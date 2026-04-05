@@ -1,0 +1,222 @@
+.sessionsLayout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+}
+
+.leftSide {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.nextSession {
+  background: #119698;
+  color: white;
+}
+
+.nextBox {
+  background: rgba(255,255,255,0.2);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+.summary p {
+  margin: 5px 0;
+}
+
+.calendarBox {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.day {
+  padding: 10px 0;
+  border-radius: 10px;
+  background: #f2f2f2;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+}
+
+.activeDay {
+  background: #119698;
+  color: white;
+}
+
+.sessionsList {
+  margin-top: 15px;
+}
+
+.sessionItem {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.detailsBtn {
+  border: none;
+  background: transparent;
+  color: #119698;
+  cursor: pointer;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.emptyBox {
+  margin-top: 15px;
+  padding: 20px;
+  border: 2px dashed #ddd;
+  border-radius: 15px;
+  text-align: center;
+  color: #888;
+  cursor: pointer;
+}
+
+/* 🔥 Large Tablet */
+@media (max-width: 1024px) {
+  .sessionsLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .leftSide {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .leftSide > div {
+    flex: 1;
+    min-width: 260px;
+  }
+}
+
+/* 🔥 Tablet */
+@media (max-width: 768px) {
+  .calendarBox {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+
+  .day {
+    font-size: 12px;
+    padding: 8px 0;
+  }
+}
+
+/* 🔥 Mobile */
+@media (max-width: 600px) {
+  .sessionsLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .leftSide {
+    flex-direction: column;
+  }
+
+  .calendarBox {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+  }
+
+  .day {
+    font-size: 11px;
+    padding: 6px 0;
+  }
+
+  .sessionItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detailsBtn {
+    align-self: flex-end;
+  }
+
+  .emptyBox {
+    font-size: 13px;
+    padding: 12px;
+  }
+}
+
+/* 🔥 Small Mobile */
+@media (max-width: 400px) {
+  .calendarBox {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .day {
+    font-size: 10px;
+    padding: 5px 0;
+  }
+}
+/* 🔥 Modal Overlay */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* 🔥 Modal Box */
+.modalContent {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  width: 400px;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 🔥 Title */
+.modalContent h3 {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* 🔥 Inputs */
+.modalContent input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+/* 🔥 Buttons */
+.modalContent button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+/* زرار حفظ */
+.modalContent button:first-of-type {
+  background: #119698;
+  color: white;
+}
+
+/* زرار إلغاء */
+.modalContent button:last-of-type {
+  background: #eee;
+}
+
+/* 🔥 Mobile */
+@media (max-width: 600px) {
+  .modalContent {
+    width: 95%;
+    padding: 15px;
+  }
+}

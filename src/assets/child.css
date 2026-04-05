@@ -1,0 +1,170 @@
+.child-container {
+  display: flex;
+  min-height: 100vh;
+  flex-wrap: wrap;
+}
+
+.child-left {
+  flex: 1;
+  background: #eef7f6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.child-left img {
+  width: 70%;
+  max-width: 400px;
+}
+
+.child-left h3 {
+  margin-top: 20px;
+  color: #2c7a7b;
+  text-align: center;
+}
+
+.child-left p {
+  color: #777;
+  text-align: center;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.child-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  direction: rtl;
+  padding: 20px;
+}
+
+.child-box {
+  width: 100%;
+  max-width: 400px;
+}
+
+.child-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.child-sub {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #777;
+}
+
+.stepper {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.step {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step.active {
+  background: #2c7a7b;
+  color: white;
+}
+
+.child-input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  direction: rtl;
+  text-align: right;
+}
+
+.child-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(to right, #2c7a7b, #38b2ac);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 20px;
+}
+
+.child-btn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 1024px) {
+  .child-container {
+    flex-direction: column;
+  }
+
+  .child-left {
+    order: 2;
+    padding: 20px;
+  }
+
+  .child-right {
+    order: 1;
+  }
+
+  .child-left img {
+    width: 60%;
+  }
+}
+
+@media (max-width: 600px) {
+  .child-box {
+    max-width: 100%;
+  }
+
+  .child-title {
+    font-size: 22px;
+  }
+
+  .child-input {
+    padding: 12px;
+  }
+
+  .child-btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .child-left img {
+    width: 80%;
+  }
+}
+.upload-circle {
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 50%;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -1,0 +1,218 @@
+.login * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.login {
+  display: flex;
+  height: 100vh;
+  direction: rtl;
+  font-family: 'Tajawal', sans-serif;
+}
+
+/* LEFT */
+.login .login-left {
+  flex: 1;
+  background: linear-gradient(135deg,#119698 , #119698);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 40px;
+}
+
+.login .overlay {
+  max-width: 450px;
+}
+
+.login .login-left h2 {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: white;
+}
+
+.login .login-left p {
+  margin: 20px 0;
+  opacity: 0.9;
+  line-height: 1.7;
+  color: white;
+}
+
+.login .features {
+  margin-top: 30px;
+}
+
+.login .feature {
+  background: rgba(255,255,255,0.15);
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+/* RIGHT */
+.login .login-right {
+  flex: 1;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login .form-box {
+  width: 380px;
+}
+.login .header {
+  text-align: right;
+  margin-bottom: 30px;
+}
+
+/* TITLE */
+.login .title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e2f35;
+  margin-top: 8px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.login .subtitle {
+  font-size: 14px;
+  color: #6c7a7e;
+  margin-top: 6px;
+  font-weight: 500;}
+
+/* TABS */
+.login .tabs {
+  display: flex;
+  background: #f1f5f9;
+  padding: 6px;
+  border-radius: 16px;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+
+.login .tab {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: 0.3s;
+}
+
+.login .tab.active {
+  background: white;
+  color: #119698;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* INPUTS */
+.login .input-box {
+  position: relative;
+}
+
+.login .input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+/* 🔥 أهم تعديل */
+.login input {
+  width: 100%;
+  padding: 14px 14px 14px 40px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* FORGET */
+.login .forget {
+  font-size: 18px;
+  color: #2fb5a8;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+/* BUTTON */
+.login .login-btns {
+  width: 100%;
+  padding: 14px;
+  background: #119698;
+  color: white;
+  border: none;
+  border-radius: 18px;
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 30px;
+  font-weight: 600px;
+}
+
+/* DIVIDER */
+.login .divider {
+  text-align: center;
+  margin: 20px 0;
+  color: #aaa;
+}
+
+/* SOCIAL */
+.login .social {
+  display: flex;
+  gap: 10px;
+}
+
+.login .social button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 15px;
+  border: 1px solid #ddd;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 30px;
+    font-weight: 600px;
+}
+
+/* REGISTER */
+.login .register {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.login .register span {
+  color: #2fb5a8;
+  cursor: pointer;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .login {
+    flex-direction: column;
+  }
+}
+.eye {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+}

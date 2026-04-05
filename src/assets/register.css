@@ -1,0 +1,469 @@
+.signup-container * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.signup-container {
+  display: flex;
+  min-height: 100vh;
+  direction: rtl;
+  font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #ffffff;
+}
+
+/* ========== القسم الأيمن (النموذج) ========== */
+.signup-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: #ffffff;
+}
+
+.signup-box {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* الهيدر */
+.signup-header {
+  text-align: right;
+  margin-bottom: 28px;
+}
+
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.brand-circle {
+  background: #e0f2f1;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.brand-circle img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.brand-name {
+  color: #119698;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.3px;
+}
+
+.signup-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e2f35;
+  margin-top: 8px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.signup-subtitle {
+  font-size: 14px;
+  color: #6c7a7e;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* أزرار تبديل الدور */
+.role-switch {
+  display: flex;
+  background: #f1f5f9;
+  padding: 5px;
+  border-radius: 40px;
+  margin: 24px 0 20px 0;
+  gap: 4px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 32px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Tajawal', 'Segoe UI', sans-serif;
+  transition: all 0.2s ease;
+  color: #5a6e74;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.role-btn.active {
+  background: white;
+  color: #119698;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.role-btn svg {
+  font-size: 16px;
+}
+
+/* حقول الإدخال */
+.field-box {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.field-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aab7bc;
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.field-box input {
+  width: 100%;
+  padding: 14px 45px 14px 18px;
+  border-radius: 32px;
+  border: 1px solid #e2e8f0;
+  background: #f9fbfd;
+  font-size: 14px;
+  font-family: 'Tajawal', 'Segoe UI', sans-serif;
+  outline: none;
+  transition: all 0.2s;
+  color: #1e2f35;
+}
+
+.field-box input:focus {
+  border-color: #119698;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(17, 150, 152, 0.1);
+}
+
+.field-box input::placeholder {
+  color: #aab7bc;
+  font-size: 13px;
+}
+
+/* الزر الرئيسي */
+.main-btn {
+  width: 100%;
+  padding: 14px;
+  background: #119698;
+  color: white;
+  border: none;
+  border-radius: 40px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Tajawal', 'Segoe UI', sans-serif;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(17, 150, 152, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.main-btn:hover {
+  background: #0e7f81;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(17, 150, 152, 0.25);
+}
+
+.main-btn:active {
+  transform: translateY(0);
+}
+
+/* الفاصل */
+.split-line {
+  text-align: center;
+  margin: 22px 0 18px;
+  font-size: 13px;
+  color: #b9c8ce;
+  position: relative;
+}
+
+.split-line::before,
+.split-line::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #e2edf0;
+}
+
+.split-line::before {
+  right: 0;
+}
+
+.split-line::after {
+  left: 0;
+}
+
+.split-line span {
+  background: white;
+  padding: 0 12px;
+  position: relative;
+  z-index: 1;
+  color: #6f8f96;
+}
+
+/* أزرار التواصل الاجتماعي */
+.social-box {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.social-box button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 32px;
+  border: 1px solid #dee9ec;
+  background: white;
+  font-size: 28px;
+  font-weight: 600;
+  font-family: 'Tajawal', 'Segoe UI', sans-serif;
+  color: #2c4b54;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.social-box button svg {
+  font-size: 18px;
+}
+
+.social-box button:hover {
+  background: #f4faf9;
+  border-color: #cbdbe0;
+  transform: translateY(-1px);
+}
+
+/* رابط تسجيل الدخول */
+.login-redirect {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #5a7279;
+}
+
+.login-redirect span {
+  color: #119698;
+  cursor: pointer;
+  font-weight: 700;
+  margin-right: 6px;
+  transition: opacity 0.2s;
+}
+
+.login-redirect span:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+/* ========== القسم الأيسر (الجانب التوضيحي) ========== */
+.signup-left {
+  flex: 1;
+  background: #eaf4f3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 20px;
+  position: relative;
+}
+
+.signup-left img {
+  width: 280px;
+  max-width: 85%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.05));
+}
+
+.signup-left h3 {
+  color: #119698;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.signup-left p {
+  color: #4a5b5e;
+  font-size: 15px;
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* ========== تحسينات إضافية ========== */
+/* إضافة شارة المجتمع */
+.signup-left::before {
+  content: "✨";
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 32px;
+  opacity: 0.3;
+}
+
+/* تأثيرات حركية */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.signup-box {
+  animation: fadeUp 0.5s ease-out;
+}
+
+/* ========== تصميم متجاوب ========== */
+@media (max-width: 1024px) {
+  .signup-box {
+    max-width: 380px;
+  }
+  
+  .signup-left img {
+    width: 240px;
+  }
+}
+
+@media (max-width: 900px) {
+  .signup-container {
+    flex-direction: column;
+  }
+  
+  .signup-left {
+    order: 2;
+    padding: 50px 20px;
+    border-radius: 32px 32px 0 0;
+  }
+  
+  .signup-right {
+    order: 1;
+    padding: 40px 24px;
+  }
+  
+  .signup-box {
+    max-width: 100%;
+  }
+  
+  .signup-left img {
+    width: 200px;
+  }
+  
+  .brand-name {
+    font-size: 20px;
+  }
+  
+  .signup-title {
+    font-size: 26px;
+  }
+  
+  .role-btn {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .signup-right {
+    padding: 24px 16px;
+  }
+  
+  .signup-title {
+    font-size: 24px;
+  }
+  
+  .role-switch {
+    margin: 16px 0;
+  }
+  
+  .field-box input {
+    padding: 12px 42px 12px 16px;
+    font-size: 13px;
+  }
+  
+  .main-btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .social-box button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .signup-left h3 {
+    font-size: 18px;
+  }
+  
+  .signup-left p {
+    font-size: 13px;
+  }
+}
+
+/* دعم الشاشات الصغيرة جداً */
+@media (max-width: 360px) {
+  .role-btn {
+    font-size: 12px;
+    gap: 4px;
+  }
+  
+  .social-box {
+    flex-direction: column;
+  }
+  
+  .social-box button {
+    width: 100%;
+  }
+}
+
+/* تحسين للطباعة */
+@media print {
+  .signup-container {
+    display: block;
+  }
+  
+  .role-switch,
+  .social-box,
+  .main-btn {
+    display: none;
+  }
+}
+.eye {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+}

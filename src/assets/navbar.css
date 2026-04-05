@@ -1,0 +1,187 @@
+.navbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:15px 60px;
+  background:white;
+  direction:rtl;
+}
+
+/* اللوجو */
+
+.logo-container{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo-circle{
+  width:60px;
+  height:60px;
+  background:#119698;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.logo-circle img{
+  width:50px;
+  filter:brightness(0) invert(1);
+}
+
+.logo-text{
+  font-size:30px;
+  font-weight:700;
+  color:#119698;
+}
+
+
+/* المينيو */
+
+.nav-links{
+  display:flex;
+  list-style:none;
+  gap:40px;
+}
+
+.nav-links li{
+  cursor:pointer;
+  font-size:16px;
+  color:#444;
+}
+
+
+/* الأزرار */
+
+.auth-buttons{
+  display:flex;
+  gap:10px;
+}
+
+.login-btn{
+  border:1px solid #119698;
+  background:white;
+  padding:8px 18px;
+  border-radius:6px;
+  color:#119698;
+  cursor:pointer;
+  font-size: 15px;
+}
+
+.register-btn{
+  background:#119698;
+  border:none;
+  padding:8px 18px;
+  border-radius:15px;
+  color:white;
+  cursor:pointer;
+  font-size: 20px;
+}
+/* ================= Responsive Navbar ================= */
+
+/* تابلت */
+@media (max-width: 992px){
+
+  .navbar{
+    padding:15px 30px;
+  }
+
+  .nav-links{
+    gap:20px;
+  }
+
+  .logo-text{
+    font-size:24px;
+  }
+
+  .logo-circle{
+    width:50px;
+    height:50px;
+  }
+
+  .logo-circle img{
+    width:40px;
+  }
+
+  .register-btn{
+    font-size:16px;
+    padding:8px 14px;
+  }
+
+  .login-btn{
+    font-size:14px;
+  }
+
+}
+
+
+/* موبايل */
+@media (max-width: 768px){
+
+  .navbar{
+    flex-direction:column;
+    gap:15px;
+    padding:15px 20px;
+  }
+
+  /* المينيو تحت */
+  .nav-links{
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:15px;
+  }
+
+  .nav-links li{
+    font-size:14px;
+  }
+
+  /* الأزرار */
+  .auth-buttons{
+    width:100%;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  .login-btn,
+  .register-btn{
+    padding:10px 20px;
+    font-size:14px;
+  }
+
+}
+
+
+/* موبايل صغير */
+@media (max-width: 480px){
+
+  .logo-text{
+    font-size:20px;
+  }
+
+  .logo-circle{
+    width:45px;
+    height:45px;
+  }
+
+  .logo-circle img{
+    width:35px;
+  }
+
+  .nav-links{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .auth-buttons{
+    flex-direction:column;
+    width:100%;
+  }
+
+  .login-btn,
+  .register-btn{
+    width:100%;
+    text-align:center;
+  }
+
+}

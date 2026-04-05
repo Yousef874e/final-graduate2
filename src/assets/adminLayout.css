@@ -1,0 +1,52 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  direction: rtl;
+}
+
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: #ffffff;
+  border-left: 1px solid #eee;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  background: #f6f8fb;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  height: 60px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+  border-bottom: 1px solid #eee;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.bell {
+  font-size: 20px;
+}
+
+.content {
+  padding: 20px;
+}
+
+.logout {
+  margin-top: 30px;
+  color: red;
+  cursor: pointer;
+}

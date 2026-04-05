@@ -1,0 +1,91 @@
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  font-size: 15px;
+}
+
+.tabs button {
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+}
+
+.activeTab {
+  background: #119698;
+  color:black;
+}
+
+.banner {
+  margin-top: 20px;
+  padding: 30px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #119698, #0d7c7e);
+  color: white;
+
+}
+.banner h2{
+    color: white;
+    font-size: 35px;
+}
+
+.banner button {
+  margin-top: 10px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+    font-size: 25px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.cardContent {
+  padding: 15px;
+}
+
+.meta {
+  font-size: 13px;
+  color: #777;
+}
+
+.btn {
+  margin-top: 10px;
+  border: none;
+  background: transparent;
+  color: #119698;
+  cursor: pointer;
+}
+
+/* 🔥 Responsive */
+@media (max-width: 992px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

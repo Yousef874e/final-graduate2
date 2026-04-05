@@ -1,0 +1,97 @@
+.layout {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* 🔵 Sidebar */
+.sidebar {
+  width: 250px;
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+}
+
+.tags span {
+  display: inline-block;
+  background: #f1f1f1;
+  padding: 5px 10px;
+  border-radius: 10px;
+  margin: 5px;
+  font-size: 12px;
+}
+
+.users span {
+  font-size: 20px;
+  margin: 5px;
+}
+
+/* 🔵 Main */
+.main {
+  flex: 1;
+}
+
+/* 🔥 Create Post */
+.createPost {
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.createPost input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.createPost button {
+  background: #119698;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+}
+
+/* 🔥 Post */
+.post {
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+.postHeader {
+  display: flex;
+  justify-content: space-between;
+}
+
+.postHeader p {
+  font-size: 12px;
+  color: gray;
+}
+
+.content {
+  margin: 10px 0;
+}
+
+.actions {
+  display: flex;
+  gap: 20px;
+  color: gray;
+  cursor: pointer;
+}
+
+/* 🔥 Responsive */
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+}
