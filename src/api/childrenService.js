@@ -1,7 +1,7 @@
 import axiosClient from "./axiosClient"
 
-export const getChildren = async () => {
-  const res = await axiosClient.get("/Children")
+export const getChildren = async (params) => {
+  const res = await axiosClient.get("/Children", { params })
   return res.data
 }
 
@@ -19,6 +19,12 @@ export const updateChildProfile = async (childId, data) => {
   const res = await axiosClient.put(`/Children/${childId}`, data)
   return res.data
 }
+
+export const deleteChild = async (childId) => {
+  const res = await axiosClient.delete(`/Children/${childId}`)
+  return res.data
+}
+
 export const setChildImage = async (childId, mediaId) => {
   const res = await axiosClient.put(
     `/Children/${childId}/profile-image`,

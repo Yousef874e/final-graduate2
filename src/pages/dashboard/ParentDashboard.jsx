@@ -1,18 +1,21 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import styles from "../../assets/dashboard.module.css"
 import { FaBell, FaPlay, FaUser } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
 import axiosClient from "../../api/axiosClient"
 import { useApp } from "../../Context/AppContext"
+import { getParentProfileImage } from "../../api/parentProfileService"
+import { getTreatmentPlans } from "../../api/treatmentPlansService"
 
 function ParentDashboard() {
 
   const navigate = useNavigate()
-  const { data, profileImage } = useApp()
+  const { data } = useApp()
 
   const [showNotifications, setShowNotifications] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [profileImage, setProfileImage] = useState(null)
 
   const children = data?.children || []
   const appointments = data?.upcomingAppointments || []
@@ -37,8 +40,21 @@ function ParentDashboard() {
   }
 
   const notificationsCount =
-    (alerts.childrenWithoutUpcomingAppointments || 0) +
-    (alerts.childrenWithLowAccuracy || 0)
+    (alerts?.childrenWithoutUpcomingAppointments || 0) +
+    (alerts?.childrenWithLowAccuracy || 0)
+
+  useEffect(() => {
+    fetchProfileImage()
+  }, [])
+
+  const fetchProfileImage = async () => {
+    try {
+      const res = await getParentProfileImage()
+      setProfileImage(res.url)
+    } catch {
+      setProfileImage(null)
+    }
+  }
 
   const handleStartSession = async () => {
 
@@ -50,9 +66,25 @@ function ParentDashboard() {
     try {
       setStarting(true)
 
+      const plans = await getTreatmentPlans(child.id)
+      const plan = plans?.[0] || plans?.items?.[0]
+
+      if (!plan) {
+        toast.error("لا توجد خطة علاج ❌")
+        return
+      }
+
+      const exercise = plan.exercises?.[0]
+
+      if (!exercise) {
+        toast.error("لا يوجد تمرين ❌")
+        return
+      }
+
       const res = await axiosClient.post("/Sessions/start", {
         childId: child.id,
-        exerciseId: 1
+        exerciseId: exercise.exerciseId,
+        treatmentPlanExerciseId: exercise.id
       })
 
       const sessionId = res.data?.id
@@ -108,10 +140,10 @@ function ParentDashboard() {
 
             {showNotifications && (
               <div className={styles.dropdown}>
-                {alerts.childrenWithoutUpcomingAppointments > 0 && (
+                {alerts?.childrenWithoutUpcomingAppointments > 0 && (
                   <p>⚠️ في طفل بدون مواعيد</p>
                 )}
-                {alerts.childrenWithLowAccuracy > 0 && (
+                {alerts?.childrenWithLowAccuracy > 0 && (
                   <p>📉 في طفل محتاج متابعة</p>
                 )}
                 {notificationsCount === 0 && (

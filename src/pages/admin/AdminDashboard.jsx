@@ -2,32 +2,25 @@ import "../../assets/adminDashboard.css"
 import { useEffect, useState } from "react"
 import { getAdminDashboard } from "../../api/dashboardService"
 import { getSystemMonitoring } from "../../api/adminService"
-import toast from "react-hot-toast"
+import { FaExclamationTriangle, FaFileAlt, FaCalendar, FaUsers,  } from "react-icons/fa"
+import banner from "../../assets/images/banner.png"
 
 function AdminDashboard() {
-
   const [data, setData] = useState({})
   const [system, setSystem] = useState({})
-
+  
   useEffect(() => {
     loadData()
   }, [])
 
   const loadData = async () => {
-
-    const t = toast.loading("جاري التحميل...")
-
     try {
       const dash = await getAdminDashboard()
-      setData(dash)
-
       const sys = await getSystemMonitoring()
+      setData(dash)
       setSystem(sys)
-
-      toast.success("تم التحميل ✅", { id: t })
-
-    } catch {
-      toast.error("فشل التحميل ❌", { id: t })
+    } catch (e) {
+      console.log(e)
     }
   }
 
@@ -35,92 +28,58 @@ function AdminDashboard() {
     <div className="admin-page">
 
       <div className="top-row">
-        <div>
+        <h2>مرحبًا</h2>
+        <div className="date-box">
           <p>تاريخ اليوم</p>
-          <h4>{new Date().toLocaleDateString("ar-EG")}</h4>
-        </div>
-
-        <h2>👋 مرحبًا</h2>
-      </div>
-
-      <div className="banner">
-        <div>
-          <h1>لوحة الإدارة</h1>
-          <p>مركز متابعة شامل للنظام</p>
-
-          <div className="tags">
-            <span>API مستقر</span>
-            <span>SignalR متصل</span>
-            <span>آخر تحديث الآن</span>
-          </div>
+          <h4>{data?.todayDate || "-"}</h4>
         </div>
       </div>
 
-      <div className="alert">
-        يوجد {data.activeIssues || 0} مشاكل نشطة تحتاج متابعة فورية
+      <div className="banner-img">
+        <img src={banner} alt="banner" />
       </div>
+<div className="alert">
+  يوجد {data?.activeIssues || 0} مشاكل نشطة تحتاج متابعة فورية
+</div>
 
       <div className="stats">
-
-        <div className="card red">
-          <h3>{data.activeIssues || 0}</h3>
+        <div className="card">
+          <FaExclamationTriangle />
+          <h3>{data?.activeIssues || 0}</h3>
           <p>مشاكل نشطة</p>
         </div>
 
-        <div className="card yellow">
-          <h3>{data.pendingReports || 0}</h3>
-          <p>تقارير تحتاج متابعة</p>
+        <div className="card">
+          <FaFileAlt />
+          <h3>{data?.pendingReports || 0}</h3>
+          <p>تقارير</p>
         </div>
 
-        <div className="card green">
-          <h3>{data.todaySessions || 0}</h3>
+        <div className="card">
+          <FaCalendar />
+          <h3>{data?.todaySessions || 0}</h3>
           <p>جلسات اليوم</p>
         </div>
 
-        <div className="card blue">
-          <h3>{data.totalUsers || 0}</h3>
-          <p>إجمالي المستخدمين</p>
+        <div className="card">
+          <FaUsers />
+          <h3>{data?.totalUsers || 0}</h3>
+          <p>المستخدمين</p>
         </div>
-
       </div>
 
       <div className="bottom">
 
         <div className="activities">
-          <h3>آخر الأنشطة</h3>
-
-          <div className="activity green">
-            مستخدم جديد - منذ 5 دقائق
-          </div>
-
-          <div className="activity blue">
-            رفع تقرير - منذ 11 دقيقة
-          </div>
-
-          <div className="activity red">
-            جلسة فاشلة - منذ 20 دقيقة
-          </div>
-
+          {(data?.recentActivities || []).map((a, i) => (
+            <div key={i} className="activity-item">{a.description}</div>
+          ))}
         </div>
 
         <div className="system">
-          <h3>حالة المنظومة</h3>
-
-          <div className="status">
-            <span>API Health</span>
-            <span>{system.apiStatus || "مستقر"}</span>
-          </div>
-
-          <div className="status">
-            <span>SignalR Hub</span>
-            <span>{system.signalR || "متصل"}</span>
-          </div>
-
-          <div className="status">
-            <span>Queue Jobs</span>
-            <span>{system.queue || "قيد التنفيذ"}</span>
-          </div>
-
+          <div className="system-item">API: {system?.apiStatus}</div>
+          <div className="system-item">SignalR: {system?.signalR}</div>
+          <div className="system-item">Queue: {system?.queue}</div>
         </div>
 
       </div>

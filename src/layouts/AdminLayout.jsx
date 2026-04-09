@@ -1,46 +1,60 @@
 import "../assets/adminLayout.css"
 import logo from "../assets/images/logo.png"
-import { FaHome, FaUsers, FaCalendar, FaFileAlt, FaCog, FaBell } from "react-icons/fa"
-import { Outlet, useNavigate } from "react-router-dom"
+import {
+  FaHome, FaUsers, FaCalendar, FaFileAlt,
+  FaCog, FaBell, FaBook, FaSignOutAlt
+} from "react-icons/fa"
+import { Outlet, useNavigate, useLocation } from "react-router-dom"
+import { useState } from "react"
 
 function AdminLayout() {
-
   const navigate = useNavigate()
+  const location = useLocation()
+  const isActive = (path) => location.pathname === path
+  const [showNotif, setShowNotif] = useState(false)
+
 
   return (
     <div className="layout">
 
       <div className="sidebar">
 
-        <div className="logo">
-          <img src={logo} alt="logo" />
-          <span>رفيق</span>
-        </div>
+        <div className="logo-container">
+            <div className="logo-circle">
+              <img src={logo} alt="logo" />
+            </div>
+            <span className="logo-text">رفيق</span>
+          </div>
+          <br />
 
         <div className="menu">
-          <div className="active" onClick={() => navigate("/dashboard/admin")}>
+          <div className={isActive("/dashboard/admin") ? "active" : ""} onClick={() => navigate("/dashboard/admin")}>
             <FaHome /> الرئيسية
           </div>
 
-          <div>
+          <div className={isActive("/dashboard/admin/users") ? "active" : ""} onClick={() => navigate("/dashboard/admin/users")}>
             <FaUsers /> ملفات المستخدمين
           </div>
 
-          <div>
+          <div className={isActive("/dashboard/admin/appointments") ? "active" : ""} onClick={() => navigate("/dashboard/admin/appointments")}>
             <FaCalendar /> جدول المواعيد
           </div>
 
-          <div>
+          <div className={isActive("/dashboard/admin/reports") ? "active" : ""} onClick={() => navigate("/dashboard/admin/reports")}>
             <FaFileAlt /> التقارير الطبية
           </div>
 
-          <div>
+          <div className={isActive("/dashboard/admin/library") ? "active" : ""} onClick={() => navigate("/dashboard/admin/library")}>
+            <FaBook /> المكتبة
+          </div>
+
+          <div className={isActive("/dashboard/admin/settings") ? "active" : ""} onClick={() => navigate("/dashboard/admin/settings")}>
             <FaCog /> الإعدادات
           </div>
         </div>
 
         <div className="logout">
-          تسجيل الخروج
+          <FaSignOutAlt /> تسجيل الخروج
         </div>
 
       </div>
@@ -49,10 +63,10 @@ function AdminLayout() {
 
         <div className="header">
           <h3>لوحة تحكم الأدمن</h3>
-
-          <div className="header-left">
-            <FaBell className="bell" />
-          </div>
+          <div className="header-row">
+        <FaBell className="bell" onClick={() => setShowNotif(!showNotif)} />
+        {showNotif && <div className="notif-box">لا يوجد إشعارات حالياً</div>}
+      </div>
         </div>
 
         <div className="content">

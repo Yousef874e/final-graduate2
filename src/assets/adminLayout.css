@@ -1,52 +1,160 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 .layout {
   display: flex;
-  height: 100vh;
+  flex-direction: row;
+  min-height: 100vh;
+  background: #F0F4F8;
   direction: rtl;
+  font-family: 'Cairo', sans-serif;
 }
 
 .sidebar {
-  width: 240px;
-  min-width: 240px;
-  background: #ffffff;
-  border-left: 1px solid #eee;
-  padding: 20px;
+  width: 210px;
+  background: white;
   display: flex;
   flex-direction: column;
+  padding: 24px 16px;
+  border-right: 1px solid #eee;
+}
+
+.logoCircle {
+  width: 55px;
+  height: 55px;
+  background: #119698;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoCircle img {
+  width: 30px;
+}
+
+.logoText {
+  font-weight: 800;
+  font-size: 24px;
+  color: #119698;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.menu div {
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.menu div.active {
+  background: #0f9d8a;
+  color: white;
+}
+
+.logout {
+  color: red;
+  cursor: pointer;
 }
 
 .main {
   flex: 1;
-  background: #f6f8fb;
   display: flex;
   flex-direction: column;
 }
 
 .header {
   height: 60px;
-  background: #fff;
+  background: white;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   padding: 0 25px;
-  border-bottom: 1px solid #eee;
 }
 
 .content {
+  overflow-y: auto;
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
 }
 
 .bell {
   font-size: 20px;
-}
-
-.content {
-  padding: 20px;
-}
-
-.logout {
-  margin-top: 30px;
-  color: red;
   cursor: pointer;
+}
+
+/* ================= Responsive ================= */
+
+/* تابلت */
+@media (max-width: 992px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+  }
+
+  .menu {
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+  }
+
+  .menu div {
+    white-space: nowrap;
+  }
+
+  .logo {
+    margin-bottom: 0;
+  }
+}
+
+/* موبايل */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 15px;
+  }
+
+  .content {
+    padding: 15px;
+  }
+
+  .logo span {
+    font-size: 14px;
+  }
+
+  .menu div {
+    font-size: 12px;
+    padding: 8px;
+  }
+}
+
+/* موبايل صغير */
+@media (max-width: 480px) {
+  .sidebar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .menu {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .menu div {
+    width: 100%;
+  }
 }
