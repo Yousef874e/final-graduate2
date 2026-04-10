@@ -376,3 +376,61 @@
     width: 100%;
   }
 }
+.filter-btn {
+  background: #009688;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.filter-btn:hover {
+  background: #00796b;
+}
+
+/* filter box */
+.filter-box {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+  padding: 10px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  flex-wrap: wrap;
+}
+
+/* buttons */
+.filter-box button {
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  cursor: pointer;
+  transition: 0.25s;
+  font-size: 14px;
+}
+
+/* hover */
+.filter-box button:hover {
+  background: #009688;
+  color: #fff;
+  border-color: #009688;
+}
+
+/* active */
+.filter-box button.active {
+  background: #009688;
+  color: #fff;
+  border-color: #009688;
+}
+
+/* 📱 responsive */
+@media (max-width: 768px) {
+  .filter-box {
+    justify-content: center;
+  }
+}

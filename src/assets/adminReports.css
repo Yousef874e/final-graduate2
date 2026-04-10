@@ -1,0 +1,113 @@
+.reports-page {
+  padding: 20px;
+}
+
+.reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-btn {
+  background: #2bbbad;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.reports-tools {
+  margin: 20px 0;
+}
+
+.reports-tools input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.report-card {
+  display: flex;
+  justify-content: space-between;
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.report-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upload-btn {
+  background: #2bbbad;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+}
+
+.close-btn {
+  background: #eee;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+}
+@media (max-width: 480px) {
+
+  .modal-content {
+    padding: 18px;
+    border-radius: 15px;
+  }
+
+  .modal-content h3 {
+    font-size: 16px;
+  }
+
+  .upload-btn,
+  .close-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+}
+
+/* 📱 Tablet */
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 90%;
+  }
+}

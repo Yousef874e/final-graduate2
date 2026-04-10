@@ -1,10 +1,7 @@
 import axiosClient from "./axiosClient"
 
 export const getMedicalReports = async (childId, params) => {
-  const res = await axiosClient.get(
-    `/MedicalReports/child/${childId}`,
-    { params }
-  )
+  const res = await axiosClient.get(`/MedicalReports/child/${childId}`, { params })
   return res.data
 }
 
@@ -19,9 +16,8 @@ export const deleteMedicalReport = async (id) => {
 }
 
 export const downloadMedicalReport = async (id) => {
-  const res = await axiosClient.get(
-    `/MedicalReports/${id}/download`,
-    { responseType: "blob" }
-  )
+  const res = await axiosClient.get(`/MedicalReports/${id}/download`, {
+    responseType: "blob"
+  })
   return res.data
 }
