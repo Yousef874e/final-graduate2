@@ -24,6 +24,7 @@ function AdminUsers() {
   const [showFilter, setShowFilter] = useState(false)
 
   const [selectedSpecialist, setSelectedSpecialist] = useState("")
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     loadUsers()
@@ -59,9 +60,20 @@ function AdminUsers() {
   }
 
   const handleLink = async () => {
-    await assignSpecialistToChild(selectedUser.id, selectedSpecialist)
+    if (!selectedSpecialist) return
+
+    await assignSpecialistToChild(selectedUser.id, {
+      specialistProfileId: Number(selectedSpecialist)
+    })
+
     setShowLink(false)
+    setSelectedSpecialist("")
   }
+
+  // 🔥 فلترة بالبحث
+  const filteredUsers = users.filter(user =>
+    user.fullName?.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className="admin-page">
@@ -83,22 +95,26 @@ function AdminUsers() {
         </div>
       )}
 
-      <input className="search" placeholder="بحث..." />
+      <input
+        className="search"
+        placeholder="بحث..."
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
       <div className="users-grid">
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <div className="user-card" key={user.id}>
 
             <div className="user-top">
 
               <div className="user-info">
                 <img
-                  src={user.image || user.imageUrl || "/default.png"}
+                  src={user.profileImageUrl || "/default.png"}
                   className="avatar"
                 />
 
                 <div>
-                  <h3 title={user.name}>{user.name}</h3>
+                  <h3 title={user.fullName}>{user.fullName}</h3>
                   <p>{user.age || "-" } سنة</p>
 
                   <span className={user.isActive ? "status active" : "status inactive"}>
@@ -159,7 +175,7 @@ function AdminUsers() {
             <h3>التقارير</h3>
 
             {reports.map((r, i) => (
-              <div key={i} className="item">{r.title}</div>
+              <div key={i} className="item">{r.title || "تقرير"}</div>
             ))}
 
             <button onClick={() => setShowReports(false)}>إغلاق</button>
@@ -173,7 +189,9 @@ function AdminUsers() {
             <h3>الجلسات</h3>
 
             {sessions.map((s, i) => (
-              <div key={i} className="item">{s.title}</div>
+              <div key={i} className="item">
+                {new Date(s.createdAtUtc).toLocaleString()}
+              </div>
             ))}
 
             <button onClick={() => setShowSessions(false)}>إغلاق</button>
@@ -187,9 +205,11 @@ function AdminUsers() {
             <h3>ربط طفل</h3>
 
             <select onChange={(e) => setSelectedSpecialist(e.target.value)}>
-              <option>اختر أخصائي</option>
+              <option value="">اختر أخصائي</option>
               {specialists.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.specialistProfileId} value={s.specialistProfileId}>
+                  {s.fullName}
+                </option>
               ))}
             </select>
 

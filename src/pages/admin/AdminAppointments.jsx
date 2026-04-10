@@ -1,31 +1,29 @@
 import { useEffect, useState } from "react"
 import {
-  getAppointmentsByChild,
+  getAppointmentsByChildId,
   createAppointment,
-  updateAppointment,
   cancelAppointment,
   completeAppointment
 } from "../../api/appointmentsService"
 import { getChildren } from "../../api/childrenService"
-import axiosClient from "../../api/axiosClient"
 import "../../assets/adminAppointments.css"
+import toast from "react-hot-toast"
 
 export default function AdminAppointments() {
 
   const [appointments, setAppointments] = useState([])
   const [children, setChildren] = useState([])
-  const [specialists, setSpecialists] = useState([])
 
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const [showModal, setShowModal] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState({
     childId: "",
-    specialistUserId: "",
     scheduledAtUtc: "",
-    location: "",
+    durationMinutes: "",
     notes: ""
   })
 
@@ -34,68 +32,94 @@ export default function AdminAppointments() {
   }, [])
 
   const loadData = async () => {
-    const c = await getChildren()
-    const kids = c.data || []
-    setChildren(kids)
+    try {
+      const c = await getChildren()
+      const kids = c.data || []
+      setChildren(kids)
 
-    if (kids.length > 0) {
-      const a = await getAppointmentsByChild(kids[0].id)
-      setAppointments(a || [])
+      if (kids.length > 0) {
+        const a = await getAppointmentsByChildId(kids[0].id)
+        setAppointments(a.items || [])
+      }
+    } catch {
+      toast.error("فشل تحميل البيانات")
     }
-
-    const s = await axiosClient.get("/Specialists?pageNumber=1&pageSize=50")
-    setSpecialists(s.data.items || [])
   }
 
   const getDays = () => {
     const year = currentMonth.getFullYear()
     const month = currentMonth.getMonth()
-    const days = new Date(year, month + 1, 0).getDate()
 
-    return [...Array(days)].map((_, i) =>
-      new Date(year, month, i + 1)
-    )
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    const days = []
+
+    for (let i = 0; i < firstDay; i++) days.push(null)
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i))
+    }
+
+    return days
   }
 
   const filtered = appointments.filter(a => {
     const d = new Date(a.scheduledAtUtc)
-    return (
-      d.getDate() === selectedDate.getDate() &&
-      d.getMonth() === selectedDate.getMonth() &&
-      d.getFullYear() === selectedDate.getFullYear()
-    )
+    return d.toDateString() === selectedDate.toDateString()
   })
 
-  const getChild = (id) =>
-    children.find(c => c.id === id)?.fullName || ""
-
-  const getDoctor = (id) =>
-    specialists.find(s => s.userId === id)?.fullName || ""
-
-  const getStatus = (status) => {
-    if (status === 1) return { text: "جاري الآن", class: "now" }
-    if (status === 4) return { text: "مكتمل", class: "done" }
-    if (status === 3) return { text: "ملغي", class: "cancel" }
-    return { text: "انضم للجلسة", class: "join" }
+  const isValid = () => {
+    return (
+      form.childId &&
+      form.scheduledAtUtc &&
+      form.durationMinutes >= 15 &&
+      form.durationMinutes <= 240
+    )
   }
 
   const submit = async () => {
-    await createAppointment(form)
-    setShowModal(false)
-    loadData()
+    if (!isValid()) {
+      toast.error("اكمل البيانات صح ❌")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      await createAppointment({
+        childId: Number(form.childId),
+        scheduledAtUtc: new Date(form.scheduledAtUtc).toISOString(),
+        durationMinutes: Number(form.durationMinutes),
+        notes: form.notes
+      })
+
+      toast.success("تم إضافة الجلسة ✅")
+
+      setShowModal(false)
+      setForm({
+        childId: "",
+        scheduledAtUtc: "",
+        durationMinutes: "",
+        notes: ""
+      })
+
+      loadData()
+    } catch {
+      toast.error("فشل إضافة الجلسة ❌")
+    }
+
+    setLoading(false)
   }
 
   return (
     <div className="appointments">
 
-      <div className="top">
-        <button className="add-btn" onClick={() => setShowModal(true)}>
-          + إضافة موعد جديد
-        </button>
-      </div>
-
-      <div className="title">
+      <div className="header">
         <h2>الجدول الزمني</h2>
+        <button className="add-btn" onClick={() => setShowModal(true)}>
+          + إضافة موعد
+        </button>
       </div>
 
       <div className="month">
@@ -116,45 +140,27 @@ export default function AdminAppointments() {
         {getDays().map((d, i) => (
           <div
             key={i}
-            className={`day ${selectedDate.toDateString() === d.toDateString() ? "active" : ""}`}
-            onClick={() => setSelectedDate(d)}
+            className={`day ${d && selectedDate.toDateString() === d.toDateString() ? "active" : ""}`}
+            onClick={() => d && setSelectedDate(d)}
           >
-            {d.getDate()}
+            {d ? d.getDate() : ""}
           </div>
         ))}
       </div>
 
       <div className="cards">
         {filtered.map(a => {
-          const status = getStatus(a.status)
           const time = new Date(a.scheduledAtUtc)
 
           return (
             <div className="card" key={a.id}>
-
-              <div className="row">
-                <h3>{a.notes || "جلسة"}</h3>
-                <span>
-                  {time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
-
-              <div className="info">
-                <p>{getDoctor(a.specialistUserId)}</p>
-                <p>{getChild(a.childId)}</p>
-                <p>{a.location || "العيادة الرئيسية"}</p>
-              </div>
-
-              <button className={`status ${status.class}`}>
-                {status.text}
-              </button>
+              <h3>{a.notes || "جلسة"}</h3>
+              <p>{time.toLocaleTimeString()}</p>
 
               <div className="actions">
-                <button onClick={() => updateAppointment(a.id, a)}>تعديل</button>
                 <button onClick={() => cancelAppointment(a.id)}>إلغاء</button>
                 <button onClick={() => completeAppointment(a.id)}>إنهاء</button>
               </div>
-
             </div>
           )
         })}
@@ -166,15 +172,8 @@ export default function AdminAppointments() {
 
             <h3>إضافة جلسة</h3>
 
-            <select onChange={e => setForm({ ...form, specialistUserId: e.target.value })}>
-              <option>الأخصائي</option>
-              {specialists.map(s => (
-                <option key={s.userId} value={s.userId}>{s.fullName}</option>
-              ))}
-            </select>
-
             <select onChange={e => setForm({ ...form, childId: e.target.value })}>
-              <option>الطفل</option>
+              <option value="">اختر الطفل</option>
               {children.map(c => (
                 <option key={c.id} value={c.id}>{c.fullName}</option>
               ))}
@@ -186,17 +185,27 @@ export default function AdminAppointments() {
             />
 
             <input
-              placeholder="المكان"
-              onChange={e => setForm({ ...form, location: e.target.value })}
+              type="number"
+              placeholder="مدة الجلسة (15-240 دقيقة)"
+              onChange={e => setForm({ ...form, durationMinutes: e.target.value })}
             />
 
             <input
-              placeholder="عنوان الجلسة"
+              placeholder="ملاحظات"
               onChange={e => setForm({ ...form, notes: e.target.value })}
             />
 
-            <button onClick={submit}>إضافة جلسة</button>
-            <button onClick={() => setShowModal(false)}>إغلاق</button>
+            <button
+              disabled={!isValid() || loading}
+              className="submit"
+              onClick={submit}
+            >
+              {loading ? "جاري الإضافة..." : "إضافة"}
+            </button>
+
+            <button className="close" onClick={() => setShowModal(false)}>
+              إغلاق
+            </button>
 
           </div>
         </div>

@@ -1,11 +1,9 @@
 import axiosClient from "./axiosClient"
-export const getAppointmentsByChild = async (childId, params) => {
-  const res = await axiosClient.get(
-    `/Appointments/child/${childId}`,
-    { params }
-  )
+export const getAppointmentsByChildId = async (childId) => {
+  const res = await axiosClient.get(`/Appointments/child/${childId}`)
   return res.data
 }
+
 export const createAppointment = async (data) => {
   const res = await axiosClient.post("/Appointments", data)
   return res.data

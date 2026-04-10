@@ -3,7 +3,7 @@ import sessionStyles from "../../assets/sessions.module.css"
 import { FaUser, FaBell } from "react-icons/fa"
 import { useEffect, useState } from "react"
 import { getSessionsByChild } from "../../api/sessionsService"
-import { getAppointmentsByChild, createAppointment } from "../../api/appointmentsService"
+//import { getAppointmentsByChild, createAppointment } from "../../api/appointmentsService"
 
 function Sessions() {
 
