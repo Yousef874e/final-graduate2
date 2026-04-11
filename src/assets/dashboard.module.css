@@ -768,3 +768,131 @@
   padding: 24px 16px;
   border-right: 1px solid #eee;
 }
+.logout div {
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  gap: 12px;
+  padding: 12px 15px;
+  border-radius: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #e74c3c;
+  transition: 0.2s;
+}
+
+.logout div:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+    padding: 10px;
+  }
+
+  .sidebar ul {
+    display: flex;
+    gap: 10px;
+  }
+
+  .sidebar li {
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  .main {
+    padding: 15px;
+  }
+
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .heroBtns {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .headerLeft {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .heroRight h2 {
+    font-size: 20px;
+  }
+
+  .heroRight p {
+    font-size: 14px;
+  }
+
+  .progressCircle {
+    width: 90px;
+    height: 90px;
+    font-size: 18px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar li a {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .logout div {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .hero {
+    padding: 20px;
+  }
+
+  .heroRight h2 {
+    font-size: 18px;
+  }
+
+  .heroRight p {
+    font-size: 13px;
+  }
+
+  .startBtn,
+  .outlineBtn {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  .card h4 {
+    font-size: 14px;
+  }
+}

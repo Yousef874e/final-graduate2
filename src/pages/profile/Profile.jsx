@@ -4,98 +4,147 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { getChildProfile, updateChildProfile, setChildImage } from "../../api/childrenService"
 import { uploadImage } from "../../api/mediaService"
+import { setParentProfileImage } from "../../api/parentProfileService"
+import toast from "react-hot-toast"
+
 function Profile() {
+
   const navigate = useNavigate()
   const childId = localStorage.getItem("childId")
+
   const [child, setChild] = useState({})
+  const [parent, setParent] = useState({})
   const [loading, setLoading] = useState(true)
+
   useEffect(() => {
     fetchData()
   }, [])
+
   const fetchData = async () => {
     try {
       const res = await getChildProfile(childId)
+
       setChild(res)
-    } catch (err) {
-      console.log(err)
+
+      setParent({
+        fullName: res?.parentFullName || "",
+        phoneNumber: res?.parentPhoneNumber || "",
+        address: res?.parentAddress || ""
+      })
+
+    } catch {
+      toast.error("فشل تحميل البيانات")
     } finally {
       setLoading(false)
     }
   }
-  const handleChange = (e) => {
+
+  const handleChildChange = (e) => {
     setChild({
       ...child,
       [e.target.name]: e.target.value
     })
   }
+
+  const handleParentChange = (e) => {
+    setParent({
+      ...parent,
+      [e.target.name]: e.target.value
+    })
+  }
+
   const handleSave = async () => {
     try {
-      const payload = {
-        fullName: child.name,
-        dateOfBirth: child.birthDate,
+      await updateChildProfile(childId, {
+        fullName: child.fullName,
+        dateOfBirth: child.dateOfBirth,
         gender: child.gender,
         diagnosis: child.diagnosis
-      }
-      await updateChildProfile(childId, payload)
-      alert("تم الحفظ ✅")
+      })
 
+      toast.success("تم الحفظ")
     } catch {
-      alert("فشل الحفظ ❌")
+      toast.error("فشل الحفظ")
     }
   }
-  const handleUpload = async (e) => {
+
+  const handleChildImage = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+
     const formData = new FormData()
     formData.append("file", file)
-    formData.append("category", "2")
+    formData.append("category", 2)
+
     try {
       const res = await uploadImage(formData)
-      const mediaId = res?.id
-      await setChildImage(childId, mediaId)
+      await setChildImage(childId, res.id)
       fetchData()
-    } catch (err) {
-      console.log(err)
+      toast.success("تم تغيير صورة الطفل")
+    } catch {
+      toast.error("فشل رفع الصورة")
     }
   }
+
+  const handleParentImage = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("category", 2)
+
+    try {
+      const res = await uploadImage(formData)
+      await setParentProfileImage({ mediaId: res.id })
+      toast.success("تم تغيير الصورة")
+    } catch {
+      toast.error("فشل رفع الصورة")
+    }
+  }
+
   if (loading) return <p>Loading...</p>
+
   return (
     <div className={dashboardStyles.specialistsPage}>
+
       <div className={styles.header}>
         <h2 className={dashboardStyles.pageTitle}>الملف الشخصي</h2>
+
         <button className={styles.saveBtn} onClick={handleSave}>
           حفظ التغييرات
         </button>
       </div>
+      <br />
+
       <div className={styles.container}>
 
         <div className={styles.left}>
 
           <div className={styles.card}>
-            <h3>المعلومات الأساسية</h3>
+            <h3>بيانات ولي الأمر</h3>
 
             <div className={styles.grid}>
+              <input
+                name="fullName"
+                value={parent.fullName}
+                onChange={handleParentChange}
+                placeholder="الاسم بالكامل"
+              />
 
-              <div>
-                <label>الاسم الأول</label>
-                <input name="firstName" value={child.firstName || ""} onChange={handleChange} />
-              </div>
+              <input
+                name="phoneNumber"
+                value={parent.phoneNumber}
+                onChange={handleParentChange}
+                placeholder="رقم الهاتف"
+              />
 
-              <div>
-                <label>اسم العائلة</label>
-                <input name="lastName" value={child.lastName || ""} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>رقم الجوال</label>
-                <input name="phone" value={child.phone || ""} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>البريد الإلكتروني</label>
-                <input name="email" value={child.email || ""} onChange={handleChange} />
-              </div>
-
+              <input
+                name="address"
+                value={parent.address}
+                onChange={handleParentChange}
+                placeholder="العنوان"
+              />
             </div>
           </div>
 
@@ -103,34 +152,37 @@ function Profile() {
             <h3>بيانات الطفل</h3>
 
             <div className={styles.childBox}>
-              <span>{child.name}</span>
+              <span>{child.fullName}</span>
 
-              <label className={styles.uploadChildBtn}>
-                تحديث صورة الطفل
-                <input type="file" onChange={handleUpload} hidden />
+              <label className={styles.uploadBtn}>
+                تغيير صورة الطفل
+                <input type="file" hidden onChange={handleChildImage} />
               </label>
             </div>
 
             <div className={styles.grid}>
+              <input
+                name="fullName"
+                value={child.fullName || ""}
+                onChange={handleChildChange}
+                placeholder="اسم الطفل"
+              />
 
-              <div>
-                <label>التشخيص الطبي</label>
-                <input name="diagnosis" value={child.diagnosis || ""} onChange={handleChange} />
-              </div>
+              <input
+                name="dateOfBirth"
+                value={child.dateOfBirth || ""}
+                onChange={handleChildChange}
+                placeholder="تاريخ الميلاد"
+              />
 
-              <div>
-                <label>تاريخ الميلاد</label>
-                <input name="birthDate" value={child.birthDate || ""} onChange={handleChange} />
-              </div>
-
+              <input
+                name="diagnosis"
+                value={child.diagnosis || ""}
+                onChange={handleChildChange}
+                placeholder="التشخيص"
+              />
             </div>
 
-            <textarea
-              name="notes"
-              placeholder="ملاحظات إضافية"
-              value={child.notes || ""}
-              onChange={handleChange}
-            />
           </div>
 
         </div>
@@ -140,18 +192,20 @@ function Profile() {
           <div className={styles.profileCard}>
 
             <img
-              src={child.imageUrl || child.url || "/avatar.png"}
-              alt=""
+              src={child.imageUrl || "/avatar.png"}
               className={styles.avatar}
             />
 
-            <h3>{child.name}</h3>
+            <h3>{parent.fullName}</h3>
             <p>ولي أمر</p>
+            <br /><br />
 
-            <label className={styles.uploadChildBtn}>
-              تغير الصوره
-              <input type="file" onChange={handleUpload} hidden />
+            <label className={styles.uploadBtn}>
+              تغيير الصورة
+              <input type="file" hidden onChange={handleParentImage} />
             </label>
+            <br />
+            <br />
 
             <button
               className={styles.logout}
@@ -165,22 +219,10 @@ function Profile() {
 
           </div>
 
-          <div className={styles.menuCard}>
-
-            <div className={`${styles.menuItem} ${styles.active}`}>
-              معلومات الحساب
-            </div>
-
-            <div className={styles.menuItem}>بيانات الطفل</div>
-            <div className={styles.menuItem}>التقارير الطبية</div>
-            <div className={styles.menuItem}>الأمان وكلمة المرور</div>
-            <div className={styles.menuItem}>الإشعارات</div>
-
-          </div>
-
         </div>
 
       </div>
+
     </div>
   )
 }

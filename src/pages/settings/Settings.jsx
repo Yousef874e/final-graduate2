@@ -3,19 +3,12 @@ import dashboardStyles from "../../assets/dashboard.module.css"
 import { useState, useEffect } from "react"
 import { changePassword } from "../../api/authService"
 import { useNavigate } from "react-router-dom"
-import { FaBell, FaPalette, FaLock } from "react-icons/fa"
+import { FaPalette, FaLock } from "react-icons/fa"
+import toast from "react-hot-toast"
 
 function Settings() {
 
   const navigate = useNavigate()
-
-  const [notifications, setNotifications] = useState(
-    localStorage.getItem("notifications") === "true"
-  )
-
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem("darkMode") === "true"
-  )
 
   const [language, setLanguage] = useState(
     localStorage.getItem("language") || "ar"
@@ -24,35 +17,17 @@ function Settings() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [oldPassword, setOldPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
-  const [notificationsList, setNotificationsList] = useState([])
-
-  useEffect(() => {
-    localStorage.setItem("notifications", notifications)
-  }, [notifications])
-
-  useEffect(() => {
-    localStorage.setItem("darkMode", darkMode)
-    document.body.classList.toggle("dark", darkMode)
-  }, [darkMode])
 
   useEffect(() => {
     localStorage.setItem("language", language)
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr"
   }, [language])
 
-  useEffect(() => {
-    if (notifications) {
-      setNotificationsList([
-        "تم إضافة تقرير جديد",
-        "لديك جلسة غداً"
-      ])
-    } else {
-      setNotificationsList([])
-    }
-  }, [notifications])
-
   const handleChangePassword = async () => {
-    if (!oldPassword || !newPassword) return
+    if (!oldPassword || !newPassword) {
+      toast.error("املى البيانات")
+      return
+    }
 
     try {
       await changePassword({
@@ -63,10 +38,11 @@ function Settings() {
       setShowPasswordModal(false)
       setOldPassword("")
       setNewPassword("")
-      alert("تم التغيير ✅")
+
+      toast.success("تم تغيير كلمة المرور")
 
     } catch {
-      alert("خطأ ❌")
+      toast.error("فشل تغيير كلمة المرور")
     }
   }
 
@@ -82,38 +58,6 @@ function Settings() {
     <div className={dashboardStyles.specialistsPage}>
 
       <h2 className={dashboardStyles.pageTitle}>الإعدادات</h2>
-
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>
-          <FaBell />
-          الإشعارات
-        </div>
-
-        <div className={styles.card}>
-          <label className={styles.switch}>
-            <input
-              type="checkbox"
-              checked={notifications}
-              onChange={() => setNotifications(!notifications)}
-            />
-            <span className={styles.slider}></span>
-          </label>
-
-          <div>
-            <h4>تفعيل الإشعارات</h4>
-            <p>استقبال كل التحديثات</p>
-          </div>
-        </div>
-
-        {notificationsList.length > 0 && (
-          <div className={styles.notificationsBox}>
-            {notificationsList.map((n, i) => (
-              <p key={i}>{n}</p>
-            ))}
-          </div>
-        )}
-
-      </div>
 
       <div className={styles.section}>
         <div className={styles.sectionTitle}>
@@ -136,23 +80,6 @@ function Settings() {
             <p>تغيير لغة التطبيق</p>
           </div>
         </div>
-
-        <div className={styles.card}>
-          <label className={styles.switch}>
-            <input
-              type="checkbox"
-              checked={darkMode}
-              onChange={() => setDarkMode(!darkMode)}
-            />
-            <span className={styles.slider}></span>
-          </label>
-
-          <div>
-            <h4>الوضع الليلي</h4>
-            <p>تشغيل الوضع الداكن</p>
-          </div>
-        </div>
-
       </div>
 
       <div className={styles.section}>

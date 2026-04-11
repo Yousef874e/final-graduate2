@@ -33,7 +33,6 @@ function DashboardLayout() {
     (alerts?.childrenWithoutUpcomingAppointments || 0) +
     (alerts?.childrenWithLowAccuracy || 0)
 
-  // 🔥 Titles Mapping
   const titles = {
     "/dashboard/parent": "لوحة التحكم",
     "/dashboard/appointments": "الجدول الزمني",
@@ -46,13 +45,11 @@ function DashboardLayout() {
   }
 
   const currentTitle = titles[location.pathname] || "لوحة التحكم"
-
   const isDashboard = location.pathname === "/dashboard/parent"
 
   return (
     <div className={styles.dashboard}>
 
-      {/* SIDEBAR */}
       <div className={styles.sidebar}>
 
         <div className="logo-container">
@@ -81,6 +78,7 @@ function DashboardLayout() {
               <FaBook /> المكتبة
             </NavLink>
           </li>
+
           <li>
             <NavLink to="/dashboard/exercises">
               <FaDumbbell /> التمارين
@@ -92,6 +90,7 @@ function DashboardLayout() {
               <FaChartBar /> التقارير
             </NavLink>
           </li>
+
           <li>
             <NavLink to="/dashboard/chat">
               <FaComment /> الشات
@@ -111,19 +110,23 @@ function DashboardLayout() {
           </li>
 
           <li className={styles.logout}>
-            <NavLink to="/login">
+            <div
+              onClick={() => {
+                localStorage.clear()
+                navigate("/login")
+              }}
+              style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+            >
               <FaSignOutAlt /> تسجيل الخروج
-            </NavLink>
+            </div>
           </li>
 
         </ul>
 
       </div>
 
-      {/* MAIN */}
       <div className={styles.main}>
 
-        {/* HEADER */}
         <div className={styles.header}>
 
           <div className={styles.headerRight}>
@@ -138,7 +141,6 @@ function DashboardLayout() {
 
           <div className={styles.headerLeft}>
 
-            {/* NOTIFICATIONS */}
             <div style={{ position: "relative" }}>
               <FaBell
                 className={styles.iconCircle}
@@ -166,7 +168,6 @@ function DashboardLayout() {
               )}
             </div>
 
-            {/* PROFILE */}
             <div
               className={styles.userBox}
               onClick={() => navigate("/dashboard/profile")}
@@ -188,7 +189,6 @@ function DashboardLayout() {
 
         </div>
 
-        {/* CONTENT */}
         <Outlet />
 
       </div>
