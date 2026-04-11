@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react"
 import styles from "../../assets/dashboard.module.css"
-import { FaBell, FaPlay, FaUser } from "react-icons/fa"
+import { FaPlay } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
 import axiosClient from "../../api/axiosClient"
 import { useApp } from "../../Context/AppContext"
-import { getParentProfileImage } from "../../api/parentProfileService"
 import { getTreatmentPlans } from "../../api/treatmentPlansService"
 
 function ParentDashboard() {
@@ -13,14 +12,11 @@ function ParentDashboard() {
   const navigate = useNavigate()
   const { data } = useApp()
 
-  const [showNotifications, setShowNotifications] = useState(false)
   const [starting, setStarting] = useState(false)
-  const [profileImage, setProfileImage] = useState(null)
 
   const children = data?.children || []
   const appointments = data?.upcomingAppointments || []
   const overview = data?.overview || {}
-  const alerts = data?.alerts || {}
 
   const appointment = appointments[0]
   const child = children[0]
@@ -37,23 +33,6 @@ function ParentDashboard() {
       hour: "2-digit",
       minute: "2-digit"
     })
-  }
-
-  const notificationsCount =
-    (alerts?.childrenWithoutUpcomingAppointments || 0) +
-    (alerts?.childrenWithLowAccuracy || 0)
-
-  useEffect(() => {
-    fetchProfileImage()
-  }, [])
-
-  const fetchProfileImage = async () => {
-    try {
-      const res = await getParentProfileImage()
-      setProfileImage(res.url)
-    } catch {
-      setProfileImage(null)
-    }
   }
 
   const handleStartSession = async () => {
@@ -113,68 +92,9 @@ function ParentDashboard() {
   }
 
   return (
-    <div className={styles.main}>
+    <>
 
-      <div className={styles.header}>
-
-        <div className={styles.headerRight}>
-          <h3>لوحة التحكم</h3>
-          <p className={styles.welcome}>
-            مرحباً، {data?.parentName || "..."}
-          </p>
-        </div>
-
-        <div className={styles.headerLeft}>
-
-          <div style={{ position: "relative" }}>
-            <FaBell
-              className={styles.iconCircle}
-              onClick={() => setShowNotifications(!showNotifications)}
-            />
-
-            {notificationsCount > 0 && (
-              <span className={styles.badge}>
-                {notificationsCount}
-              </span>
-            )}
-
-            {showNotifications && (
-              <div className={styles.dropdown}>
-                {alerts?.childrenWithoutUpcomingAppointments > 0 && (
-                  <p>⚠️ في طفل بدون مواعيد</p>
-                )}
-                {alerts?.childrenWithLowAccuracy > 0 && (
-                  <p>📉 في طفل محتاج متابعة</p>
-                )}
-                {notificationsCount === 0 && (
-                  <p>لا يوجد إشعارات</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div
-            className={styles.userBox}
-            onClick={() => navigate("/dashboard/profile")}
-          >
-            <span>{data?.parentName || "..."}</span>
-
-            {profileImage ? (
-              <img
-                src={profileImage}
-                alt="profile"
-                className={styles.avatar}
-              />
-            ) : (
-              <FaUser className={styles.iconCircle}/>
-            )}
-
-          </div>
-
-        </div>
-
-      </div>
-
+      {/* HERO */}
       <div className={styles.hero}>
 
         <div className={styles.heroRight}>
@@ -221,6 +141,7 @@ function ParentDashboard() {
 
       </div>
 
+      {/* CARDS */}
       <div className={styles.cards}>
 
         <div className={styles.card}>
@@ -306,7 +227,7 @@ function ParentDashboard() {
 
       </div>
 
-    </div>
+    </>
   )
 }
 

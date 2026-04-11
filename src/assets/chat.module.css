@@ -1,0 +1,135 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 40px);
+  background: #f7f9fc;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* HEADER */
+.chatHeader {
+  padding: 15px 20px;
+  background: white;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+/* CHAT AREA */
+.chatBox {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* EMPTY */
+.empty {
+  text-align: center;
+  color: #999;
+  margin-top: 50px;
+}
+
+/* MESSAGES */
+.myMsg {
+  align-self: flex-end;
+  background: #0d9488;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 12px 12px 0 12px;
+  max-width: 70%;
+  word-break: break-word;
+  font-size: 14px;
+}
+
+.otherMsg {
+  align-self: flex-start;
+  background: white;
+  color: #333;
+  padding: 10px 15px;
+  border-radius: 12px 12px 12px 0;
+  max-width: 70%;
+  word-break: break-word;
+  font-size: 14px;
+  border: 1px solid #eee;
+}
+
+/* INPUT */
+.inputBox {
+  display: flex;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #eee;
+  gap: 10px;
+}
+
+.inputBox input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  outline: none;
+  font-size: 14px;
+}
+
+.inputBox input:focus {
+  border-color: #0d9488;
+}
+
+.inputBox button {
+  background: #0d9488;
+  color: white;
+  border: none;
+  padding: 0 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.inputBox button:hover {
+  background: #0f766e;
+}
+
+/* SCROLL */
+.chatBox::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chatBox::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .container {
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .chatHeader {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .chatBox {
+    padding: 15px;
+  }
+
+  .myMsg,
+  .otherMsg {
+    max-width: 85%;
+    font-size: 13px;
+  }
+
+  .inputBox {
+    padding: 8px;
+  }
+
+  .inputBox button {
+    padding: 0 15px;
+  }
+}

@@ -1,16 +1,17 @@
 import styles from "../../assets/dashboard.module.css"
 import reportStyles from "../../assets/reports.module.css"
 import { useEffect, useState } from "react"
-import { getMedicalReports, deleteMedicalReport } from "../../api/medicalReportsService"
-import { FaBell, FaUser, FaDownload, FaTrash, FaFilePdf } from "react-icons/fa"
+import { getMedicalReports, deleteMedicalReport, downloadMedicalReport } from "../../api/medicalReportsService"
+import { FaDownload, FaTrash, FaFilePdf, FaEye } from "react-icons/fa"
+import toast from "react-hot-toast"
 
 function Reports() {
 
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
+  const [previewUrl, setPreviewUrl] = useState(null)
 
   const childId = localStorage.getItem("childId")
-  const userName = localStorage.getItem("userName") || "User"
 
   useEffect(() => {
     fetchReports()
@@ -19,15 +20,9 @@ function Reports() {
   const fetchReports = async () => {
     try {
       const res = await getMedicalReports(childId)
-
-      setReports(
-        res.data?.items ||
-        res.data?.data?.items ||
-        []
-      )
-
-    } catch (err) {
-      console.log(err)
+      setReports(res.data?.items || res.data?.data?.items || [])
+    } catch {
+      toast.error("فشل تحميل التقارير")
     } finally {
       setLoading(false)
     }
@@ -35,43 +30,48 @@ function Reports() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("متأكد عايز تمسح التقرير؟")) return
-
     try {
       await deleteMedicalReport(id)
-      fetchReports()
-    } catch (err) {
-      console.log(err)
+      setReports(prev => prev.filter(r => r.id !== id))
+      toast.success("تم حذف التقرير")
+    } catch {
+      toast.error("فشل حذف التقرير")
+    }
+  }
+
+  const handleDownload = async (id) => {
+    try {
+      const blob = await downloadMedicalReport(id)
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "report.pdf"
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch {
+      toast.error("فشل تحميل التقرير")
+    }
+  }
+
+  const handlePreview = async (id) => {
+    try {
+      const blob = await downloadMedicalReport(id)
+      const url = window.URL.createObjectURL(blob)
+      setPreviewUrl(url)
+    } catch {
+      toast.error("فشل فتح التقرير")
     }
   }
 
   return (
     <div className={styles.specialistsPage}>
 
-      {/* 🔥 Top Bar */}
-      <div className={styles.topBar}>
-        <div className={styles.topRight}>
-          <h3>لوحة التحكم</h3>
-        </div>
-
-        <div className={styles.topLeft}>
-          <div className={styles.userBox}>
-            <span>{userName}</span>
-            <FaUser className={styles.iconCircle}/>
-          </div>
-
-          <div className={styles.iconWrapper}>
-            <FaBell />
-          </div>
-        </div>
-      </div>
-
-      {/* 🔥 Title */}
       <h2 className={styles.pageTitle}>التقارير الطبية</h2>
       <p className={styles.pageDesc}>
         جميع التقارير الطبية الخاصة بطفلك في مكان واحد
       </p>
 
-      {/* 🔥 List */}
       <div className={reportStyles.list}>
 
         {loading ? (
@@ -82,7 +82,6 @@ function Reports() {
           reports.map((item) => (
             <div key={item.id} className={reportStyles.card}>
 
-              {/* 🔥 Left */}
               <div className={reportStyles.left}>
 
                 <div className={reportStyles.icon}>
@@ -91,35 +90,28 @@ function Reports() {
 
                 <div>
                   <div className={reportStyles.titleRow}>
-                    <h4>{item.title}</h4>
-
-                    {/* 🔴 badge */}
+                    <h4>{item.notes || "تقرير طبي"}</h4>
                     <span className={reportStyles.badge}>جديد</span>
                   </div>
 
                   <p className={reportStyles.meta}>
-                    {new Date(item.createdAt).toLocaleDateString("ar-EG")}
+                    {new Date(item.createdAtUtc).toLocaleDateString("ar-EG")}
                   </p>
-
-                  <small className={reportStyles.doctor}>
-                    {item.doctorName || "بدون دكتور"}
-                  </small>
                 </div>
 
               </div>
 
-              {/* 🔥 Actions */}
               <div className={reportStyles.actions}>
 
-                <button
-                  onClick={() => window.open(item.fileUrl)}
-                >
+                <button onClick={() => handlePreview(item.id)}>
+                  <FaEye />
+                </button>
+
+                <button onClick={() => handleDownload(item.id)}>
                   <FaDownload />
                 </button>
 
-                <button
-                  onClick={() => handleDelete(item.id)}
-                >
+                <button onClick={() => handleDelete(item.id)}>
                   <FaTrash />
                 </button>
 
@@ -130,6 +122,14 @@ function Reports() {
         )}
 
       </div>
+
+      {previewUrl && (
+        <div className={reportStyles.previewOverlay} onClick={() => setPreviewUrl(null)}>
+          <div className={reportStyles.previewBox} onClick={(e) => e.stopPropagation()}>
+            <iframe src={previewUrl} title="preview" />
+          </div>
+        </div>
+      )}
 
     </div>
   )

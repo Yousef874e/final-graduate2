@@ -1,14 +1,13 @@
 import styles from "../../assets/settings.module.css"
 import dashboardStyles from "../../assets/dashboard.module.css"
 import { useState, useEffect } from "react"
-import { forgotPassword } from "../../api/authService"
+import { changePassword } from "../../api/authService"
 import { useNavigate } from "react-router-dom"
-import { FaBell, FaUser, FaPalette, FaLock } from "react-icons/fa"
+import { FaBell, FaPalette, FaLock } from "react-icons/fa"
 
 function Settings() {
 
   const navigate = useNavigate()
-  const userName = localStorage.getItem("userName") || "User"
 
   const [notifications, setNotifications] = useState(
     localStorage.getItem("notifications") === "true"
@@ -26,7 +25,6 @@ function Settings() {
   const [oldPassword, setOldPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [notificationsList, setNotificationsList] = useState([])
-  const [showDropdown, setShowDropdown] = useState(false)
 
   useEffect(() => {
     localStorage.setItem("notifications", notifications)
@@ -44,23 +42,29 @@ function Settings() {
 
   useEffect(() => {
     if (notifications) {
-      const data = [
+      setNotificationsList([
         "تم إضافة تقرير جديد",
         "لديك جلسة غداً"
-      ]
-      setNotificationsList(data)
+      ])
     } else {
       setNotificationsList([])
     }
   }, [notifications])
 
   const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword) return
+
     try {
-      await changePassword({ oldPassword, newPassword })
-      alert("تم التغيير ✅")
+      await changePassword({
+        currentPassword: oldPassword,
+        newPassword: newPassword
+      })
+
       setShowPasswordModal(false)
       setOldPassword("")
       setNewPassword("")
+      alert("تم التغيير ✅")
+
     } catch {
       alert("خطأ ❌")
     }
@@ -76,39 +80,6 @@ function Settings() {
 
   return (
     <div className={dashboardStyles.specialistsPage}>
-
-      <div className={dashboardStyles.topBar}>
-        <h3>لوحة التحكم</h3>
-
-        <div className={dashboardStyles.topLeft}>
-          <span>{userName}</span>
-          <FaUser />
-
-          <div
-            className={dashboardStyles.bellWrapper}
-            onClick={() => setShowDropdown(!showDropdown)}
-          >
-            <FaBell />
-
-            {notifications && notificationsList.length > 0 && (
-              <span className={dashboardStyles.badge}></span>
-            )}
-
-            {showDropdown && (
-              <div className={dashboardStyles.dropdown}>
-                {notificationsList.length === 0 ? (
-                  <p>لا يوجد إشعارات</p>
-                ) : (
-                  notificationsList.map((n, i) => (
-                    <p key={i}>{n}</p>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-
-        </div>
-      </div>
 
       <h2 className={dashboardStyles.pageTitle}>الإعدادات</h2>
 
@@ -127,11 +98,21 @@ function Settings() {
             />
             <span className={styles.slider}></span>
           </label>
+
           <div>
             <h4>تفعيل الإشعارات</h4>
             <p>استقبال كل التحديثات</p>
           </div>
         </div>
+
+        {notificationsList.length > 0 && (
+          <div className={styles.notificationsBox}>
+            {notificationsList.map((n, i) => (
+              <p key={i}>{n}</p>
+            ))}
+          </div>
+        )}
+
       </div>
 
       <div className={styles.section}>
@@ -149,6 +130,7 @@ function Settings() {
             <option value="ar">العربية</option>
             <option value="en">English</option>
           </select>
+
           <div>
             <h4>اللغة</h4>
             <p>تغيير لغة التطبيق</p>
@@ -164,11 +146,13 @@ function Settings() {
             />
             <span className={styles.slider}></span>
           </label>
+
           <div>
             <h4>الوضع الليلي</h4>
             <p>تشغيل الوضع الداكن</p>
           </div>
         </div>
+
       </div>
 
       <div className={styles.section}>
@@ -184,7 +168,10 @@ function Settings() {
           تغيير كلمة السر
         </button>
 
-        <button className={styles.deleteLink} onClick={handleDeleteAccount}>
+        <button
+          className={styles.deleteLink}
+          onClick={handleDeleteAccount}
+        >
           حذف الحساب
         </button>
       </div>
@@ -215,8 +202,13 @@ function Settings() {
             />
 
             <div className={styles.modalActions}>
-              <button onClick={handleChangePassword}>حفظ</button>
-              <button onClick={() => setShowPasswordModal(false)}>إلغاء</button>
+              <button onClick={handleChangePassword}>
+                حفظ
+              </button>
+
+              <button onClick={() => setShowPasswordModal(false)}>
+                إلغاء
+              </button>
             </div>
           </div>
         </div>

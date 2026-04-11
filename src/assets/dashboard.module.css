@@ -8,12 +8,6 @@
   background: #f6f8f9;
 }
 
-.sidebar {
-  width: 260px;
-  background: white;
-  border-left: 1px solid #eee;
-  padding: 30px 20px;
-}
 
 .logoBox {
   display: flex;
@@ -756,4 +750,21 @@
 .dropdown p {
   font-size: 13px;
   margin-bottom: 8px;
+}
+.layout {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  background: #F0F4F8;
+  direction: rtl;
+  font-family: 'Cairo', sans-serif;
+}
+
+.sidebar {
+  width: 210px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  border-right: 1px solid #eee;
 }

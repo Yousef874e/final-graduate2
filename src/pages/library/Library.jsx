@@ -2,156 +2,174 @@ import styles from "../../assets/dashboard.module.css"
 import libraryStyles from "../../assets/library.module.css"
 import { useEffect, useState } from "react"
 import { getExercises } from "../../api/exerciseService"
-import { FaBell, FaUser } from "react-icons/fa"
+import { getSessionsByChild } from "../../api/sessionsService"
+import { useNavigate } from "react-router-dom"
 
 function Library() {
 
   const [exercises, setExercises] = useState([])
+  const [sessions, setSessions] = useState([])
+  const [filtered, setFiltered] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState("all")
 
-  const userName = localStorage.getItem("userName") || "User"
+  const [search, setSearch] = useState("")
+  const [activeType, setActiveType] = useState("all")
+
+  const navigate = useNavigate()
+
+  const childId = localStorage.getItem("childId")
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getExercises()
-
-        const data = res.data?.data?.items || []
-
-        const mapped = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          type: item.exerciseType?.toLowerCase().includes("upper")
-            ? "video"
-            : "article",
-          mediaThumbnailUrl: item.mediaThumbnailUrl,
-          mediaUrl: item.mediaUrl
-        }))
-
-        setExercises(mapped)
-
-      } catch (err) {
-        console.log(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchData()
   }, [])
 
-  const filteredData = exercises.filter(item => {
-    if (filter === "all") return true
-    return item.type === filter
-  })
+  const fetchData = async () => {
+    try {
+      const [exData, sesData] = await Promise.all([
+        getExercises(),
+        getSessionsByChild(childId)
+      ])
+
+      setExercises(exData)
+      setSessions(sesData)
+      setFiltered(exData)
+
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+
+    let result = exercises.filter(item => item.isActive)
+
+    if (search) {
+      result = result.filter(item =>
+        item.name.toLowerCase().includes(search.toLowerCase())
+      )
+    }
+
+    if (activeType !== "all") {
+      result = result.filter(item =>
+        item.exerciseType === activeType
+      )
+    }
+
+    setFiltered(result)
+
+  }, [search, activeType, exercises])
+
+  const isCompleted = (exerciseId) => {
+    return sessions.some(
+      s => s.exerciseId === exerciseId && s.status === 4
+    )
+  }
+
+  const completedCount = exercises.filter(ex =>
+    sessions.some(s => s.exerciseId === ex.id && s.status === 4)
+  ).length
+
+  const progress = exercises.length
+    ? (completedCount / exercises.length) * 100
+    : 0
 
   return (
-    <div className={styles.specialistsPage}>
+    <div style={{ padding: "20px" }}>
 
-      {/* 🔥 Top Bar */}
-      <div className={styles.topBar}>
-        <div className={styles.topRight}>
-          <h3>لوحة التحكم</h3>
-        </div>
+      <h2 className={styles.pageTitle}>التمارين</h2>
 
-        <div className={styles.topLeft}>
-          <div className={styles.userBox}>
-            <span>{userName}</span>
-            <FaUser className={styles.iconCircle}/>
-          </div>
+      <input
+        type="text"
+        placeholder="ابحث عن تمرين..."
+        className={libraryStyles.search}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-          <div className={styles.iconWrapper}>
-            <FaBell />
-          </div>
-        </div>
-      </div>
-
-      {/* 🔥 Title */}
-      <h2 className={styles.pageTitle}>المكتبة والمصادر</h2>
-      <p className={styles.pageDesc}>
-        محتوى تعليمي لمساعدتك في رحلة العلاج
-      </p>
-
-      {/* 🔥 Tabs */}
       <div className={libraryStyles.tabs}>
+
         <button
-          className={filter === "all" ? libraryStyles.activeTab : ""}
-          onClick={() => setFilter("all")}
+          className={activeType === "all" ? libraryStyles.activeTab : ""}
+          onClick={() => setActiveType("all")}
         >
           الكل
         </button>
 
         <button
-          className={filter === "video" ? libraryStyles.activeTab : ""}
-          onClick={() => setFilter("video")}
+          className={activeType === "Physical" ? libraryStyles.activeTab : ""}
+          onClick={() => setActiveType("Physical")}
         >
-          فيديو
+          علاج طبيعي
         </button>
 
         <button
-          className={filter === "article" ? libraryStyles.activeTab : ""}
-          onClick={() => setFilter("article")}
+          className={activeType === "Speech" ? libraryStyles.activeTab : ""}
+          onClick={() => setActiveType("Speech")}
         >
-          مقالات
+          تخاطب
         </button>
-      </div>
-
-      {/* 🔥 Banner */}
-      <div className={libraryStyles.banner}>
-        <h2>سلسلة التأهيل الحركي المكثف</h2>
-        <p>كورس متكامل يشرح أهم التمارين المنزلية بشكل مبسط</p>
 
         <button
-          onClick={() => {
-            if (filteredData.length > 0) {
-              window.open(filteredData[0].mediaUrl)
-            }
-          }}
+          className={activeType === "Balance" ? libraryStyles.activeTab : ""}
+          onClick={() => setActiveType("Balance")}
         >
-          ابدأ المشاهدة الآن
+          توازن
         </button>
+
       </div>
 
-      {/* 🔥 Cards */}
-      <div className={libraryStyles.grid}>
+      <div className={libraryStyles.progressBox}>
+        <p>تمرين اليوم</p>
+        <div className={libraryStyles.progressBar}>
+          <div
+            className={libraryStyles.progressFill}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : filteredData.length === 0 ? (
-          <p>لا يوجد محتوى</p>
-        ) : (
-          filteredData.map((item)=>(
-            <div key={item.id} className={libraryStyles.card}>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className={libraryStyles.grid}>
 
-              <img
-                src={item.mediaThumbnailUrl}
-                alt=""
-                onError={(e)=> e.target.src = "https://via.placeholder.com/300"}
-              />
+          {filtered.map(item => {
 
-              <div className={libraryStyles.cardContent}>
+            const completed = isCompleted(item.id)
+
+            return (
+              <div key={item.id} className={libraryStyles.card}>
+
+                <img
+                  src={item.mediaThumbnailUrl || "/default.png"}
+                  alt={item.name}
+                  className={libraryStyles.image}
+                />
+
                 <h4>{item.name}</h4>
 
-                <p className={libraryStyles.meta}>
-                  {item.type === "video" ? "فيديو" : "مقال"}
+                <p className={libraryStyles.desc}>
+                  {item.description?.slice(0, 60) || "لا يوجد وصف"}
                 </p>
 
                 <button
-                  className={libraryStyles.btn}
-                  onClick={() => window.open(item.mediaUrl)}
+                  className={completed ? libraryStyles.doneBtn : styles.startBtn}
+                  onClick={() => !completed && navigate(`/exercise/${item.id}`)}
                 >
-                  عرض المحتوى
+                  {completed ? "مكتمل" : "ابدأ التمرين"}
                 </button>
+
               </div>
+            )
+          })}
 
-            </div>
-          ))
-        )}
-
-      </div>
+        </div>
+      )}
 
     </div>
   )
 }
+
 export default Library

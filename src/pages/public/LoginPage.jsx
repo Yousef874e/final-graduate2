@@ -131,7 +131,7 @@ function LoginPage() {
 
           <button className="google-btn" onClick={handleGoogleLogin}>
             <FaGoogle />
-            تسجيل الدخول بجوجل
+            تسجيل  بجوجل
           </button>
 
           <p className="register">

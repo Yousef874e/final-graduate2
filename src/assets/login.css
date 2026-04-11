@@ -216,3 +216,28 @@
   cursor: pointer;
   font-size: 18px;
 }
+.google-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid #ddd;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 25px;
+  font-weight: 600;
+   color: #2c4b54;
+    font-family: 'Tajawal', 'Segoe UI', sans-serif;
+    cursor: pointer;
+}
+.google-btn svg{
+  font-size: 18px;
+}
+.google-btn :hover{
+  background: #f4faf9;
+  border-color: #cbdbe0;
+  transform: translateY(-1px);
+}
