@@ -12,5 +12,5 @@ export const sendMessage = async (data) => {
 
 export const markMessageRead = async (messageId) => {
   const res = await axiosClient.patch(`/Messages/${messageId}/read`)
-  return res.data
+  return res.data || true
 }

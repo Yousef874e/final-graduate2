@@ -98,7 +98,15 @@ function AdminUsers() {
     try {
       const r1 = await getMedicalReports(user.id)
       const r2 = await getProgressReports(user.id)
-      setReports([...(r1.items || []), ...(r2.items || [])])
+
+      const medical = r1?.items || []
+      const progress = r2?.items || []
+
+      setReports([
+        ...medical.map(r => ({ ...r, type: "medical" })),
+        ...progress.map(r => ({ ...r, type: "progress" }))
+      ])
+
     } catch {
       toast.error("فشل تحميل التقارير ❌")
     }
@@ -187,27 +195,27 @@ function AdminUsers() {
 
       {showFilter && (
         <div className="filter-box">
-  <button
-    className={activeFilter === "all" ? "active" : ""}
-    onClick={() => setActiveFilter("all")}
-  >
-    الكل
-  </button>
+          <button
+            className={activeFilter === "all" ? "active" : ""}
+            onClick={() => setActiveFilter("all")}
+          >
+            الكل
+          </button>
 
-  <button
-    className={activeFilter === "active" ? "active" : ""}
-    onClick={() => setActiveFilter("active")}
-  >
-    مفعل
-  </button>
+          <button
+            className={activeFilter === "active" ? "active" : ""}
+            onClick={() => setActiveFilter("active")}
+          >
+            مفعل
+          </button>
 
-  <button
-    className={activeFilter === "inactive" ? "active" : ""}
-    onClick={() => setActiveFilter("inactive")}
-  >
-    غير مفعل
-  </button>
-</div>
+          <button
+            className={activeFilter === "inactive" ? "active" : ""}
+            onClick={() => setActiveFilter("inactive")}
+          >
+            غير مفعل
+          </button>
+        </div>
       )}
 
       <input
@@ -277,7 +285,10 @@ function AdminUsers() {
           <div className="modal-content">
             <h3>التقارير</h3>
             {reports.map((r, i) => (
-              <div key={i} className="item">{r.title || "تقرير"}</div>
+              <div key={r.id || i} className="item">
+                {r.type === "medical" && (r.notes || "تقرير طبي")}
+                {r.type === "progress" && (r.summary || "تقرير تقدم")}
+              </div>
             ))}
             <button onClick={() => setShowReports(false)}>إغلاق</button>
           </div>

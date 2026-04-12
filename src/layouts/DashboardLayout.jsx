@@ -21,13 +21,16 @@ function DashboardLayout() {
 
   const navigate = useNavigate()
   const location = useLocation()
-  const { data } = useApp()
+  const { data, profileImage } = useApp()
 
   const [showNotifications, setShowNotifications] = useState(false)
 
   const alerts = data?.alerts || {}
-  const userName = data?.parentName || "User"
-  const profileImage = data?.parentProfileImageUrl
+
+  const userName =
+    data?.parentName ||
+    data?.specialistName ||
+    "User"
 
   const notificationsCount =
     (alerts?.childrenWithoutUpcomingAppointments || 0) +
@@ -74,37 +77,37 @@ function DashboardLayout() {
           </li>
 
           <li>
-            <NavLink to="/dashboard/library">
+            <NavLink to="/dashboard/library" className={({ isActive }) => isActive ? styles.active : ""}>
               <FaBook /> المكتبة
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/exercises">
+            <NavLink to="/dashboard/exercises" className={({ isActive }) => isActive ? styles.active : ""}>
               <FaDumbbell /> التمارين
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/reports">
+            <NavLink to="/dashboard/reports" className={({ isActive }) => isActive ? styles.active : ""}>
               <FaChartBar /> التقارير
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/chat">
+            <NavLink to="/dashboard/chat" className={({ isActive }) => isActive ? styles.active : ""}>
               <FaComment /> الشات
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/settings">
+            <NavLink to="/dashboard/settings" className={({ isActive }) => isActive ? styles.active : ""}>
               <FaCog /> الإعدادات
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/profile">
+            <NavLink to="/dashboard/profile" className={({ isActive }) => isActive ? styles.active : ""}>
               <FaUser /> الملف الشخصي
             </NavLink>
           </li>
@@ -113,7 +116,7 @@ function DashboardLayout() {
             <div
               onClick={() => {
                 localStorage.clear()
-                navigate("/login")
+                navigate("/login", { replace: true })
               }}
               style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
             >

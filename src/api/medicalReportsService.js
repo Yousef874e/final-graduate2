@@ -12,12 +12,10 @@ export const createMedicalReport = async (data) => {
 
 export const deleteMedicalReport = async (id) => {
   const res = await axiosClient.delete(`/MedicalReports/${id}`)
-  return res.data
+  return res.data || true
 }
 
 export const downloadMedicalReport = async (id) => {
-  const res = await axiosClient.get(`/MedicalReports/${id}/download`, {
-    responseType: "blob"
-  })
+  const res = await axiosClient.get(`/MedicalReports/${id}/download`)
   return res.data
 }

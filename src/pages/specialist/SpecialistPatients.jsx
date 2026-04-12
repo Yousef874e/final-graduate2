@@ -19,6 +19,7 @@ function SpecialistPatients() {
 
   const children = data?.childrenSnapshot || []
   const [patients, setPatients] = useState([])
+  const [search, setSearch] = useState("")
 
   const getStatus = (score) => {
     if (score >= 80) return "تحسن ملحوظ"
@@ -34,6 +35,7 @@ function SpecialistPatients() {
 
   useEffect(() => {
     const loadPatients = async () => {
+
       const result = await Promise.all(
         children.map(async (p) => {
           try {
@@ -43,7 +45,7 @@ function SpecialistPatients() {
 
             return {
               ...p,
-              image: res.data?.url
+              image: res.data?.url || null
             }
 
           } catch {
@@ -59,21 +61,30 @@ function SpecialistPatients() {
     }
 
     if (children.length) loadPatients()
+
   }, [children])
+
+  const filteredPatients = patients.filter(p =>
+    p.childName?.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className={styles.container}>
 
       <div className={styles.header}>
         <div className={styles.searchBox}>
-          <input placeholder="بحث..." />
+          <input
+            placeholder="بحث..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
           <FaSearch />
         </div>
       </div>
 
       <div className={styles.grid}>
 
-        {patients.map((p) => (
+        {filteredPatients.map((p) => (
           <div key={p.childId} className={styles.card}>
 
             <div className={styles.top}>
@@ -81,7 +92,7 @@ function SpecialistPatients() {
 
               <div className={styles.user}>
                 <img
-                  src={p.image || ""}
+                  src={p.image || "/avatar.png"}
                   alt=""
                 />
 

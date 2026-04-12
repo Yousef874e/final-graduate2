@@ -1,0 +1,120 @@
+.container {
+  padding: 20px;
+  direction: rtl;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.headerCard {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 25px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* COVER */
+.cover {
+  height: 160px;
+  background: linear-gradient(135deg, #00bfa6, #008e7a);
+}
+
+/* PROFILE INFO */
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+
+  margin-top: -60px;
+  position: relative;
+  z-index: 2;
+}
+
+/* AVATAR */
+.avatarWrapper {
+  position: relative;
+}
+
+.avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 5px solid white;
+  object-fit: cover;
+  background: #eee;
+}
+
+/* UPLOAD INPUT */
+.fileInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* TEXT */
+.profileInfo h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.profileInfo p {
+  margin: 5px 0 0;
+  color: #777;
+  font-size: 14px;
+}
+
+/* ===== GRID ===== */
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .profileInfo {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .avatar {
+    width: 90px;
+    height: 90px;
+  }
+
+  .cover {
+    height: 130px;
+  }
+
+}

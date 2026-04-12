@@ -14,21 +14,18 @@ export const AppProvider = ({ children }) => {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const role = localStorage.getItem("role")
+  const [role] = useState(localStorage.getItem("role"))
 
   const loadData = async () => {
     try {
       setLoading(true)
 
-      let dashboardRes
+      const dashboardRes =
+        role === "Specialist"
+          ? await getSpecialistDashboard()
+          : await getParentDashboard()
 
-      if (role === "Specialist") {
-        dashboardRes = await getSpecialistDashboard()
-      } else {
-        dashboardRes = await getParentDashboard()
-      }
-
-      const dashboardData = dashboardRes?.data || dashboardRes || {}
+      const dashboardData = dashboardRes || {}
       setData(dashboardData)
 
       if (role === "Specialist") {
@@ -47,21 +44,26 @@ export const AppProvider = ({ children }) => {
       }
 
       if (role !== "Specialist") {
+
         const childId = dashboardData?.children?.[0]?.childId
 
-        if (childId) {
-          const [sessionsRes, appointmentsRes] = await Promise.all([
-            getSessionsByChild(childId),
-            getAppointmentsByChildId(childId)
-          ])
-
-          setSessions(sessionsRes?.data?.data?.items || [])
-          setAppointments(appointmentsRes?.data?.data?.items || [])
+        if (!childId) {
+          setSessions([])
+          setAppointments([])
+          return
         }
+
+        const [sessionsRes, appointmentsRes] = await Promise.all([
+          getSessionsByChild(childId),
+          getAppointmentsByChildId(childId)
+        ])
+
+        setSessions(sessionsRes?.items || sessionsRes || [])
+        setAppointments(appointmentsRes?.items || appointmentsRes || [])
       }
 
     } catch (err) {
-      console.log(err)
+      console.error(err)
     } finally {
       setLoading(false)
     }

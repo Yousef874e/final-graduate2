@@ -3,8 +3,8 @@ import dashboardStyles from "../../assets/dashboard.module.css"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { getChildProfile, updateChildProfile, setChildImage } from "../../api/childrenService"
+import { getParentProfileImage, setParentProfileImage } from "../../api/parentProfileService"
 import { uploadImage } from "../../api/mediaService"
-import { setParentProfileImage } from "../../api/parentProfileService"
 import toast from "react-hot-toast"
 
 function Profile() {
@@ -13,7 +13,7 @@ function Profile() {
   const childId = localStorage.getItem("childId")
 
   const [child, setChild] = useState({})
-  const [parent, setParent] = useState({})
+  const [parentImage, setParentImage] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,15 +22,11 @@ function Profile() {
 
   const fetchData = async () => {
     try {
-      const res = await getChildProfile(childId)
+      const childRes = await getChildProfile(childId)
+      setChild(childRes || {})
 
-      setChild(res)
-
-      setParent({
-        fullName: res?.parentFullName || "",
-        phoneNumber: res?.parentPhoneNumber || "",
-        address: res?.parentAddress || ""
-      })
+      const img = await getParentProfileImage()
+      setParentImage(img?.url || null)
 
     } catch {
       toast.error("فشل تحميل البيانات")
@@ -46,13 +42,6 @@ function Profile() {
     })
   }
 
-  const handleParentChange = (e) => {
-    setParent({
-      ...parent,
-      [e.target.name]: e.target.value
-    })
-  }
-
   const handleSave = async () => {
     try {
       await updateChildProfile(childId, {
@@ -62,7 +51,7 @@ function Profile() {
         diagnosis: child.diagnosis
       })
 
-      toast.success("تم الحفظ")
+      toast.success("تم الحفظ بنجاح")
     } catch {
       toast.error("فشل الحفظ")
     }
@@ -79,7 +68,7 @@ function Profile() {
     try {
       const res = await uploadImage(formData)
       await setChildImage(childId, res.id)
-      fetchData()
+      await fetchData()
       toast.success("تم تغيير صورة الطفل")
     } catch {
       toast.error("فشل رفع الصورة")
@@ -97,6 +86,7 @@ function Profile() {
     try {
       const res = await uploadImage(formData)
       await setParentProfileImage({ mediaId: res.id })
+      await fetchData()
       toast.success("تم تغيير الصورة")
     } catch {
       toast.error("فشل رفع الصورة")
@@ -115,38 +105,10 @@ function Profile() {
           حفظ التغييرات
         </button>
       </div>
-      <br />
 
       <div className={styles.container}>
 
         <div className={styles.left}>
-
-          <div className={styles.card}>
-            <h3>بيانات ولي الأمر</h3>
-
-            <div className={styles.grid}>
-              <input
-                name="fullName"
-                value={parent.fullName}
-                onChange={handleParentChange}
-                placeholder="الاسم بالكامل"
-              />
-
-              <input
-                name="phoneNumber"
-                value={parent.phoneNumber}
-                onChange={handleParentChange}
-                placeholder="رقم الهاتف"
-              />
-
-              <input
-                name="address"
-                value={parent.address}
-                onChange={handleParentChange}
-                placeholder="العنوان"
-              />
-            </div>
-          </div>
 
           <div className={styles.card}>
             <h3>بيانات الطفل</h3>
@@ -169,10 +131,10 @@ function Profile() {
               />
 
               <input
+                type="date"
                 name="dateOfBirth"
-                value={child.dateOfBirth || ""}
+                value={child.dateOfBirth?.split("T")[0] || ""}
                 onChange={handleChildChange}
-                placeholder="تاريخ الميلاد"
               />
 
               <input
@@ -192,20 +154,17 @@ function Profile() {
           <div className={styles.profileCard}>
 
             <img
-              src={child.imageUrl || "/avatar.png"}
+              src={parentImage || "/avatar.png"}
               className={styles.avatar}
             />
 
-            <h3>{parent.fullName}</h3>
-            <p>ولي أمر</p>
-            <br /><br />
+            <h3>ولي الأمر</h3>
+            <p>Parent</p>
 
             <label className={styles.uploadBtn}>
               تغيير الصورة
               <input type="file" hidden onChange={handleParentImage} />
             </label>
-            <br />
-            <br />
 
             <button
               className={styles.logout}

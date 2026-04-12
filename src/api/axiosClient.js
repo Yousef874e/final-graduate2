@@ -25,12 +25,28 @@ const processQueue = (error, token = null) => {
   failedQueue = []
 }
 
+const logout = () => {
+  localStorage.clear()
+  window.location.href = "/login"
+}
+
 axiosClient.interceptors.response.use(
   res => res,
   async (error) => {
     const original = error.config
 
-    if (error.response?.status === 401 && !original._retry) {
+    if (
+      error.response?.status === 401 &&
+      !original._retry &&
+      original.url !== "/Auth/refresh-token"
+    ) {
+      const refreshToken = localStorage.getItem("refreshToken")
+
+      if (!refreshToken) {
+        logout()
+        return Promise.reject(error)
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -44,8 +60,6 @@ axiosClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken")
-
         const res = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/api/v1/Auth/refresh-token`,
           { refreshToken }
@@ -57,17 +71,15 @@ axiosClient.interceptors.response.use(
         localStorage.setItem("accessToken", newAccessToken)
         localStorage.setItem("refreshToken", newRefreshToken)
 
-        axiosClient.defaults.headers.Authorization = `Bearer ${newAccessToken}`
+        axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`
 
         processQueue(null, newAccessToken)
 
         original.headers.Authorization = `Bearer ${newAccessToken}`
         return axiosClient(original)
-
       } catch (err) {
         processQueue(err)
-        localStorage.clear()
-        window.location.href = "/login"
+        logout()
         return Promise.reject(err)
       } finally {
         isRefreshing = false

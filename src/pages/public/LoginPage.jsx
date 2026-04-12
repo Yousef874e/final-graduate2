@@ -19,7 +19,7 @@ function LoginPage() {
 
   const handleLogin = async () => {
 
-    if (!email || !password) {
+    if (!email.trim() || !password.trim()) {
       toast.error("من فضلك املأ البيانات ❌")
       return
     }
@@ -29,31 +29,33 @@ function LoginPage() {
 
       const data = await login({ email, password })
 
-      localStorage.setItem("accessToken", data.accessToken)
-      localStorage.setItem("refreshToken", data.refreshToken)
-
-      const role = data.roles?.[0]
-      localStorage.setItem("role", role)
-
       if (data.requiresPasswordChange) {
         toast("لازم تغير كلمة المرور 🔐")
         navigate("/reset-password")
         return
       }
 
+      localStorage.setItem("accessToken", data.accessToken)
+      localStorage.setItem("refreshToken", data.refreshToken)
+
+      const role = data.roles?.[0]
+
+      if (!role) {
+        toast.error("Role غير معروف ❌")
+        return
+      }
+
+      localStorage.setItem("role", role)
+
       toast.success("تم تسجيل الدخول ✅")
 
-      setTimeout(() => {
-        if (role === "Admin") {
-          navigate("/dashboard/admin")
-        } else if (role === "Parent") {
-          navigate("/dashboard/parent")
-        } else if (role === "Specialist") {
-          navigate("/dashboard/specialist")
-        } else {
-          toast.error("Role غير معروف ❌")
-        }
-      }, 500)
+      if (role === "Admin") {
+        navigate("/dashboard/admin")
+      } else if (role === "Parent") {
+        navigate("/dashboard/parent")
+      } else if (role === "Specialist") {
+        navigate("/dashboard/specialist")
+      }
 
     } catch (err) {
 

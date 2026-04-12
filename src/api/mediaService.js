@@ -1,8 +1,12 @@
 import axiosClient from "./axiosClient"
-export const uploadImage = async (formData, onProgress) => {
-  const res = await axiosClient.post("/Media/upload/image", formData, {
+
+const upload = async (url, formData, onProgress) => {
+  const res = await axiosClient.post(url, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    },
     onUploadProgress: (e) => {
-      if (onProgress) {
+      if (onProgress && e.total) {
         const percent = Math.round((e.loaded * 100) / e.total)
         onProgress(percent)
       }
@@ -10,33 +14,25 @@ export const uploadImage = async (formData, onProgress) => {
   })
   return res.data
 }
-export const uploadVideo = async (formData, onProgress) => {
-  const res = await axiosClient.post("/Media/upload/video", formData, {
-    onUploadProgress: (e) => {
-      if (onProgress) {
-        const percent = Math.round((e.loaded * 100) / e.total)
-        onProgress(percent)
-      }
-    }
-  })
-  return res.data
+
+export const uploadImage = (formData, onProgress) => {
+  return upload("/Media/upload/image", formData, onProgress)
 }
-export const uploadFile = async (formData, onProgress) => {
-  const res = await axiosClient.post("/Media/upload", formData, {
-    onUploadProgress: (e) => {
-      if (onProgress) {
-        const percent = Math.round((e.loaded * 100) / e.total)
-        onProgress(percent)
-      }
-    }
-  })
-  return res.data
+
+export const uploadVideo = (formData, onProgress) => {
+  return upload("/Media/upload/video", formData, onProgress)
 }
+
+export const uploadFile = (formData, onProgress) => {
+  return upload("/Media/upload", formData, onProgress)
+}
+
 export const getMediaPaged = async (params) => {
   const res = await axiosClient.get("/Media/paged", { params })
   return res.data
 }
+
 export const deleteMedia = async (id) => {
   const res = await axiosClient.delete(`/Media/${id}`)
-  return res.data
+  return res.data || true
 }

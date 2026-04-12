@@ -49,7 +49,7 @@ function ChildImage() {
   const handleUpload = async () => {
 
     if (!file) {
-      toast.error("اختار صورة ❌")
+      toast.error("اختار صورة الأول ❌")
       return
     }
 
@@ -62,11 +62,12 @@ function ChildImage() {
 
     try {
       setLoading(true)
+      setProgress(0)
 
       const formData = new FormData()
       formData.append("file", file)
       formData.append("category", 2)
-      formData.append("childId", null)
+      formData.append("childId", "")
 
       const uploadRes = await uploadImage(formData, setProgress)
 
@@ -86,14 +87,15 @@ function ChildImage() {
     } catch (err) {
 
       const errorMsg =
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.title ||
+        err?.response?.data?.errors?.[0] ||
+        err?.response?.data?.title ||
         "فيه خطأ ❌"
 
       toast.error(errorMsg)
 
     } finally {
       setLoading(false)
+      setProgress(0)
     }
   }
 

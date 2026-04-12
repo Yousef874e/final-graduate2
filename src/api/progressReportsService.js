@@ -1,11 +1,11 @@
 import axiosClient from "./axiosClient"
 
 export const generateReport = async (data) => {
-  const res = await axiosClient.post("/progressReports/generate", data)
+  const res = await axiosClient.post("/ProgressReports/generate", data)
   return res.data
 }
 
-export const getProgressReports = async (childId) => {
-  const res = await axiosClient.get(`/progressReports/${childId}`)
+export const getProgressReports = async (childId, params) => {
+  const res = await axiosClient.get(`/ProgressReports/child/${childId}`, { params })
   return res.data
 }

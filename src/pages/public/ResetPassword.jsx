@@ -12,7 +12,7 @@ function ResetPassword() {
   const [searchParams] = useSearchParams()
 
   const email = searchParams.get("email")
-  const token = searchParams.get("token")
+  const token = decodeURIComponent(searchParams.get("token") || "")
 
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -21,22 +21,79 @@ function ResetPassword() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
+  const isStrongPassword = (pass) =>
+    /[A-Z]/.test(pass) &&
+    /[a-z]/.test(pass) &&
+    /[0-9]/.test(pass)
+
+  if (!email || !token) {
+    return (
+      <div className="login">
+
+        <div className="login-right">
+          <div className="form-box">
+
+            <div className="signup-header">
+              <div className="logo-container">
+                <div className="logo-circle">
+                  <img src={logo} alt="logo" />
+                </div>
+                <span className="logo-text">رفيق</span>
+              </div>
+
+              <h2 className="signup-title">الرابط غير صالح ❌</h2>
+              <p className="signup-subtitle">
+                من فضلك اطلب رابط جديد لإعادة تعيين كلمة المرور
+              </p>
+            </div>
+
+            <button
+              className="login-btns"
+              onClick={() => navigate("/forgot-password")}
+            >
+              إعادة المحاولة
+            </button>
+
+          </div>
+        </div>
+
+        <div className="login-left">
+          <div className="overlay">
+
+            <h2>
+              صحة طفلك
+              <br />
+              في أيدي أمينة.
+            </h2>
+
+            <p>
+              انضم إلى مجتمع رفيق واستفد من أحدث التقنيات
+              في متابعة وعلاج الأطفال.
+            </p>
+
+            <div className="features">
+              <div className="feature">✔ خطط علاجية معتمدة</div>
+              <div className="feature">✔ تواصل مع الأخصائيين</div>
+              <div className="feature">✔ تقارير دورية</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    )
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (!email || !token) {
-      toast.error("الرابط غير صالح ❌")
-      navigate("/login")
-      return
-    }
 
     if (!password || !confirmPassword) {
       toast.error("املى كل البيانات ❌")
       return
     }
 
-    if (password.length < 8) {
-      toast.error("كلمة المرور لازم 8 حروف ❌")
+    if (password.length < 8 || !isStrongPassword(password)) {
+      toast.error("كلمة المرور ضعيفة ❌")
       return
     }
 
@@ -56,15 +113,13 @@ function ResetPassword() {
 
       toast.success("تم تغيير كلمة السر ✅")
 
-      setTimeout(() => {
-        navigate("/login")
-      }, 1500)
+      navigate("/login")
 
     } catch (err) {
 
       const errorMsg =
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.title ||
+        err?.response?.data?.errors?.[0] ||
+        err?.response?.data?.title ||
         "الكود غير صحيح ❌"
 
       toast.error(errorMsg)

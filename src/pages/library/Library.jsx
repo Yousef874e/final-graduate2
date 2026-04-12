@@ -1,13 +1,13 @@
 import styles from "../../assets/dashboard.module.css"
 import libraryStyles from "../../assets/library.module.css"
 import { useEffect, useState } from "react"
-import { getExercises } from "../../api/exerciseService"
+import { getTreatmentPlans } from "../../api/treatmentPlansService"
 import { getSessionsByChild } from "../../api/sessionsService"
 import { useNavigate } from "react-router-dom"
 
 function Library() {
 
-  const [exercises, setExercises] = useState([])
+  const [plans, setPlans] = useState([])
   const [sessions, setSessions] = useState([])
   const [filtered, setFiltered] = useState([])
   const [loading, setLoading] = useState(true)
@@ -16,7 +16,6 @@ function Library() {
   const [activeType, setActiveType] = useState("all")
 
   const navigate = useNavigate()
-
   const childId = localStorage.getItem("childId")
 
   useEffect(() => {
@@ -25,17 +24,28 @@ function Library() {
 
   const fetchData = async () => {
     try {
-      const [exData, sesData] = await Promise.all([
-        getExercises(),
+
+      if (!childId) {
+        setPlans([])
+        setSessions([])
+        return
+      }
+
+      const [planRes, sessionRes] = await Promise.all([
+        getTreatmentPlans(childId),
         getSessionsByChild(childId)
       ])
 
-      setExercises(exData)
-      setSessions(sesData)
-      setFiltered(exData)
+      const plansData = planRes?.items || planRes?.data?.items || []
+
+      setPlans(plansData)
+      setSessions(sessionRes?.items || [])
+
+      const exercises = plansData.flatMap(p => p.exercises || [])
+      setFiltered(exercises)
 
     } catch (err) {
-      console.log(err)
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -43,23 +53,23 @@ function Library() {
 
   useEffect(() => {
 
-    let result = exercises.filter(item => item.isActive)
+    let exercises = plans.flatMap(p => p.exercises || [])
 
     if (search) {
-      result = result.filter(item =>
-        item.name.toLowerCase().includes(search.toLowerCase())
+      exercises = exercises.filter(item =>
+        item.exerciseName?.toLowerCase().includes(search.toLowerCase())
       )
     }
 
     if (activeType !== "all") {
-      result = result.filter(item =>
-        item.exerciseType === activeType
+      exercises = exercises.filter(item =>
+        String(item.exerciseType) === activeType
       )
     }
 
-    setFiltered(result)
+    setFiltered(exercises)
 
-  }, [search, activeType, exercises])
+  }, [search, activeType, plans])
 
   const isCompleted = (exerciseId) => {
     return sessions.some(
@@ -67,12 +77,14 @@ function Library() {
     )
   }
 
-  const completedCount = exercises.filter(ex =>
-    sessions.some(s => s.exerciseId === ex.id && s.status === 4)
+  const allExercises = plans.flatMap(p => p.exercises || [])
+
+  const completedCount = allExercises.filter(ex =>
+    sessions.some(s => s.exerciseId === ex.exerciseId && s.status === 4)
   ).length
 
-  const progress = exercises.length
-    ? (completedCount / exercises.length) * 100
+  const progress = allExercises.length
+    ? (completedCount / allExercises.length) * 100
     : 0
 
   return (
@@ -98,30 +110,23 @@ function Library() {
         </button>
 
         <button
-          className={activeType === "Physical" ? libraryStyles.activeTab : ""}
-          onClick={() => setActiveType("Physical")}
+          className={activeType === "1" ? libraryStyles.activeTab : ""}
+          onClick={() => setActiveType("1")}
         >
           علاج طبيعي
         </button>
 
         <button
-          className={activeType === "Speech" ? libraryStyles.activeTab : ""}
-          onClick={() => setActiveType("Speech")}
+          className={activeType === "2" ? libraryStyles.activeTab : ""}
+          onClick={() => setActiveType("2")}
         >
           تخاطب
-        </button>
-
-        <button
-          className={activeType === "Balance" ? libraryStyles.activeTab : ""}
-          onClick={() => setActiveType("Balance")}
-        >
-          توازن
         </button>
 
       </div>
 
       <div className={libraryStyles.progressBox}>
-        <p>تمرين اليوم</p>
+        <p>تقدم التمارين</p>
         <div className={libraryStyles.progressBar}>
           <div
             className={libraryStyles.progressFill}
@@ -137,26 +142,31 @@ function Library() {
 
           {filtered.map(item => {
 
-            const completed = isCompleted(item.id)
+            const completed = isCompleted(item.exerciseId)
 
             return (
               <div key={item.id} className={libraryStyles.card}>
 
                 <img
                   src={item.mediaThumbnailUrl || "/default.png"}
-                  alt={item.name}
+                  alt=""
                   className={libraryStyles.image}
                 />
 
-                <h4>{item.name}</h4>
+                <h4>{item.exerciseName}</h4>
 
                 <p className={libraryStyles.desc}>
-                  {item.description?.slice(0, 60) || "لا يوجد وصف"}
+                  عدد المرات: {item.expectedReps} × {item.sets}
                 </p>
 
                 <button
                   className={completed ? libraryStyles.doneBtn : styles.startBtn}
-                  onClick={() => !completed && navigate(`/exercise/${item.id}`)}
+                  onClick={() =>
+                    !completed &&
+                    navigate(`/exercise/${item.exerciseId}`, {
+                      state: { treatmentPlanExerciseId: item.id }
+                    })
+                  }
                 >
                   {completed ? "مكتمل" : "ابدأ التمرين"}
                 </button>

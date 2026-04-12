@@ -29,7 +29,12 @@ function ChildInfoStep1() {
 
   const handleSubmit = async () => {
 
-    if (!form.fullName || !form.dateOfBirth || form.gender === "" || !form.diagnosis) {
+    if (
+      !form.fullName.trim() ||
+      !form.dateOfBirth ||
+      form.gender === "" ||
+      !form.diagnosis.trim()
+    ) {
       toast.error("املى كل البيانات ❌")
       return
     }
@@ -62,8 +67,8 @@ function ChildInfoStep1() {
     } catch (err) {
 
       const errorMsg =
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.title ||
+        err?.response?.data?.errors?.[0] ||
+        err?.response?.data?.title ||
         "فيه خطأ ❌"
 
       toast.error(errorMsg)
@@ -96,6 +101,7 @@ function ChildInfoStep1() {
             className="child-input"
             name="fullName"
             placeholder="الاسم الكامل"
+            value={form.fullName}
             onChange={handleChange}
           />
 
@@ -104,12 +110,14 @@ function ChildInfoStep1() {
             type="date"
             name="dateOfBirth"
             max={today}
+            value={form.dateOfBirth}
             onChange={handleChange}
           />
 
           <select
             className="child-input"
             name="gender"
+            value={form.gender}
             onChange={handleChange}
           >
             <option value="">اختر الجنس</option>
@@ -122,6 +130,7 @@ function ChildInfoStep1() {
             className="child-input"
             name="diagnosis"
             placeholder="التشخيص"
+            value={form.diagnosis}
             onChange={handleChange}
           />
 

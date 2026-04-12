@@ -16,7 +16,7 @@ function ForgotPassword() {
 
   const handleSubmit = async () => {
 
-    if (!email) {
+    if (!email.trim()) {
       toast.error("من فضلك أدخل البريد الإلكتروني ❌")
       return
     }
@@ -33,12 +33,11 @@ function ForgotPassword() {
 
       toast.success("راجع بريدك الإلكتروني لإعادة تعيين كلمة السر 📧")
 
-      setTimeout(() => {
-        navigate("/login")
-      }, 1500)
+      navigate("/login")
 
-    } catch (err) {
+    } catch {
       toast.success("راجع بريدك الإلكتروني لإعادة تعيين كلمة السر 📧")
+      navigate("/login")
     } finally {
       setLoading(false)
     }

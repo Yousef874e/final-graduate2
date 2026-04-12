@@ -7,10 +7,10 @@ export const getSpecialistProfileImage = async () => {
 
 export const setSpecialistProfileImage = async (mediaId) => {
   const res = await axiosClient.put("/Specialist/profile-image", { mediaId })
-  return res.data
+  return res.data || true
 }
 
 export const deleteSpecialistProfileImage = async () => {
   const res = await axiosClient.delete("/Specialist/profile-image")
-  return res.data
+  return res.data || true
 }

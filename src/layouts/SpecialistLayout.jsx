@@ -22,13 +22,12 @@ function SpecialistLayout() {
 
   const navigate = useNavigate()
   const location = useLocation()
-  const { data } = useApp()
+  const { data, profileImage } = useApp()
 
   const [showNotifications, setShowNotifications] = useState(false)
 
   const alerts = data?.alerts || {}
   const userName = data?.specialistName || "Doctor"
-  const profileImage = data?.profileImageUrl
 
   const notificationsCount =
     (alerts?.childrenWithoutUpcomingAppointments || 0) +

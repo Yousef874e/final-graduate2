@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import styles from "../../assets/dashboard.module.css"
 import { FaPlay } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
-import axiosClient from "../../api/axiosClient"
 import { useApp } from "../../Context/AppContext"
 import { getTreatmentPlans } from "../../api/treatmentPlansService"
+import { startSession } from "../../api/sessionsService"
 
 function ParentDashboard() {
 
@@ -37,7 +37,7 @@ function ParentDashboard() {
 
   const handleStartSession = async () => {
 
-    if (!child?.id) {
+    if (!child?.childId) {
       toast.error("لا يوجد طفل ❌")
       return
     }
@@ -45,8 +45,8 @@ function ParentDashboard() {
     try {
       setStarting(true)
 
-      const plans = await getTreatmentPlans(child.id)
-      const plan = plans?.[0] || plans?.items?.[0]
+      const plans = await getTreatmentPlans(child.childId)
+      const plan = plans?.items?.[0]
 
       if (!plan) {
         toast.error("لا توجد خطة علاج ❌")
@@ -60,13 +60,13 @@ function ParentDashboard() {
         return
       }
 
-      const res = await axiosClient.post("/Sessions/start", {
-        childId: child.id,
+      const res = await startSession({
+        childId: child.childId,
         exerciseId: exercise.exerciseId,
         treatmentPlanExerciseId: exercise.id
       })
 
-      const sessionId = res.data?.id
+      const sessionId = res?.id
 
       if (!sessionId) {
         toast.error("فشل بدء التمرين ❌")
@@ -80,8 +80,8 @@ function ParentDashboard() {
     } catch (err) {
 
       const errorMsg =
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.title ||
+        err?.response?.data?.errors?.[0] ||
+        err?.response?.data?.title ||
         "فشل بدء التمرين ❌"
 
       toast.error(errorMsg)
@@ -93,7 +93,6 @@ function ParentDashboard() {
 
   return (
     <>
-
       {/* HERO */}
       <div className={styles.hero}>
 
@@ -112,7 +111,7 @@ function ParentDashboard() {
               className={styles.outlineBtn}
               onClick={() => {
                 if (appointment) {
-                  navigate(`/dashboard/sessions?appointmentId=${appointment.id}`)
+                  navigate(`/dashboard/sessions?appointmentId=${appointment.appointmentId}`)
                 } else {
                   toast.error("لا يوجد جلسة حالياً ❌")
                 }
@@ -190,7 +189,7 @@ function ParentDashboard() {
 
         <div className={styles.card}>
           <h4>
-            {child ? child.fullName : "لا يوجد طفل"}
+            {child ? child.childName : "لا يوجد طفل"}
           </h4>
 
           {child && (
@@ -210,7 +209,7 @@ function ParentDashboard() {
               </div>
 
               <span className={styles.good}>
-                {child.averageAccuracyScore >= 70
+                {(child.averageAccuracyScore || 0) >= 70
                   ? "جيد جدًا"
                   : "يحتاج متابعة"}
               </span>

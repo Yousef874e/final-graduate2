@@ -142,8 +142,9 @@
   background: #eef2f5;
   border: none;
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: 18px;
   cursor: pointer;
+  font-size: 22px;
 }
 
 .filter-box {
@@ -151,6 +152,14 @@
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
+  font-size: 18px;
+}
+.activeFilter button {
+  font-size: 18px;
+  
+}
+filter-box button {
+font-size: 18px;
 }
 
 .search {

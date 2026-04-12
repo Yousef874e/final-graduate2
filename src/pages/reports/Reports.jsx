@@ -1,7 +1,11 @@
 import styles from "../../assets/dashboard.module.css"
 import reportStyles from "../../assets/reports.module.css"
 import { useEffect, useState } from "react"
-import { getMedicalReports, deleteMedicalReport, downloadMedicalReport } from "../../api/medicalReportsService"
+import {
+  getMedicalReports,
+  deleteMedicalReport,
+  downloadMedicalReport
+} from "../../api/medicalReportsService"
 import { FaDownload, FaTrash, FaFilePdf, FaEye } from "react-icons/fa"
 import toast from "react-hot-toast"
 
@@ -20,7 +24,7 @@ function Reports() {
   const fetchReports = async () => {
     try {
       const res = await getMedicalReports(childId)
-      setReports(res.data?.items || res.data?.data?.items || [])
+      setReports(res?.items || [])
     } catch {
       toast.error("فشل تحميل التقارير")
     } finally {
@@ -41,8 +45,7 @@ function Reports() {
 
   const handleDownload = async (id) => {
     try {
-      const blob = await downloadMedicalReport(id)
-      const url = window.URL.createObjectURL(blob)
+      const url = await downloadMedicalReport(id)
       const link = document.createElement("a")
       link.href = url
       link.download = "report.pdf"
@@ -56,8 +59,7 @@ function Reports() {
 
   const handlePreview = async (id) => {
     try {
-      const blob = await downloadMedicalReport(id)
-      const url = window.URL.createObjectURL(blob)
+      const url = await downloadMedicalReport(id)
       setPreviewUrl(url)
     } catch {
       toast.error("فشل فتح التقرير")
@@ -124,8 +126,14 @@ function Reports() {
       </div>
 
       {previewUrl && (
-        <div className={reportStyles.previewOverlay} onClick={() => setPreviewUrl(null)}>
-          <div className={reportStyles.previewBox} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={reportStyles.previewOverlay}
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div
+            className={reportStyles.previewBox}
+            onClick={(e) => e.stopPropagation()}
+          >
             <iframe src={previewUrl} title="preview" />
           </div>
         </div>

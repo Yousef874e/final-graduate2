@@ -8,7 +8,6 @@ import { MdEmail } from "react-icons/md"
 import { FcGoogle } from "react-icons/fc"
 import { IoArrowForward } from "react-icons/io5"
 import { registerParent, registerSpecialist } from "../../api/authService"
-import { getChildren } from "../../api/childrenService"
 import { setAuth } from "../../utils/auth"
 import toast from "react-hot-toast"
 
@@ -99,32 +98,20 @@ function RegisterPage() {
         })
       }
 
-      if (!res?.accessToken) {
-        toast.error("فشل إنشاء الحساب ❌")
+      if (res.requiresPasswordChange) {
+        toast("لازم تغير كلمة المرور 🔐")
+        navigate("/reset-password")
         return
       }
 
       setAuth(res)
 
-      const roleName = res?.roles?.[0] || ""
+      const roleName = res?.roles?.[0]
+
+      toast.success("تم إنشاء الحساب وتسجيل الدخول ✅")
 
       if (roleName === "Parent") {
-
-        try {
-          const childRes = await getChildren()
-          const children = childRes?.items || []
-
-          if (children.length > 0) {
-            localStorage.setItem("childId", children[0].id)
-            navigate("/dashboard/parent")
-          } else {
-            navigate("/child-info-step1")
-          }
-
-        } catch {
-          navigate("/child-info-step1")
-        }
-
+        navigate("/child-info-step1")
       } else if (roleName === "Specialist") {
         navigate("/dashboard/specialist")
       } else if (roleName === "Admin") {
@@ -132,8 +119,6 @@ function RegisterPage() {
       } else {
         toast.error("Role غير معروف ❌")
       }
-
-      toast.success("تم إنشاء الحساب وتسجيل الدخول ✅")
 
     } catch (err) {
 

@@ -1,10 +1,7 @@
+import Chat from "../chat/Chat"
+
 function SpecialistChat() {
-  return (
-    <div>
-      <h2>Chat</h2>
-      <p>This is the Chat page for Specialists.</p>
-    </div>
-  );
+  return <Chat />
 }
 
-export default SpecialistChat;
+export default SpecialistChat

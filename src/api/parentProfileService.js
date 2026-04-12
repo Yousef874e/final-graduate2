@@ -7,10 +7,10 @@ export const getParentProfileImage = async () => {
 
 export const setParentProfileImage = async (mediaId) => {
   const res = await axiosClient.put("/Parent/profile-image", { mediaId })
-  return res.data
+  return res.data || true
 }
 
 export const deleteParentProfileImage = async () => {
   const res = await axiosClient.delete("/Parent/profile-image")
-  return res.data
+  return res.data || true
 }
