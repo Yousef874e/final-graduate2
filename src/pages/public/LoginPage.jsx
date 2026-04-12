@@ -32,33 +32,35 @@ function LoginPage() {
       localStorage.setItem("accessToken", data.accessToken)
       localStorage.setItem("refreshToken", data.refreshToken)
 
+      const role = data.roles?.[0]
+      localStorage.setItem("role", role)
+
       if (data.requiresPasswordChange) {
         toast("لازم تغير كلمة المرور 🔐")
-        setLoading(false)
         navigate("/reset-password")
-        return
-      }
-
-      const role = data.roles?.[0]
-
-      if (role === "Admin") {
-        navigate("/dashboard/admin")
-      } else if (role === "Parent") {
-        navigate("/dashboard/parent")
-      } else if (role === "Specialist") {
-        navigate("/dashboard/specialist")
-      } else {
-        toast.error("Role غير معروف ❌")
         return
       }
 
       toast.success("تم تسجيل الدخول ✅")
 
+      setTimeout(() => {
+        if (role === "Admin") {
+          navigate("/dashboard/admin")
+        } else if (role === "Parent") {
+          navigate("/dashboard/parent")
+        } else if (role === "Specialist") {
+          navigate("/dashboard/specialist")
+        } else {
+          toast.error("Role غير معروف ❌")
+        }
+      }, 500)
+
     } catch (err) {
 
       const errorMsg =
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.title ||
+        err?.response?.data?.errors?.[0] ||
+        err?.response?.data?.title ||
+        err?.message ||
         "فشل تسجيل الدخول ❌"
 
       toast.error(errorMsg)

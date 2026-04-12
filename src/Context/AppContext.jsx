@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react"
-import { getParentDashboard } from "../api/dashboardService"
+import { getParentDashboard, getSpecialistDashboard } from "../api/dashboardService"
 import { getSessionsByChild } from "../api/sessionsService"
 import { getAppointmentsByChildId } from "../api/appointmentsService"
+import { getSpecialistProfileImage } from "../api/specialistProfileService"
 
 const AppContext = createContext()
 
@@ -13,30 +14,50 @@ export const AppProvider = ({ children }) => {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const role = localStorage.getItem("role")
+
   const loadData = async () => {
     try {
       setLoading(true)
 
-      // 1. Dashboard
-      const dashboardRes = await getParentDashboard()
+      let dashboardRes
+
+      if (role === "Specialist") {
+        dashboardRes = await getSpecialistDashboard()
+      } else {
+        dashboardRes = await getParentDashboard()
+      }
+
       const dashboardData = dashboardRes?.data || dashboardRes || {}
-
       setData(dashboardData)
-      setProfileImage(dashboardData?.parentProfileImageUrl || null)
 
-      // 2. childId
-      const childId = dashboardData?.children?.[0]?.childId
+      if (role === "Specialist") {
+        try {
+          const img = await getSpecialistProfileImage()
+          setProfileImage(img?.url || null)
+        } catch {
+          setProfileImage(null)
+        }
+      } else {
+        setProfileImage(
+          dashboardData?.parentProfileImageUrl ||
+          dashboardData?.profileImageUrl ||
+          null
+        )
+      }
 
-      if (childId) {
+      if (role !== "Specialist") {
+        const childId = dashboardData?.children?.[0]?.childId
 
-        // 3. Sessions + Appointments
-        const [sessionsRes, appointmentsRes] = await Promise.all([
-          getSessionsByChild(childId),
-          getAppointmentsByChildId(childId) // ✅ الاسم الصح
-        ])
+        if (childId) {
+          const [sessionsRes, appointmentsRes] = await Promise.all([
+            getSessionsByChild(childId),
+            getAppointmentsByChildId(childId)
+          ])
 
-        setSessions(sessionsRes?.data?.data?.items || [])
-        setAppointments(appointmentsRes?.data?.data?.items || [])
+          setSessions(sessionsRes?.data?.data?.items || [])
+          setAppointments(appointmentsRes?.data?.data?.items || [])
+        }
       }
 
     } catch (err) {
@@ -57,7 +78,8 @@ export const AppProvider = ({ children }) => {
       sessions,
       appointments,
       loading,
-      loadData
+      loadData,
+      role
     }}>
       {children}
     </AppContext.Provider>

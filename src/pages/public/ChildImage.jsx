@@ -65,7 +65,8 @@ function ChildImage() {
 
       const formData = new FormData()
       formData.append("file", file)
-      formData.append("category", "2")
+      formData.append("category", 2)
+      formData.append("childId", null)
 
       const uploadRes = await uploadImage(formData, setProgress)
 

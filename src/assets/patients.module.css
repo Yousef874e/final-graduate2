@@ -1,0 +1,168 @@
+.container {
+  padding: 25px;
+  direction: rtl;
+  background: #f7f9fb;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.addBtn {
+  background: #00bfa6;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.addBtn:hover {
+  background: #00a98f;
+}
+
+.searchBox {
+  position: relative;
+  width: 300px;
+}
+
+.searchBox input {
+  width: 100%;
+  padding: 10px 40px 10px 10px;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  outline: none;
+  font-size: 13px;
+}
+
+.searchBox svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user h4 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.user p {
+  font-size: 12px;
+  color: #777;
+}
+
+.status {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.good {
+  background: #d4f8e8;
+  color: #1ca67a;
+}
+
+.normal {
+  background: #e7f0ff;
+  color: #3b82f6;
+}
+
+.bad {
+  background: #ffe5e5;
+  color: #e53935;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.actions div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: #777;
+  font-size: 12px;
+  transition: 0.3s;
+}
+
+.actions div:hover {
+  color: #00bfa6;
+}
+
+.actions svg {
+  font-size: 16px;
+}
+
+/* 🔥 Responsive */
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .searchBox {
+    width: 100%;
+  }
+}
