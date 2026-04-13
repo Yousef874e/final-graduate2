@@ -7,13 +7,9 @@
   text-align:right;
   gap:60px;
 }
-
-/* النص */
 .hero-text{
   width:50%;
 }
-
-/* البادج */
 .badge{
   display:inline-block;
   background:#e6f4f2;
@@ -24,7 +20,6 @@
   margin-bottom:15px;
 }
 
-/* العنوان */
 .hero-text h1{
   font-size:60px;
   font-weight:900;
@@ -32,7 +27,6 @@
   color:#1f1f1f;
 }
 
-/* الأخضر */
 .green{
   color:#2fb5a8;
   position:relative;
@@ -48,8 +42,6 @@
   background:#f2a24c;
   border-radius:5px;
 }
-
-/* البراجراف */
 .hero-text p{
   margin-top:20px;
   font-size:18px;
@@ -57,8 +49,6 @@
   line-height:2;
   max-width:520px;
 }
-
-/* الأزرار */
 .hero-buttons{
   margin-top:30px;
   display:flex;
@@ -85,36 +75,28 @@
   font-size:16px;
   cursor:pointer;
 }
-
-/* النجوم + users */
 .hero-rating{
   margin-top:25px;
   display:flex;
   align-items:center;
   gap:15px;
 }
-
-/* النجوم */
 .stars{
   display:flex;
   gap:5px;
   color:#f2a24c;
   font-size:18px;
 }
-
-/* النص */
 .trust{
   color:#777;
   font-size:14px;
 }
 
-/* المستخدمين */
 .users{
   display:flex;
   align-items:center;
 }
 
-/* أيقونة المستخدم */
 .user{
   width:35px;
   height:35px;
@@ -127,7 +109,6 @@
   color:#555;
 }
 
-/* +2k */
 .count{
   width:35px;
   height:35px;
@@ -140,13 +121,11 @@
   margin-left:-10px;
 }
 
-/* الصورة */
 .hero-image{
   position:relative;
   width:50%;
 }
 
-/* الصورة */
 .main-img{
   width:100%;
   max-width:550px;
@@ -154,7 +133,6 @@
   box-shadow:0 20px 60px rgba(0,0,0,0.15);
 }
 
-/* الكروت */
 .hero-card{
   position:absolute;
   background:white;
@@ -186,7 +164,6 @@
 
 /* ================== Responsive ================== */
 
-/* تابلت */
 @media (max-width: 992px) {
 
   .hero{
@@ -235,7 +212,6 @@
 }
 
 
-/* موبايل */
 @media (max-width: 576px) {
 
   .hero{

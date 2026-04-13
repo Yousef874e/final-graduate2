@@ -12,7 +12,6 @@
   background: #ffffff;
 }
 
-/* ========== القسم الأيمن (النموذج) ========== */
 .signup-right {
   flex: 1;
   display: flex;
@@ -27,8 +26,6 @@
   max-width: 400px;
   margin: 0 auto;
 }
-
-/* الهيدر */
 .signup-header {
   text-align: right;
   margin-bottom: 28px;
@@ -81,7 +78,6 @@
   font-weight: 500;
 }
 
-/* أزرار تبديل الدور */
 .role-switch {
   display: flex;
   background: #f1f5f9;
@@ -159,7 +155,6 @@
   font-size: 13px;
 }
 
-/* الزر الرئيسي */
 .main-btn {
   width: 100%;
   padding: 14px;
@@ -190,7 +185,6 @@
   transform: translateY(0);
 }
 
-/* الفاصل */
 .split-line {
   text-align: center;
   margin: 22px 0 18px;
@@ -224,8 +218,6 @@
   z-index: 1;
   color: #6f8f96;
 }
-
-/* أزرار التواصل الاجتماعي */
 .social-box {
   display: flex;
   gap: 12px;
@@ -259,8 +251,6 @@
   border-color: #cbdbe0;
   transform: translateY(-1px);
 }
-
-/* رابط تسجيل الدخول */
 .login-redirect {
   margin-top: 20px;
   text-align: center;
@@ -280,8 +270,6 @@
   text-decoration: underline;
   opacity: 0.8;
 }
-
-/* ========== القسم الأيسر (الجانب التوضيحي) ========== */
 .signup-left {
   flex: 1;
   background: #eaf4f3;
@@ -319,8 +307,6 @@
   font-weight: 500;
 }
 
-/* ========== تحسينات إضافية ========== */
-/* إضافة شارة المجتمع */
 .signup-left::before {
   content: "✨";
   position: absolute;
@@ -329,8 +315,6 @@
   font-size: 32px;
   opacity: 0.3;
 }
-
-/* تأثيرات حركية */
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -345,8 +329,6 @@
 .signup-box {
   animation: fadeUp 0.5s ease-out;
 }
-
-/* ========== تصميم متجاوب ========== */
 @media (max-width: 1024px) {
   .signup-box {
     max-width: 380px;
@@ -431,7 +413,6 @@
   }
 }
 
-/* دعم الشاشات الصغيرة جداً */
 @media (max-width: 360px) {
   .role-btn {
     font-size: 12px;
@@ -446,8 +427,6 @@
     width: 100%;
   }
 }
-
-/* تحسين للطباعة */
 @media print {
   .signup-container {
     display: block;

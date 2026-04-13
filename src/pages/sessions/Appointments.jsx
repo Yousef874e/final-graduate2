@@ -45,7 +45,7 @@ function Sessions() {
       id: a?.id,
       type: "appointment",
       title: "جلسة علاج طبيعي",
-      doctor: a?.specialistUserId || "غير معروف",
+      doctor: a?.specialistName || "غير معروف",
       time: a?.scheduledAtUtc
     })),
     ...sessions.map(s => ({
@@ -71,7 +71,7 @@ function Sessions() {
       .sort((a, b) => new Date(a.time) - new Date(b.time))
   }, [mergedData, selectedDay, month, year])
 
-  const now = new Date()
+  const now = useMemo(() => new Date(), [])
 
   const nextAppointment = useMemo(() => {
     return appointments
@@ -136,10 +136,10 @@ function Sessions() {
             </div>
 
             <div className={sessionStyles.calendarBox}>
-              {days.map(d=>(
+              {days.map(d => (
                 <div
                   key={d}
-                  onClick={()=> setSelectedDay(d)}
+                  onClick={() => setSelectedDay(d)}
                   className={`${sessionStyles.day} ${
                     selectedDay === d ? sessionStyles.activeDay : ""
                   }`}
@@ -161,11 +161,11 @@ function Sessions() {
                 لا توجد مواعيد
               </div>
             ) : (
-              filteredData.map((item)=>{
+              filteredData.map((item) => {
 
                 const isActive =
-                  (item.type === "session" && item.id == sessionId) ||
-                  (item.type === "appointment" && item.id == appointmentId)
+                  (item.type === "session" && item.id === Number(sessionId)) ||
+                  (item.type === "appointment" && item.id === Number(appointmentId))
 
                 return (
                   <div

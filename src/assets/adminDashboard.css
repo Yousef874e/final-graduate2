@@ -399,8 +399,6 @@ font-size: 18px;
 .filter-btn:hover {
   background: #00796b;
 }
-
-/* filter box */
 .filter-box {
   display: flex;
   gap: 10px;
@@ -423,21 +421,18 @@ font-size: 18px;
   font-size: 14px;
 }
 
-/* hover */
 .filter-box button:hover {
   background: #009688;
   color: #fff;
   border-color: #009688;
 }
 
-/* active */
 .filter-box button.active {
   background: #009688;
   color: #fff;
   border-color: #009688;
 }
 
-/* 📱 responsive */
 @media (max-width: 768px) {
   .filter-box {
     justify-content: center;

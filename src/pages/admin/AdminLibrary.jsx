@@ -42,6 +42,8 @@ function AdminLibrary() {
   }
 
   const uploadMedia = async () => {
+    if (!form.file) return null
+
     const data = new FormData()
     data.append("file", form.file)
     data.append("category", 1)
@@ -88,7 +90,7 @@ function AdminLibrary() {
         exerciseType: Number(form.exerciseType),
         description: form.description,
         mediaId,
-        isActive: true
+        isActive: selectedExercise.isActive
       })
 
       toast.success("تم التعديل ✅")
@@ -129,6 +131,12 @@ function AdminLibrary() {
     setShowModal(false)
     setIsEdit(false)
     setSelectedExercise(null)
+    setForm({
+      name: "",
+      exerciseType: "",
+      description: "",
+      file: null
+    })
   }
 
   const filtered = exercises.filter(ex => {
@@ -136,13 +144,12 @@ function AdminLibrary() {
 
     if (activeFilter === "all") return matchSearch
 
-    return matchSearch && ex.exerciseType === activeFilter
+    return matchSearch && ex.exerciseType === Number(activeFilter)
   })
 
   return (
     <div className="library-page">
 
-      {/* TOP BAR */}
       <div className="top-bar">
 
         <button className="add-btn" onClick={openCreate}>
@@ -157,29 +164,13 @@ function AdminLibrary() {
         />
       </div>
 
-      {/* FILTERS */}
       <div className="filters">
-        <button
-          className={activeFilter === "all" ? "active" : ""}
-          onClick={() => setActiveFilter("all")}
-        >
-          الكل
-        </button>
-
-        <button onClick={() => setActiveFilter(1)}>
-          علاج طبيعي
-        </button>
-
-        <button onClick={() => setActiveFilter(2)}>
-          نطق
-        </button>
-
-        <button onClick={() => setActiveFilter(3)}>
-          تكامل حسي
-        </button>
+        <button onClick={() => setActiveFilter("all")}>الكل</button>
+        <button onClick={() => setActiveFilter(1)}>علاج طبيعي</button>
+        <button onClick={() => setActiveFilter(2)}>نطق</button>
+        <button onClick={() => setActiveFilter(3)}>تكامل حسي</button>
       </div>
 
-      {/* GRID */}
       <div className="grid">
         {filtered.map((ex) => (
           <div className="card" key={ex.id}>
@@ -191,15 +182,12 @@ function AdminLibrary() {
             <h3>{ex.name}</h3>
             <p className="desc">{ex.description}</p>
 
-            <button className="edit-btn" onClick={() => openEdit(ex)}>
-              تعديل
-            </button>
+            <button onClick={() => openEdit(ex)}>تعديل</button>
 
           </div>
         ))}
       </div>
 
-      {/* MODAL */}
       {showModal && (
         <div className="modal">
           <div className="modal-content">
@@ -213,7 +201,7 @@ function AdminLibrary() {
             />
 
             <select
-              value={form.exerciseType || ""}
+              value={form.exerciseType}
               onChange={(e) => setForm({ ...form, exerciseType: e.target.value })}
             >
               <option value="">نوع التمرين</option>
@@ -233,16 +221,11 @@ function AdminLibrary() {
               onChange={(e) => setForm({ ...form, file: e.target.files[0] })}
             />
 
-            <button
-              className="save-btn"
-              onClick={isEdit ? handleUpdate : handleCreate}
-            >
-              {isEdit ? "حفظ التعديل" : "إضافة"}
+            <button onClick={isEdit ? handleUpdate : handleCreate}>
+              {isEdit ? "حفظ" : "إضافة"}
             </button>
 
-            <button className="close-btn" onClick={closeModal}>
-              إغلاق
-            </button>
+            <button onClick={closeModal}>إغلاق</button>
 
           </div>
         </div>

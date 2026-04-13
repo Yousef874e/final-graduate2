@@ -9,8 +9,6 @@
   direction: rtl;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
-
-/* الهيدر */
 .doctors-top {
   display: flex;
   justify-content: space-between;
@@ -20,7 +18,6 @@
   gap: 20px;
 }
 
-/* النص */
 .doctors-text {
   max-width: 550px;
 }
@@ -50,8 +47,6 @@
   line-height: 1.6;
   margin: 0;
 }
-
-/* زرار عرض الكل */
 .view-all {
   border: 1px solid #e5e7eb;
   padding: 12px 28px;
@@ -69,15 +64,11 @@
   background: #f9fafb;
   transform: translateY(-2px);
 }
-
-/* 🔥 الجريد */
 .doctors-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 28px;
 }
-
-/* 🔥 الكارت */
 .doctor-card {
   background: white;
   border-radius: 24px;
@@ -93,8 +84,6 @@
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
   border-color: #e5e7eb;
 }
-
-/* 🔥 الصورة */
 .doctor-img {
   width: 100px;
   height: 100px;
@@ -111,8 +100,6 @@
   height: 100%;
   object-fit: cover;
 }
-
-/* الاونلاين */
 .online {
   width: 14px;
   height: 14px;
@@ -124,24 +111,18 @@
   border: 2px solid white;
   box-shadow: 0 0 0 1px #e5e7eb;
 }
-
-/* الاسم */
 .doctor-card h3 {
   margin: 12px 0 6px;
   font-size: 18px;
   font-weight: 700;
   color: #1f2937;
 }
-
-/* التخصص */
 .special {
   color: #2fb5a8;
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 12px;
 }
-
-/* النجوم */
 .stars {
   color: #fbbf24;
   margin: 12px 0;
@@ -150,8 +131,6 @@
   gap: 4px;
   font-size: 14px;
 }
-
-/* زرار الحجز */
 .book {
   width: 100%;
   padding: 12px;
@@ -172,8 +151,6 @@
   color: white;
   transform: translateY(-2px);
 }
-
-/* استجابة للشاشات */
 @media (max-width: 1024px) {
   .doctors-grid {
     grid-template-columns: repeat(2, 1fr);

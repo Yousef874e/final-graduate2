@@ -128,7 +128,7 @@
   }
 }
 
-/* 📱 Small phones */
+
 @media (max-width: 480px) {
   .videoBox {
     height: 180px;

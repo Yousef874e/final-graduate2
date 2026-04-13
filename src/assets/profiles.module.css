@@ -5,7 +5,7 @@
   min-height: 100vh;
 }
 
-/* ===== HEADER ===== */
+
 .headerCard {
   background: white;
   border-radius: 20px;
@@ -15,13 +15,12 @@
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-/* COVER */
+
 .cover {
   height: 160px;
   background: linear-gradient(135deg, #00bfa6, #008e7a);
 }
 
-/* PROFILE INFO */
 .profileInfo {
   display: flex;
   align-items: center;
@@ -33,7 +32,6 @@
   z-index: 2;
 }
 
-/* AVATAR */
 .avatarWrapper {
   position: relative;
 }
@@ -46,16 +44,12 @@
   object-fit: cover;
   background: #eee;
 }
-
-/* UPLOAD INPUT */
 .fileInput {
   position: absolute;
   inset: 0;
   opacity: 0;
   cursor: pointer;
 }
-
-/* TEXT */
 .profileInfo h2 {
   margin: 0;
   font-size: 20px;
@@ -67,15 +61,12 @@
   color: #777;
   font-size: 14px;
 }
-
-/* ===== GRID ===== */
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 20px;
 }
 
-/* CARD */
 .card {
   background: white;
   padding: 20px;

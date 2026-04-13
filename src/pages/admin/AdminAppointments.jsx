@@ -1,3 +1,4 @@
+import "../../assets/adminAppointments.css"
 import { useEffect, useState } from "react"
 import {
   getAppointmentsByChildId,
@@ -6,7 +7,6 @@ import {
   completeAppointment
 } from "../../api/appointmentsService"
 import { getChildren } from "../../api/childrenService"
-import "../../assets/adminAppointments.css"
 import toast from "react-hot-toast"
 
 export default function AdminAppointments() {
@@ -34,13 +34,19 @@ export default function AdminAppointments() {
   const loadData = async () => {
     try {
       const c = await getChildren()
-      const kids = c.data || []
+      const kids = c.items || []
       setChildren(kids)
 
-      if (kids.length > 0) {
-        const a = await getAppointmentsByChildId(kids[0].id)
-        setAppointments(a.items || [])
-      }
+      const requests = kids.map(child =>
+        getAppointmentsByChildId(child.id)
+      )
+
+      const results = await Promise.all(requests)
+
+      const allAppointments = results.flatMap(r => r.items || [])
+
+      setAppointments(allAppointments)
+
     } catch {
       toast.error("فشل تحميل البيانات")
     }
@@ -105,11 +111,32 @@ export default function AdminAppointments() {
       })
 
       loadData()
+
     } catch {
       toast.error("فشل إضافة الجلسة ❌")
     }
 
     setLoading(false)
+  }
+
+  const handleCancel = async (id) => {
+    try {
+      await cancelAppointment(id)
+      toast.success("تم الإلغاء")
+      loadData()
+    } catch {
+      toast.error("فشل الإلغاء")
+    }
+  }
+
+  const handleComplete = async (id) => {
+    try {
+      await completeAppointment(id)
+      toast.success("تم إنهاء الجلسة")
+      loadData()
+    } catch {
+      toast.error("فشل إنهاء الجلسة")
+    }
   }
 
   return (
@@ -158,8 +185,8 @@ export default function AdminAppointments() {
               <p>{time.toLocaleTimeString()}</p>
 
               <div className="actions">
-                <button onClick={() => cancelAppointment(a.id)}>إلغاء</button>
-                <button onClick={() => completeAppointment(a.id)}>إنهاء</button>
+                <button onClick={() => handleCancel(a.id)}>إلغاء</button>
+                <button onClick={() => handleComplete(a.id)}>إنهاء</button>
               </div>
             </div>
           )

@@ -1,6 +1,6 @@
 import "../../assets/adminReports.css"
 import { useEffect, useState } from "react"
-import { FaDownload, FaPlus, FaEye } from "react-icons/fa"
+import { FaDownload, FaPlus } from "react-icons/fa"
 import toast from "react-hot-toast"
 
 import { getChildren } from "../../api/childrenService"
@@ -21,18 +21,8 @@ function AdminReports() {
   })
 
   useEffect(() => {
-    loadReports()
     loadChildren()
   }, [])
-
-  const loadReports = async () => {
-    try {
-      const res = await getMedicalReports()
-      setReports(res.items || [])
-    } catch {
-      toast.error("فشل تحميل التقارير")
-    }
-  }
 
   const loadChildren = async () => {
     try {
@@ -40,6 +30,16 @@ function AdminReports() {
       setChildren(res.items || [])
     } catch {
       toast.error("فشل تحميل الأطفال")
+    }
+  }
+
+  const loadReports = async (childId) => {
+    if (!childId) return
+    try {
+      const res = await getMedicalReports(childId)
+      setReports(res.items || [])
+    } catch {
+      toast.error("فشل تحميل التقارير")
     }
   }
 
@@ -64,8 +64,17 @@ function AdminReports() {
       })
 
       toast.success("تم رفع التقرير")
+
       setShowModal(false)
-      loadReports()
+
+      loadReports(form.childId)
+
+      setForm({
+        childId: "",
+        notes: "",
+        file: null
+      })
+
     } catch {
       toast.error("فشل الرفع")
     }
@@ -119,7 +128,13 @@ function AdminReports() {
 
             <h3>إضافة تقرير</h3>
 
-            <select onChange={(e) => setForm({ ...form, childId: e.target.value })}>
+            <select
+              value={form.childId}
+              onChange={(e) => {
+                setForm({ ...form, childId: e.target.value })
+                loadReports(e.target.value)
+              }}
+            >
               <option value="">اختر الطفل</option>
               {children.map(c => (
                 <option key={c.id} value={c.id}>{c.fullName}</option>
@@ -128,6 +143,7 @@ function AdminReports() {
 
             <textarea
               placeholder="ملاحظات"
+              value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
 

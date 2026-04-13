@@ -14,20 +14,24 @@ export const AppProvider = ({ children }) => {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const [role] = useState(localStorage.getItem("role"))
+  const role = localStorage.getItem("role")
 
   const loadData = async () => {
     try {
       setLoading(true)
 
-      const dashboardRes =
-        role === "Specialist"
-          ? await getSpecialistDashboard()
-          : await getParentDashboard()
+      let dashboardRes
+
+      if (role === "Specialist") {
+        dashboardRes = await getSpecialistDashboard()
+      } else {
+        dashboardRes = await getParentDashboard()
+      }
 
       const dashboardData = dashboardRes || {}
       setData(dashboardData)
 
+      // Profile Image
       if (role === "Specialist") {
         try {
           const img = await getSpecialistProfileImage()
@@ -43,6 +47,7 @@ export const AppProvider = ({ children }) => {
         )
       }
 
+      // Parent Only Data
       if (role !== "Specialist") {
 
         const childId = dashboardData?.children?.[0]?.childId
@@ -50,16 +55,16 @@ export const AppProvider = ({ children }) => {
         if (!childId) {
           setSessions([])
           setAppointments([])
-          return
+        } else {
+
+          const [sessionsRes, appointmentsRes] = await Promise.all([
+            getSessionsByChild(childId),
+            getAppointmentsByChildId(childId)
+          ])
+
+          setSessions(sessionsRes?.items || [])
+          setAppointments(appointmentsRes?.items || [])
         }
-
-        const [sessionsRes, appointmentsRes] = await Promise.all([
-          getSessionsByChild(childId),
-          getAppointmentsByChildId(childId)
-        ])
-
-        setSessions(sessionsRes?.items || sessionsRes || [])
-        setAppointments(appointmentsRes?.items || appointmentsRes || [])
       }
 
     } catch (err) {
@@ -74,15 +79,17 @@ export const AppProvider = ({ children }) => {
   }, [])
 
   return (
-    <AppContext.Provider value={{
-      data,
-      profileImage,
-      sessions,
-      appointments,
-      loading,
-      loadData,
-      role
-    }}>
+    <AppContext.Provider
+      value={{
+        data,
+        profileImage,
+        sessions,
+        appointments,
+        loading,
+        loadData,
+        role
+      }}
+    >
       {children}
     </AppContext.Provider>
   )

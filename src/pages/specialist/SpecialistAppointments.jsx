@@ -55,8 +55,19 @@ function SpecialistAppointments() {
   }, [childId])
 
   const handleSubmit = async () => {
-    if (!childId || !date || !time) {
-      toast.error("املأ البيانات")
+
+    if (!childId) {
+      toast.error("اختار طفل")
+      return
+    }
+
+    if (!date || !time) {
+      toast.error("حدد التاريخ والوقت")
+      return
+    }
+
+    if (duration < 15 || duration > 240) {
+      toast.error("المدة لازم من 15 لـ 240 دقيقة")
       return
     }
 

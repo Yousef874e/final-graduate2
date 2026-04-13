@@ -10,8 +10,6 @@
   direction: rtl;
   font-family: 'Tajawal', sans-serif;
 }
-
-/* LEFT */
 .login .login-left {
   flex: 1;
   background: linear-gradient(135deg,#119698 , #119698);
@@ -51,7 +49,7 @@
   margin-bottom: 10px;
 }
 
-/* RIGHT */
+
 .login .login-right {
   flex: 1;
   background: white;
@@ -67,7 +65,6 @@
   margin-bottom: 30px;
 }
 
-/* TITLE */
 .login .title {
   font-size: 28px;
   font-weight: 800;
@@ -82,8 +79,6 @@
   color: #6c7a7e;
   margin-top: 6px;
   font-weight: 500;}
-
-/* TABS */
 .login .tabs {
   display: flex;
   background: #f1f5f9;
@@ -116,7 +111,7 @@
   box-shadow: 0 5px 15px rgba(0,0,0,0.08);
 }
 
-/* INPUTS */
+
 .login .input-box {
   position: relative;
 }
@@ -129,7 +124,6 @@
   color: #888;
 }
 
-/* 🔥 أهم تعديل */
 .login input {
   width: 100%;
   padding: 14px 14px 14px 40px;
@@ -137,8 +131,6 @@
   border-radius: 10px;
   border: 1px solid #ddd;
 }
-
-/* FORGET */
 .login .forget {
   font-size: 18px;
   color: #2fb5a8;
@@ -146,7 +138,6 @@
   cursor: pointer;
 }
 
-/* BUTTON */
 .login .login-btns {
   width: 100%;
   padding: 14px;
@@ -163,15 +154,12 @@
   font-size: 30px;
   font-weight: 600px;
 }
-
-/* DIVIDER */
 .login .divider {
   text-align: center;
   margin: 20px 0;
   color: #aaa;
 }
 
-/* SOCIAL */
 .login .social {
   display: flex;
   gap: 10px;
@@ -191,7 +179,6 @@
     font-weight: 600px;
 }
 
-/* REGISTER */
 .login .register {
   margin-top: 15px;
   text-align: center;

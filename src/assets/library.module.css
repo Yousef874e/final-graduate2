@@ -6,7 +6,6 @@
   border: 1px solid #ccc;
 }
 
-/* 🔘 tabs */
 .tabs {
   display: flex;
   gap: 10px;
@@ -29,8 +28,6 @@
   background: #1abc9c;
  color: black;
 }
-
-/* 🔵 progress */
 .progressBox {
   background: linear-gradient(90deg, #1abc9c, #16a085);
   padding: 20px;
@@ -56,7 +53,7 @@
   border-radius: 10px;
 }
 
-/* 📦 cards */
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

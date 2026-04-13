@@ -397,7 +397,7 @@
   color: #333;
 }
 
-/* الهيدر */
+
 .topBar {
   display: flex;
   justify-content: space-between;
@@ -435,7 +435,7 @@
   cursor: pointer;
 }
 
-/* عنوان الصفحة */
+
 .pageTitle {
   text-align: right;
   font-size: 24px;
@@ -451,7 +451,6 @@
   font-size: 15px;
 }
 
-/* search */
 .searchRow {
   display: flex;
   flex-direction: row-reverse;
@@ -488,8 +487,6 @@
   text-align: right;
   font-size: 14px;
 }
-
-/* filters */
 .filters {
   display: flex;
   flex-direction: row-reverse;
@@ -511,8 +508,6 @@
   background: #119698;
   color: white;
 }
-
-/* زر تصفية النتائج */
 .filterBtn {
   background: #0f7f81;
   color: white;
@@ -524,14 +519,12 @@
   margin-bottom: 20px;
 }
 
-/* cards grid */
 .cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
-/* card */
 .card {
   background: white;
   padding: 18px;
@@ -539,7 +532,6 @@
   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
 
-/* header */
 .cardHeader {
   display: flex;
   flex-direction: row-reverse;
@@ -570,8 +562,6 @@
   font-size: 13px;
   color: #f39c12;
 }
-
-/* tags */
 .tags {
   display: flex;
   flex-direction: row-reverse;
@@ -586,8 +576,6 @@
   border-radius: 10px;
   font-size: 12px;
 }
-
-/* footer */
 .cardFooter {
   display: flex;
   justify-content: space-between;
@@ -674,14 +662,11 @@
   color: #777;
 }
 
-/* 🔔 Bell */
 .bellWrapper {
   position: relative;
   cursor: pointer;
   font-size: 18px;
 }
-
-/* 🔴 Notification Badge */
 .badge {
   position: absolute;
   top: -6px;
@@ -694,12 +679,10 @@
   font-weight: bold;
 }
 
-/* 🔥 Hover */
 .bellWrapper:hover {
   transform: scale(1.1);
 }
 
-/* 🔥 Responsive */
 @media (max-width: 768px) {
   .specialistsPage {
     padding: 15px;
@@ -717,7 +700,6 @@
   }
 }
 
-/* 🌙 Dark Mode */
 .bellWrapper {
   position: relative;
   cursor: pointer;

@@ -138,6 +138,7 @@ function AdminUsers() {
       toast.success("تم الربط ✅")
       setShowLink(false)
       setSelectedSpecialist("")
+      loadUsers()
     } catch {
       toast.error("فشل الربط ❌")
     }
@@ -195,26 +196,9 @@ function AdminUsers() {
 
       {showFilter && (
         <div className="filter-box">
-          <button
-            className={activeFilter === "all" ? "active" : ""}
-            onClick={() => setActiveFilter("all")}
-          >
-            الكل
-          </button>
-
-          <button
-            className={activeFilter === "active" ? "active" : ""}
-            onClick={() => setActiveFilter("active")}
-          >
-            مفعل
-          </button>
-
-          <button
-            className={activeFilter === "inactive" ? "active" : ""}
-            onClick={() => setActiveFilter("inactive")}
-          >
-            غير مفعل
-          </button>
+          <button className={activeFilter === "all" ? "active" : ""} onClick={() => setActiveFilter("all")}>الكل</button>
+          <button className={activeFilter === "active" ? "active" : ""} onClick={() => setActiveFilter("active")}>مفعل</button>
+          <button className={activeFilter === "inactive" ? "active" : ""} onClick={() => setActiveFilter("inactive")}>غير مفعل</button>
         </div>
       )}
 
@@ -232,17 +216,13 @@ function AdminUsers() {
             <div className="user-top">
               <div className="user-info">
                 <img src={user.profileImageUrl || "/default.png"} className="avatar" />
-
                 <div>
                   <h3>{user.fullName}</h3>
                   <p>{calculateAge(user.dateOfBirth)} سنة</p>
                 </div>
               </div>
 
-              <FaEllipsisV
-                className="menu-icon"
-                onClick={() => setShowMenu(user.id)}
-              />
+              <FaEllipsisV className="menu-icon" onClick={() => setShowMenu(user.id)} />
 
               {showMenu === user.id && (
                 <div className="dropdown">
@@ -256,10 +236,7 @@ function AdminUsers() {
 
             <div className="user-actions">
 
-              <div onClick={() => {
-                setSelectedUser(user)
-                setShowLink(true)
-              }}>
+              <div onClick={() => { setSelectedUser(user); setShowLink(true) }}>
                 <FaLink />
                 <span>ربط</span>
               </div>

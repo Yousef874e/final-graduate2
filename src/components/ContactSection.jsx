@@ -12,7 +12,6 @@ function ContactSection() {
   return (
     <section className="contact">
       <div className="contact-container">
-        {/* الفورم */}
         <div className="contact-form">
           <h3>أرسل لنا رسالة</h3>
 
@@ -30,8 +29,6 @@ function ContactSection() {
 
           <button>إرسال</button>
         </div>
-
-        {/* المعلومات */}
         <div className="contact-info">
           <h2>رفيق</h2>
 
@@ -57,7 +54,6 @@ function ContactSection() {
         </div>
       </div>
 
-      {/* الفوتر */}
       <div className="footer">
         <div className="socials">
           <FaLinkedin />

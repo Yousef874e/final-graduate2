@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
 import { useApp } from "../../Context/AppContext"
 import { getTreatmentPlans } from "../../api/treatmentPlansService"
-import { startSession } from "../../api/sessionsService"
 
 function ParentDashboard() {
 
@@ -60,22 +59,9 @@ function ParentDashboard() {
         return
       }
 
-      const res = await startSession({
-        childId: child.childId,
-        exerciseId: exercise.exerciseId,
-        treatmentPlanExerciseId: exercise.id
+      navigate(`/exercise/${exercise.exerciseId}`, {
+        state: { treatmentPlanExerciseId: exercise.id }
       })
-
-      const sessionId = res?.id
-
-      if (!sessionId) {
-        toast.error("فشل بدء التمرين ❌")
-        return
-      }
-
-      toast.success("تم بدء التمرين ✅")
-
-      navigate(`/dashboard/sessions?sessionId=${sessionId}`)
 
     } catch (err) {
 
@@ -93,7 +79,6 @@ function ParentDashboard() {
 
   return (
     <>
-      {/* HERO */}
       <div className={styles.hero}>
 
         <div className={styles.heroRight}>
@@ -140,7 +125,6 @@ function ParentDashboard() {
 
       </div>
 
-      {/* CARDS */}
       <div className={styles.cards}>
 
         <div className={styles.card}>

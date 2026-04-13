@@ -1,7 +1,6 @@
 import "../../assets/adminSettings.css"
 import { useState } from "react"
 import { changePassword } from "../../api/authService"
-import { uploadFile } from "../../api/mediaService"
 import toast from "react-hot-toast"
 
 function AdminSettings() {
@@ -11,7 +10,6 @@ function AdminSettings() {
     newPassword: ""
   })
 
-  const [image, setImage] = useState(null)
   const [preview, setPreview] = useState(null)
 
   const [notifications, setNotifications] = useState({
@@ -20,7 +18,7 @@ function AdminSettings() {
   })
 
   const handleImageChange = (file) => {
-    setImage(file)
+    if (!file) return
     setPreview(URL.createObjectURL(file))
   }
 
@@ -39,21 +37,9 @@ function AdminSettings() {
     }
   }
 
-  const handleUploadImage = async () => {
-    if (!image) return
-
-    const data = new FormData()
-    data.append("file", image)
-    data.append("category", 2)
-
-    await uploadFile(data)
-    toast.success("تم رفع الصورة ✅")
-  }
-
   return (
     <div className="settings-page">
 
-      {/* PROFILE */}
       <div className="card profile-card">
 
         <h3>الملف المهني</h3>
@@ -76,12 +62,11 @@ function AdminSettings() {
           </label>
         </div>
 
-        <button className="btn primary" onClick={handleUploadImage}>
+        <button className="btn primary">
           حفظ التغييرات
         </button>
       </div>
 
-      {/* NOTIFICATIONS */}
       <div className="card">
 
         <h3>الإشعارات والتنبيهات</h3>
@@ -116,7 +101,6 @@ function AdminSettings() {
 
       </div>
 
-      {/* PASSWORD */}
       <div className="card">
 
         <h3>الأمان</h3>
