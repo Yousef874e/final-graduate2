@@ -18,7 +18,7 @@ import AdminLayout from "./layouts/AdminLayout.jsx"
 
 import ParentDashboard from "./pages/dashboard/ParentDashboard"
 import Reports from "./pages/reports/Reports"
-import Appointments from "./pages/sessions/appointments.jsx"
+import Appointments from "./pages/sessions/Appointments.jsx"
 import Profile from "./pages/profile/Profile"
 import Library from "./pages/library/Library"
 import Exercise from "./pages/exercise/Exercise.jsx"
