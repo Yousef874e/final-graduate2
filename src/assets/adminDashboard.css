@@ -125,7 +125,6 @@
 }
 
 
-**/
 .admin-page {
   padding: 20px;
   background: #f7f9fb;
@@ -361,7 +360,6 @@ font-size: 18px;
   }
 }
 
-/* موبايل صغير */
 @media (max-width: 480px) {
 
   .admin-page {
@@ -410,7 +408,6 @@ font-size: 18px;
   flex-wrap: wrap;
 }
 
-/* buttons */
 .filter-box button {
   padding: 8px 15px;
   border-radius: 20px;
