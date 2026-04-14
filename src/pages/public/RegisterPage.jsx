@@ -38,6 +38,26 @@ function RegisterPage() {
     })
   }
 
+  const isValidSpecialization = (text) => {
+    if (!text) return false
+    if (text.length < 3) return false
+    if (!/[a-zA-Z\u0600-\u06FF]/.test(text)) return false
+    if (/^(.)\1+$/.test(text)) return false
+    if (!text.includes(" ") && text.length < 6) return false
+    return true
+  }
+
+  const isValidBio = (text) => {
+    if (!text) return false
+    if (text.length < 20) return false
+    if (text.split(" ").length < 3) return false
+    if (!/[a-zA-Z\u0600-\u06FF]/.test(text)) return false
+    const words = text.split(" ")
+    const uniqueWords = new Set(words)
+    if (uniqueWords.size < 2) return false
+    return true
+  }
+
   const handleGoogleRegister = () => {
     window.location.href = "https://your-api.com/api/auth/google"
   }
@@ -69,9 +89,16 @@ function RegisterPage() {
       return
     }
 
-    if (role === "specialist" && !form.specialization) {
-      toast.error("ادخل التخصص ❌")
-      return
+    if (role === "specialist") {
+      if (!isValidSpecialization(form.specialization)) {
+        toast.error("اكتب تخصص واضح❌")
+        return
+      }
+
+      if (!isValidBio(form.bio)) {
+        toast.error("اكتب نبذة مفهومة (على الأقل 3 كلمات) ❌")
+        return
+      }
     }
 
     setLoading(true)
