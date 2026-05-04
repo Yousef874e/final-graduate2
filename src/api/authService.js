@@ -30,9 +30,8 @@ export const changePassword = async (data) => {
   return res.data
 }
 
-// ✅ Google Login
 export const googleLogin = async (idToken) => {
-  const res = await axiosClient.post("/Auth/google-login", {
+  const res = await axiosClient.post("/Auth/external/google/link", {
     idToken
   })
   return res.data

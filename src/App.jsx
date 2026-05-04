@@ -58,7 +58,7 @@ function App() {
           <Route path="/register/specialist" element={<RegisterPage />} />
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/child-image" element={<ChildImage />} />
           <Route path="/child-info-step1" element={<ChildInfoStep1 />} />

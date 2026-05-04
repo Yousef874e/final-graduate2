@@ -16,6 +16,7 @@ function AdminLayout() {
   const isActive = (path) => location.pathname.startsWith(path)
 
   const [showNotif, setShowNotif] = useState(false)
+  const [issuesCount, setIssuesCount] = useState(0)
 
   const handleLogout = () => {
     clearAuth()
@@ -96,14 +97,24 @@ function AdminLayout() {
 
           <div className="header-row">
 
-            <FaBell
-              className="bell"
-              onClick={() => setShowNotif(!showNotif)}
-            />
+            <div style={{ position: "relative" }}>
+              <FaBell
+                className="bell"
+                onClick={() => setShowNotif(!showNotif)}
+              />
+
+              {issuesCount > 0 && (
+                <span className="notif-badge">
+                  {issuesCount}
+                </span>
+              )}
+            </div>
 
             {showNotif && (
               <div className="notif-box">
-                لا يوجد إشعارات حالياً
+                {issuesCount > 0
+                  ? `يوجد ${issuesCount} مشاكل تحتاج متابعة`
+                  : "لا يوجد مشاكل حالياً"}
               </div>
             )}
 
@@ -112,7 +123,7 @@ function AdminLayout() {
         </div>
 
         <div className="content">
-          <Outlet />
+          <Outlet context={{ setIssuesCount }} />
         </div>
 
       </div>

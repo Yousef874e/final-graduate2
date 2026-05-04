@@ -1,14 +1,15 @@
 import "../../assets/register.css"
 import logo from "../../assets/images/logo.png"
 import sideImg from "../../assets/images/ggg.png"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { FaUser, FaPhone, FaEye, FaEyeSlash } from "react-icons/fa"
 import { MdEmail } from "react-icons/md"
 import { FcGoogle } from "react-icons/fc"
 import { IoArrowForward } from "react-icons/io5"
-import { registerParent, registerSpecialist, googleLogin } from "../../api/authService"
+import { registerParent, registerSpecialist } from "../../api/authService"
 import { setAuth } from "../../utils/auth"
+import { triggerGoogleLogin } from "../../utils/googleAuth"
 import toast from "react-hot-toast"
 
 function RegisterPage() {
@@ -30,63 +31,6 @@ function RegisterPage() {
     bio: ""
   })
 
-  useEffect(() => {
-    const script = document.createElement("script")
-    script.src = "https://accounts.google.com/gsi/client"
-    script.async = true
-    script.defer = true
-    document.body.appendChild(script)
-  }, [])
-
-  // ✅ Google باستخدام idToken (credential)
-  const handleGoogleCallback = async (response) => {
-    try {
-      console.log("🔥 ID TOKEN:", response.credential)
-
-      const res = await googleLogin(response.credential)
-
-      console.log("🔥 GOOGLE RESPONSE:", res)
-
-      setAuth(res)
-      localStorage.setItem("userName", res.fullName || "")
-
-      const roleName = res?.roles?.[0]
-
-      toast.success("تم تسجيل الدخول بجوجل ✅")
-
-      if (roleName === "Parent") {
-        if (res.children && res.children.length > 0) {
-          navigate("/dashboard/parent")
-        } else {
-          navigate("/child-info-step1")
-        }
-      } else if (roleName === "Specialist") {
-        navigate("/dashboard/specialist")
-      } else if (roleName === "Admin") {
-        navigate("/dashboard/admin")
-      } else {
-        toast.error("Role غير معروف ❌")
-      }
-    } catch (err) {
-      console.log("❌ GOOGLE ERROR:", err)
-      toast.error("فشل تسجيل الدخول ❌")
-    }
-  }
-
-  const handleGoogleLogin = () => {
-    if (!window.google) {
-      toast.error("Google مش جاهز ❌")
-      return
-    }
-
-    window.google.accounts.id.initialize({
-      client_id: "470189378307-c74it8k81hpbmjhm0mekifk7n0fdpfjq.apps.googleusercontent.com",
-      callback: handleGoogleCallback
-    })
-
-    window.google.accounts.id.prompt()
-  }
-
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -94,59 +38,65 @@ function RegisterPage() {
     })
   }
 
-  const isValidSpecialization = (text) => {
-    if (!text) return false
-    if (text.length < 3) return false
-    if (!/[a-zA-Z\u0600-\u06FF]/.test(text)) return false
-    if (/^(.)\1+$/.test(text)) return false
-    if (!text.includes(" ") && text.length < 6) return false
-    return true
-  }
-
+  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email)
+  const isValidPhone = (phone) => /^[0-9]{10,15}$/.test(phone)
+  const isValidPassword = (password) =>
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password)
+  const isValidText = (text) => text && text.trim().length >= 3
   const isValidBio = (text) => {
-    if (!text) return false
-    if (text.length < 20) return false
-    if (text.split(" ").length < 3) return false
+    if (!text || text.trim().length < 5) return false
     if (!/[a-zA-Z\u0600-\u06FF]/.test(text)) return false
+    if (text.trim().split(" ").length < 2) return false
+    if (/^(.)\1+$/.test(text)) return false
     return true
   }
 
   const handleRegister = async () => {
-    if (!form.fullName || !form.email || !form.password || !form.confirmPassword) {
-      toast.error("من فضلك املى كل البيانات ❌")
+
+    if (!isValidText(form.fullName)) {
+      toast.error("اكتب اسم واضح")
       return
     }
 
-    if (role === "parent" && (!form.phone || !form.address)) {
-      toast.error("اكمل بيانات ولي الأمر ❌")
+    if (!isValidEmail(form.email)) {
+      toast.error("اكتب بريد إلكتروني صحيح")
       return
     }
 
-    if (!form.email.includes("@")) {
-      toast.error("البريد الإلكتروني غير صحيح ❌")
-      return
-    }
+    if (role === "parent") {
+      if (!isValidPhone(form.phone)) {
+        toast.error("اكتب رقم موبايل صحيح")
+        return
+      }
 
-    if (form.password.length < 8) {
-      toast.error("كلمة المرور لازم تكون 8 حروف على الأقل ❌")
-      return
-    }
-
-    if (form.password !== form.confirmPassword) {
-      toast.error("كلمة المرور غير متطابقة ❌")
-      return
+      if (!isValidText(form.address)) {
+        toast.error("اكتب عنوان واضح")
+        return
+      }
     }
 
     if (role === "specialist") {
-      if (!isValidSpecialization(form.specialization)) {
-        toast.error("اكتب تخصص واضح ❌")
+      if (!isValidText(form.specialization)) {
+        toast.error("اكتب تخصص واضح")
         return
       }
 
       if (!isValidBio(form.bio)) {
-        toast.error("اكتب نبذة مفهومة ❌")
+        toast.error("اكتب نبذة مفهومة")
         return
       }
+    }
+
+    if (!isValidPassword(form.password)) {
+      toast.error("كلمة المرور لازم تكون 8 حروف وتحتوي على رقم وحرف كبير")
+      return
+    }
+
+    if (form.password !== form.confirmPassword) {
+      toast.error("كلمة المرور مش متطابقة")
+      return
     }
 
     setLoading(true)
@@ -172,36 +122,34 @@ function RegisterPage() {
         })
       }
 
-      console.log("🔥 REGISTER RESPONSE:", res)
-
       if (res.requiresPasswordChange) {
-        toast("لازم تغير كلمة المرور 🔐")
         navigate("/reset-password")
         return
       }
 
+      localStorage.setItem(`userName_${form.email}`, form.fullName)
+
       setAuth(res)
-      localStorage.setItem("userName", form.fullName)
 
       const roleName = res?.roles?.[0]
-
-      toast.success("تم إنشاء الحساب وتسجيل الدخول ✅")
 
       if (roleName === "Parent") {
         navigate("/child-info-step1")
       } else if (roleName === "Specialist") {
         navigate("/dashboard/specialist")
-      } else if (roleName === "Admin") {
-        navigate("/dashboard/admin")
       } else {
-        toast.error("Role غير معروف ❌")
+        toast.error("Role غير معروف")
       }
-    } catch (err) {
-      console.log("❌ REGISTER ERROR:", err)
-      toast.error("فيه خطأ ❌")
+
+    } catch {
+      toast.error("فيه خطأ")
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleLogin = () => {
+    triggerGoogleLogin()
   }
 
   return (
@@ -318,10 +266,7 @@ function RegisterPage() {
               value={form.password}
               onChange={handleChange}
             />
-            <span
-              className="eye"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <span className="eye" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
@@ -334,10 +279,7 @@ function RegisterPage() {
               value={form.confirmPassword}
               onChange={handleChange}
             />
-            <span
-              className="eye"
-              onClick={() => setShowConfirm(!showConfirm)}
-            >
+            <span className="eye" onClick={() => setShowConfirm(!showConfirm)}>
               {showConfirm ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
@@ -348,9 +290,7 @@ function RegisterPage() {
             disabled={loading}
             type="button"
           >
-            {loading
-              ? "جاري الإنشاء..."
-              : `إنشاء حساب ${role === "parent" ? "ولي أمر" : "أخصائي"}`}
+            {loading ? "جاري الإنشاء..." : `إنشاء حساب ${role === "parent" ? "ولي أمر" : "أخصائي"}`}
             <IoArrowForward />
           </button>
 

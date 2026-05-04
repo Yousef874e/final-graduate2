@@ -17,7 +17,6 @@ function ParentDashboard() {
   const appointments = data?.upcomingAppointments || []
   const overview = data?.overview || {}
 
-  // 🔥 ترتيب أقرب موعد
   const appointment = appointments
     .sort((a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc))[0]
 
@@ -39,6 +38,20 @@ function ParentDashboard() {
     })
 
     isToday = date.toDateString() === new Date().toDateString()
+  }
+
+  const getLevel = (score) => {
+    if (score >= 90) return "ممتاز 🔥"
+    if (score >= 80) return "جيد جدًا 👌"
+    if (score >= 70) return "جيد 🙂"
+    if (score >= 50) return "مقبول 😐"
+    return "ضعيف ❌"
+  }
+
+  const getColor = (score) => {
+    if (score >= 80) return "#22c55e"
+    if (score >= 60) return "#eab308"
+    return "#ef4444"
   }
 
   const handleStartSession = async () => {
@@ -84,6 +97,8 @@ function ParentDashboard() {
     }
   }
 
+  const score = Math.min(100, Math.max(0, child?.averageAccuracyScore || 0))
+
   return (
     <>
       <div className={styles.hero}>
@@ -107,7 +122,7 @@ function ParentDashboard() {
               className={styles.outlineBtn}
               onClick={() => {
                 if (appointment) {
-                  navigate(`/dashboard/appointments?appointmentId=${appointment.id}`)
+                  navigate(`/dashboard/appointments?appointmentId=${appointment.appointmentId}`)
                 } else {
                   toast.error("لا يوجد جلسة حالياً ❌")
                 }
@@ -129,8 +144,11 @@ function ParentDashboard() {
         </div>
 
         <div className={styles.heroLeft}>
-          <div className={styles.progressCircle}>
-            {overview?.averageAccuracyAcrossChildren || 0}%
+          <div
+            className={styles.progressCircle}
+            style={{ color: getColor(score) }}
+          >
+            {score}%
           </div>
         </div>
 
@@ -138,7 +156,6 @@ function ParentDashboard() {
 
       <div className={styles.cards}>
 
-        {/* إنجازات */}
         <div className={styles.card}>
           <h4>إنجازات الأسبوع</h4>
 
@@ -154,7 +171,6 @@ function ParentDashboard() {
           </span>
         </div>
 
-        {/* الموعد القادم */}
         <div className={styles.card}>
           <h4>الموعد القادم</h4>
 
@@ -174,7 +190,7 @@ function ParentDashboard() {
 
               <button
                 className={styles.confirmBtn}
-                onClick={() => navigate(`/dashboard/appointments?appointmentId=${appointment.id}`)}
+                onClick={() => navigate(`/dashboard/appointments?appointmentId=${appointment.appointmentId}`)}
               >
                 عرض الجلسة
               </button>
@@ -184,7 +200,6 @@ function ParentDashboard() {
           )}
         </div>
 
-        {/* الطفل */}
         <div className={styles.card}>
           <h4>
             {child ? child.childName : "لا يوجد طفل"}
@@ -201,15 +216,17 @@ function ParentDashboard() {
                 <div
                   className={styles.progressFill}
                   style={{
-                    width: `${child.averageAccuracyScore || 0}%`
+                    width: `${score}%`,
+                    backgroundColor: getColor(score)
                   }}
                 />
               </div>
 
-              <span className={styles.good}>
-                {(child.averageAccuracyScore || 0) >= 70
-                  ? "جيد جدًا"
-                  : "يحتاج متابعة"}
+              <span
+                className={styles.good}
+                style={{ color: getColor(score) }}
+              >
+                {getLevel(score)}
               </span>
             </>
           )}

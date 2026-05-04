@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { getAdminDashboard } from "../../api/dashboardService"
 import { getSystemMonitoring } from "../../api/adminService"
 import { FaExclamationTriangle, FaFileAlt, FaCalendar, FaUsers } from "react-icons/fa"
+import { useOutletContext } from "react-router-dom"
 import banner from "../../assets/images/banner.png"
 
 function AdminDashboard() {
@@ -11,9 +12,22 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const { setIssuesCount } = useOutletContext()
+
   useEffect(() => {
     loadData()
   }, [])
+
+  useEffect(() => {
+    if (!data?.alerts) return
+
+    const count =
+      (data.alerts.unassignedChildren || 0) +
+      (data.alerts.childrenWithoutReports || 0) +
+      (data.alerts.childrenWithoutUpcomingAppointments || 0)
+
+    setIssuesCount(count)
+  }, [data])
 
   const loadData = async () => {
     try {

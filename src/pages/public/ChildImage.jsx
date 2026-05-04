@@ -24,7 +24,6 @@ function ChildImage() {
   }, [preview])
 
   const handleFileChange = (e) => {
-
     setError("")
 
     const selected = e.target.files[0]
@@ -64,21 +63,22 @@ function ChildImage() {
       setLoading(true)
       setProgress(0)
 
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("category", 2)
-      formData.append("childId", "")
+      const uploadRes = await uploadImage(
+  file,
+  {
+    category: 2
+  },
+  setProgress
+)
 
-      const uploadRes = await uploadImage(formData, setProgress)
+const mediaId = uploadRes?.id
 
-      const mediaId = uploadRes?.id
+if (!mediaId) {
+  toast.error("فشل رفع الصورة ❌")
+  return
+}
 
-      if (!mediaId) {
-        toast.error("فشل رفع الصورة ❌")
-        return
-      }
-
-      await setChildImage(childId, mediaId)
+await setChildImage(childId, mediaId)
 
       toast.success("تم رفع الصورة بنجاح ✅")
 

@@ -22,16 +22,24 @@ function ExerciseDetails() {
   const [uploading, setUploading] = useState(false)
 
   const childId = localStorage.getItem("childId")
+  const baseUrl = import.meta.env.VITE_API_URL
+
+  const getFullUrl = (url) => {
+    if (!url) return ""
+    if (url.startsWith("http")) return url
+    return `${baseUrl}${url}`
+  }
 
   useEffect(() => {
-    init()
-  }, [])
+    if (id) init()
+  }, [id])
 
   const init = async () => {
     try {
 
       if (!childId) {
         toast.error("لا يوجد طفل ❌")
+        setLoading(false)
         return
       }
 
@@ -53,6 +61,7 @@ function ExerciseDetails() {
 
       if (!exercisePlan) {
         toast.error("التمرين غير موجود في الخطة ❌")
+        setLoading(false)
         return
       }
 
@@ -64,6 +73,7 @@ function ExerciseDetails() {
 
       if (!session?.id) {
         toast.error("فشل بدء الجلسة ❌")
+        setLoading(false)
         return
       }
 
@@ -130,8 +140,15 @@ function ExerciseDetails() {
         {loading ? (
           <div className={styles.placeholder}></div>
         ) : (
-          <video controls>
-            <source src={exercise?.mediaUrl} />
+          <video
+            controls
+            width="100%"
+            poster={getFullUrl(exercise?.mediaThumbnailUrl)}
+          >
+            <source
+              src={getFullUrl(exercise?.mediaUrl)}
+              type="video/mp4"
+            />
           </video>
         )}
       </div>

@@ -4,43 +4,79 @@ import { useApp } from "../../Context/AppContext"
 import {
   getChildMessages,
   sendMessage,
-  markMessageRead
+  markMessageRead,
+  getConversations
 } from "../../api/messagesService"
-import { getChildren } from "../../api/childrenService"
-//import { getSpecialistUserId } from "../../api/specialistsHelper"
+import { startConnection } from "../../api/chatHub.js"
 import toast from "react-hot-toast"
 
 function Chat() {
 
-  const { role, userId } = useApp()
+  const { userId } = useApp()
   const myId = Number(userId)
 
-  const [children, setChildren] = useState([])
-  const [activeChild, setActiveChild] = useState(null)
+  const [conversations, setConversations] = useState([])
+  const [activeChat, setActiveChat] = useState(null)
   const [messages, setMessages] = useState([])
   const [text, setText] = useState("")
   const [loading, setLoading] = useState(false)
 
   const bottomRef = useRef()
+  const connectionRef = useRef(null)
+  const activeChatRef = useRef(null)
 
   useEffect(() => {
-    loadChildren()
+    loadConversations()
+    initSignalR()
+
+    return () => {
+      connectionRef.current?.off("ReceiveMessage")
+    }
   }, [])
 
-  const loadChildren = async () => {
-    try {
-      const res = await getChildren()
-      const list = res.items || []
-      setChildren(list)
+  const initSignalR = async () => {
+    const conn = await startConnection()
+    connectionRef.current = conn
 
-      if (list.length) {
-        const child = list[0]
-        setActiveChild(child)
-        loadMessages(child.id)
+    conn.on("ReceiveMessage", async (message) => {
+
+      if (message.childId !== activeChatRef.current?.childId) return
+
+      setMessages(prev => {
+        if (prev.find(m => m.id === message.id)) return prev
+        return [...prev, message]
+      })
+
+      setConversations(prev =>
+        prev.map(c =>
+          c.childId === message.childId
+            ? { ...c, lastMessage: message.content }
+            : c
+        )
+      )
+
+      if (Number(message.receiverUserId) === myId) {
+        await markMessageRead(message.id)
       }
 
+      scrollDown()
+    })
+  }
+
+  const loadConversations = async () => {
+    try {
+      const res = await getConversations()
+      const list = res || []
+      setConversations(list)
+
+      if (list.length) {
+        const chat = list[0]
+        setActiveChat(chat)
+        activeChatRef.current = chat
+        loadMessages(chat.childId)
+      }
     } catch {
-      toast.error("فشل تحميل الأطفال")
+      toast.error("فشل تحميل المحادثات")
     }
   }
 
@@ -51,7 +87,10 @@ function Chat() {
 
     try {
       const res = await getChildMessages(childId)
-      const msgs = res.items || []
+      const msgs = (res.items || []).sort(
+        (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc)
+      )
+
       setMessages(msgs)
 
       await Promise.all(
@@ -61,7 +100,6 @@ function Chat() {
       )
 
       scrollDown()
-
     } catch {
       toast.error("فشل تحميل الرسائل")
     } finally {
@@ -70,36 +108,39 @@ function Chat() {
   }
 
   const handleSend = async () => {
-    if (!text.trim() || !activeChild) return
+    if (!text.trim() || !activeChat) return
 
-    let receiverId = null
-
-    if (role === "Parent") {
-      receiverId = await getSpecialistUserId(
-        activeChild.specialistProfileId
-      )
-    } else {
-      receiverId = activeChild.parentUserId
-    }
+    const receiverId = activeChat.otherUserId
 
     if (!receiverId) {
-      toast.error("الطفل غير مربوط ❌")
+      toast.error("لا يوجد مستقبل ❌")
       return
     }
 
     try {
       const newMsg = await sendMessage({
-        childId: activeChild.id,
+        childId: activeChat.childId,
         receiverUserId: Number(receiverId),
         content: text
       })
 
-      setMessages(prev => [...prev, newMsg])
+      setMessages(prev => {
+        if (prev.find(m => m.id === newMsg.id)) return prev
+        return [...prev, newMsg]
+      })
+
+      setConversations(prev =>
+        prev.map(c =>
+          c.childId === activeChat.childId
+            ? { ...c, lastMessage: newMsg.content }
+            : c
+        )
+      )
+
       setText("")
       scrollDown()
 
-    } catch (err) {
-      console.log(err)
+    } catch {
       toast.error("فشل الإرسال ❌")
     }
   }
@@ -114,18 +155,20 @@ function Chat() {
     <div className={styles.container}>
 
       <div className={styles.sidebar}>
-        {children.map(c => (
+        {conversations.map(c => (
           <div
-            key={c.id}
+            key={c.conversationId}
             className={`${styles.chatItem} ${
-              activeChild?.id === c.id ? styles.active : ""
+              activeChat?.conversationId === c.conversationId ? styles.active : ""
             }`}
             onClick={() => {
-              setActiveChild(c)
-              loadMessages(c.id)
+              setActiveChat(c)
+              activeChatRef.current = c
+              loadMessages(c.childId)
             }}
           >
-            {c.fullName}
+            <div>{c.childName}</div>
+            <small>{c.lastMessage}</small>
           </div>
         ))}
       </div>
@@ -133,7 +176,7 @@ function Chat() {
       <div className={styles.chatArea}>
 
         <div className={styles.header}>
-          <h3>{activeChild?.fullName || "اختر محادثة"}</h3>
+          <h3>{activeChat?.childName || "اختر محادثة"}</h3>
         </div>
 
         <div className={styles.messages}>

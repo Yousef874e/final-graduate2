@@ -12,8 +12,24 @@ export const startConnection = async () => {
     .withAutomaticReconnect()
     .build()
 
-  await connection.start()
-  console.log("✅ SignalR connected")
+  try {
+    await connection.start()
+    console.log("✅ SignalR connected")
+  } catch (err) {
+    console.error("❌ SignalR connection failed:", err)
+  }
+
+  connection.onreconnecting(() => {
+    console.log("⚠️ reconnecting...")
+  })
+
+  connection.onreconnected(() => {
+    console.log("✅ reconnected")
+  })
+
+  connection.onclose(() => {
+    console.log("❌ connection closed")
+  })
 
   return connection
 }

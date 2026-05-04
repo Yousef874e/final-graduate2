@@ -28,6 +28,7 @@ function Library() {
       if (!childId) {
         setPlans([])
         setSessions([])
+        setLoading(false)
         return
       }
 
@@ -36,7 +37,7 @@ function Library() {
         getSessionsByChild(childId)
       ])
 
-      const plansData = planRes?.items || planRes?.data?.items || []
+      const plansData = planRes?.items || []
 
       setPlans(plansData)
       setSessions(sessionRes?.items || [])
@@ -71,20 +72,24 @@ function Library() {
 
   }, [search, activeType, plans])
 
+  const completedExercises = new Set(
+    sessions
+      .filter(s => s.status === 4)
+      .map(s => s.exerciseId)
+  )
+
   const isCompleted = (exerciseId) => {
-    return sessions.some(
-      s => s.exerciseId === exerciseId && s.status === 4
-    )
+    return completedExercises.has(exerciseId)
   }
 
   const allExercises = plans.flatMap(p => p.exercises || [])
 
   const completedCount = allExercises.filter(ex =>
-    sessions.some(s => s.exerciseId === ex.exerciseId && s.status === 4)
+    completedExercises.has(ex.exerciseId)
   ).length
 
   const progress = allExercises.length
-    ? (completedCount / allExercises.length) * 100
+    ? Math.round((completedCount / allExercises.length) * 100)
     : 0
 
   return (
@@ -126,7 +131,8 @@ function Library() {
       </div>
 
       <div className={libraryStyles.progressBox}>
-        <p>تقدم التمارين</p>
+        <p>تقدم التمارين {progress}%</p>
+
         <div className={libraryStyles.progressBar}>
           <div
             className={libraryStyles.progressFill}
@@ -137,6 +143,8 @@ function Library() {
 
       {loading ? (
         <p>Loading...</p>
+      ) : filtered.length === 0 ? (
+        <p>لا يوجد تمارين</p>
       ) : (
         <div className={libraryStyles.grid}>
 
@@ -145,7 +153,7 @@ function Library() {
             const completed = isCompleted(item.exerciseId)
 
             return (
-              <div key={item.id} className={libraryStyles.card}>
+              <div key={item.exerciseId} className={libraryStyles.card}>
 
                 <img
                   src={item.mediaThumbnailUrl || "/default.png"}

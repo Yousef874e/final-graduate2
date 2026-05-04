@@ -1,12 +1,16 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { getParentDashboard, getSpecialistDashboard, getAdminDashboard } from "../api/dashboardService"
+import {
+  getParentDashboard,
+  getSpecialistDashboard,
+  getAdminDashboard
+} from "../api/dashboardService"
 import { getSessionsByChild } from "../api/sessionsService"
 import { getAppointmentsByChildId } from "../api/appointmentsService"
 import { getSpecialistProfileImage } from "../api/specialistProfileService"
+import { getParentProfileImage } from "../api/parentProfileService" // ✅ مهم
 
 const AppContext = createContext()
 
-// 🔥 استخراج userId من التوكن
 const getUserIdFromToken = () => {
   try {
     const token = localStorage.getItem("accessToken")
@@ -32,7 +36,7 @@ export const AppProvider = ({ children }) => {
   const roles = JSON.parse(localStorage.getItem("roles") || "[]")
   const role = roles[0]
 
-  const userId = getUserIdFromToken() // 🔥 مهم
+  const userId = getUserIdFromToken()
 
   const loadData = useCallback(async () => {
     try {
@@ -51,6 +55,7 @@ export const AppProvider = ({ children }) => {
       const dashboardData = dashboardRes || {}
       setData(dashboardData)
 
+      // ✅ الصورة (أهم تعديل)
       if (role === "Specialist") {
         try {
           const img = await getSpecialistProfileImage()
@@ -58,14 +63,16 @@ export const AppProvider = ({ children }) => {
         } catch {
           setProfileImage(null)
         }
-      } else {
-        setProfileImage(
-          dashboardData?.parentProfileImageUrl ||
-          dashboardData?.profileImageUrl ||
-          null
-        )
+      } else if (role === "Parent") {
+        try {
+          const img = await getParentProfileImage()
+          setProfileImage(img?.url || null)
+        } catch {
+          setProfileImage(null)
+        }
       }
 
+      // ✅ باقي الداتا
       if (role === "Parent") {
 
         const children = dashboardData?.children || []
@@ -120,15 +127,24 @@ export const AppProvider = ({ children }) => {
   }, [role])
 
   useEffect(() => {
-    const name = localStorage.getItem("userName")
-    if (name) setUserName(name)
 
-    const userEmail = localStorage.getItem("email")
-    if (userEmail) setEmail(userEmail)
+    const userEmail = localStorage.getItem("email") || ""
+
+    setEmail(userEmail)
+
+    const storedName = localStorage.getItem(`userName_${userEmail}`)
+
+    const finalName =
+      storedName ||
+      userEmail.split("@")[0] ||
+      "مستخدم"
+
+    setUserName(finalName)
 
     if (role) {
       loadData()
     }
+
   }, [loadData, role])
 
   return (
@@ -139,11 +155,11 @@ export const AppProvider = ({ children }) => {
         sessions,
         appointments,
         loading,
-        loadData,
+        loadData, // ✅ مهم عشان نعمل refresh
         role,
         userName,
         email,
-        userId // 🔥 المهم
+        userId
       }}
     >
       {children}

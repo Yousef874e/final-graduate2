@@ -35,9 +35,13 @@ function ForgotPassword() {
 
       navigate("/login")
 
-    } catch {
-      toast.success("راجع بريدك الإلكتروني لإعادة تعيين كلمة السر 📧")
-      navigate("/login")
+    } catch (err) {
+      const errorMsg =
+        err?.response?.data?.title ||
+        err?.response?.data?.errors?.[0] ||
+        "حدث خطأ ❌"
+
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }

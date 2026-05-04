@@ -14,16 +14,17 @@ import {
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom"
 import styles from "../assets/dashboard.module.css"
 import logo from "../assets/images/logo.png"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useApp } from "../Context/AppContext"
 import { clearAuth } from "../utils/auth"
+import toast from "react-hot-toast"
 
 function DashboardLayout() {
+
   const navigate = useNavigate()
   const location = useLocation()
 
-  // 👇 جبنا الاسم من الـ Context
-  const { data, profileImage, userName, email } = useApp()
+  const { data, profileImage, userName, loadData } = useApp()
 
   const [showNotifications, setShowNotifications] = useState(false)
 
@@ -32,6 +33,29 @@ function DashboardLayout() {
   const notificationsCount =
     (alerts?.childrenWithoutUpcomingAppointments || 0) +
     (alerts?.childrenWithLowAccuracy || 0)
+
+  const prevCountRef = useRef(0)
+
+  useEffect(() => {
+    const count =
+      (alerts?.childrenWithoutUpcomingAppointments || 0) +
+      (alerts?.childrenWithLowAccuracy || 0)
+
+    if (count > prevCountRef.current) {
+      const diff = count - prevCountRef.current
+      toast.success(`عندك ${diff} إشعار جديد 🔔`)
+    }
+
+    prevCountRef.current = count
+  }, [alerts])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData()
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [loadData])
 
   const titles = {
     "/dashboard/parent": "لوحة التحكم",
@@ -47,10 +71,11 @@ function DashboardLayout() {
   const currentTitle = titles[location.pathname] || "لوحة التحكم"
   const isDashboard = location.pathname === "/dashboard/parent"
 
+  const displayName = userName || "مستخدم"
+
   return (
     <div className={styles.dashboard}>
 
-      {/* Sidebar */}
       <div className={styles.sidebar}>
 
         <div className="logo-container">
@@ -130,10 +155,8 @@ function DashboardLayout() {
         </ul>
       </div>
 
-      {/* Main */}
       <div className={styles.main}>
 
-        {/* Header */}
         <div className={styles.header}>
 
           <div className={styles.headerRight}>
@@ -141,14 +164,13 @@ function DashboardLayout() {
 
             {isDashboard && (
               <p className={styles.welcome}>
-                مرحباً، {userName} 👋
+                مرحباً، {displayName} 👋
               </p>
             )}
           </div>
 
           <div className={styles.headerLeft}>
 
-            {/* Notifications */}
             <div style={{ position: "relative" }}>
               <FaBell
                 className={styles.iconCircle}
@@ -178,22 +200,23 @@ function DashboardLayout() {
               )}
             </div>
 
-            {/* User Box */}
             <div
               className={styles.userBox}
               onClick={() => navigate("/dashboard/profile")}
             >
-              <span>{userName}</span>
+              <span>{displayName}</span>
 
-              {profileImage ? (
-                <img
-                  src={profileImage}
-                  alt="profile"
-                  className={styles.avatar}
-                />
-              ) : (
-                <FaUser className={styles.iconCircle} />
-              )}
+              <div className={styles.avatarWrapper}>
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="profile"
+                    className={styles.avatarImg}
+                  />
+                ) : (
+                  <FaUser className={styles.avatarIcon} />
+                )}
+              </div>
             </div>
 
           </div>

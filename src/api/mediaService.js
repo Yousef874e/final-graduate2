@@ -16,37 +16,46 @@ export const uploadFile = (file, data = {}, onProgress) => {
   const formData = new FormData()
   formData.append("File", file)
   formData.append("Description", data.description || "")
-  formData.append("Category", data.category || 0)
-  formData.append("ChildId", data.childId || 0)
+
+  if (data.category !== undefined) {
+    formData.append("Category", data.category)
+  }
+
+  if (data.childId) {
+    formData.append("ChildId", data.childId)
+  }
 
   return upload("/Media/upload", formData, onProgress)
 }
 
-export const uploadImage = (file, data, onProgress) => {
+export const uploadImage = (file, data = {}, onProgress) => {
   const formData = new FormData()
   formData.append("File", file)
-  formData.append("Description", data?.description || "")
-  formData.append("Category", data?.category || 0)
+  formData.append("Description", data.description || "")
 
-  if (data?.childId) {
-    formData.append("ChildId", data.childId)
+  if (data.category !== undefined) {
+    formData.append("Category", data.category)
   }
 
   return upload("/Media/upload/image", formData, onProgress)
 }
 
-export const uploadVideo = (file, data, onProgress) => {
+export const uploadVideo = (file, data = {}, onProgress) => {
   const formData = new FormData()
   formData.append("File", file)
-  formData.append("Description", data?.description || "")
-  formData.append("Category", data?.category || 0)
+  formData.append("Description", data.description || "")
 
-  if (data?.childId) {
+  if (data.category !== undefined) {
+    formData.append("Category", data.category)
+  }
+
+  if (data.childId) {
     formData.append("ChildId", data.childId)
   }
 
   return upload("/Media/upload/video", formData, onProgress)
 }
+
 export const getMediaPaged = async (params) => {
   const res = await axiosClient.get("/Media/paged", { params })
   return res.data

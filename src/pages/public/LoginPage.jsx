@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { login, googleLogin } from "../../api/authService"
 import { setAuth } from "../../utils/auth"
+import { initGoogleAuth, renderGoogleButton } from "../../utils/googleAuth"
 import toast from "react-hot-toast"
 
 function LoginPage() {
@@ -21,59 +22,32 @@ function LoginPage() {
   const handleGoogleCallback = async (response) => {
     try {
       const res = await googleLogin(response.credential)
+
       setAuth(res)
 
       const role = res?.roles?.[0]
+
       toast.success("تم تسجيل الدخول بجوجل ✅")
 
       if (role === "Admin") {
-        navigate("/dashboard/admin")
+        navigate("/dashboard/admin", { replace: true })
       } else if (role === "Parent") {
-        navigate("/dashboard/parent")
+        navigate("/dashboard/parent", { replace: true })
       } else if (role === "Specialist") {
-        navigate("/dashboard/specialist")
+        navigate("/dashboard/specialist", { replace: true })
       }
 
-    } catch (err) {
-      console.error("❌ GOOGLE ERROR:", err)
+    } catch {
       toast.error("فشل تسجيل الدخول بجوجل ❌")
     }
   }
 
   useEffect(() => {
-    const initGoogle = () => {
-      if (!window.google || !googleBtnRef.current) return
+    initGoogleAuth(handleGoogleCallback)
 
-      window.google.accounts.id.initialize({
-        client_id: "470189378307-c74it8k81hpbmjhm0mekifk7n0fdpfjq.apps.googleusercontent.com",
-        callback: handleGoogleCallback,
-      })
-
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: "outline",
-        size: "large",
-        width: "100%",
-        text: "signin_with",
-        locale: "ar",
-      })
-    }
-
-    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]')
-
-    if (existingScript) {
-      if (window.google) {
-        initGoogle()
-      } else {
-        existingScript.addEventListener("load", initGoogle)
-      }
-    } else {
-      const script = document.createElement("script")
-      script.src = "https://accounts.google.com/gsi/client"
-      script.async = true
-      script.defer = true
-      script.onload = initGoogle
-      document.body.appendChild(script)
-    }
+    setTimeout(() => {
+      renderGoogleButton(googleBtnRef.current)
+    }, 300)
   }, [])
 
   const handleLogin = async () => {
@@ -133,10 +107,8 @@ function LoginPage() {
 
   return (
     <div className="login">
-
       <div className="login-right">
         <div className="form-box">
-
           <div className="signup-header">
             <div className="logo-container">
               <div className="logo-circle">
@@ -191,7 +163,6 @@ function LoginPage() {
 
           <div className="divider">أو</div>
 
-          {/* Google بيرسم الزرار هنا */}
           <div
             ref={googleBtnRef}
             style={{ display: "flex", justifyContent: "center", marginTop: "8px" }}
@@ -203,7 +174,6 @@ function LoginPage() {
               أنشئ حساب
             </span>
           </p>
-
         </div>
       </div>
 
@@ -225,7 +195,6 @@ function LoginPage() {
           </div>
         </div>
       </div>
-
     </div>
   )
 }

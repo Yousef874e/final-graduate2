@@ -40,7 +40,6 @@ function Sessions() {
     setSelectedDay(1)
   }
 
-  // 🔥 تحويل status لنص
   const getStatus = (a) => {
     switch (a.status) {
       case 1: return { text: "قادم", color: "#2196F3" }
@@ -52,10 +51,8 @@ function Sessions() {
     }
   }
 
-  // 🔥 fallback لو الباك متأخر
   const isPast = (date) => new Date(date) < new Date()
 
-  // 🔥 دمج البيانات
   const mergedData = useMemo(() => [
     ...appointments.map(a => ({
       id: a.id,
@@ -75,22 +72,19 @@ function Sessions() {
     }))
   ], [appointments, sessions])
 
-  // 🔥 فلترة اليوم
   const filteredData = useMemo(() => {
     return mergedData
       .filter(item => {
         if (!item.time) return false
-        const date = new Date(item.time)
-        return (
-          date.getDate() === selectedDay &&
-          date.getMonth() === month &&
-          date.getFullYear() === year
-        )
+
+        const itemDate = new Date(item.time)
+        const selectedDate = new Date(year, month, selectedDay)
+
+        return itemDate.toLocaleDateString() === selectedDate.toLocaleDateString()
       })
       .sort((a, b) => new Date(a.time) - new Date(b.time))
   }, [mergedData, selectedDay, month, year])
 
-  // 🔥 أقرب موعد قادم (حسب status)
   const nextAppointment = useMemo(() => {
     return appointments
       .filter(a => a.status === 1 || a.status === 2)
@@ -117,7 +111,6 @@ function Sessions() {
 
       <div className={sessionStyles.sessionsLayout}>
 
-        {/* LEFT */}
         <div className={sessionStyles.leftSide}>
 
           <div className={`${styles.card} ${sessionStyles.nextSession}`}>
@@ -145,7 +138,6 @@ function Sessions() {
 
         </div>
 
-        {/* RIGHT */}
         <div>
 
           <div className={styles.card}>
@@ -192,7 +184,6 @@ function Sessions() {
                 if (item.type === "appointment") {
                   const status = getStatus(item.raw)
 
-                  // fallback لو الوقت عدى ولسه مش Missed
                   const fallbackMissed =
                     (item.raw.status === 1 || item.raw.status === 2) &&
                     isPast(item.time)

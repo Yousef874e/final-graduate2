@@ -3,10 +3,9 @@ import reportStyles from "../../assets/reports.module.css"
 import { useEffect, useState } from "react"
 import {
   getMedicalReports,
-  deleteMedicalReport,
   downloadMedicalReport
 } from "../../api/medicalReportsService"
-import { FaDownload, FaTrash, FaFilePdf, FaEye } from "react-icons/fa"
+import { FaDownload, FaFilePdf, FaEye } from "react-icons/fa"
 import toast from "react-hot-toast"
 
 function Reports() {
@@ -32,26 +31,19 @@ function Reports() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("متأكد عايز تمسح التقرير؟")) return
-    try {
-      await deleteMedicalReport(id)
-      setReports(prev => prev.filter(r => r.id !== id))
-      toast.success("تم حذف التقرير")
-    } catch {
-      toast.error("فشل حذف التقرير")
-    }
-  }
-
   const handleDownload = async (id) => {
     try {
-      const url = await downloadMedicalReport(id)
+      const blob = await downloadMedicalReport(id)
+      const url = window.URL.createObjectURL(blob)
+
       const link = document.createElement("a")
       link.href = url
-      link.download = "report.pdf"
+      link.download = `report-${id}.pdf`
       document.body.appendChild(link)
       link.click()
       link.remove()
+
+      window.URL.revokeObjectURL(url)
     } catch {
       toast.error("فشل تحميل التقرير")
     }
@@ -59,7 +51,8 @@ function Reports() {
 
   const handlePreview = async (id) => {
     try {
-      const url = await downloadMedicalReport(id)
+      const blob = await downloadMedicalReport(id)
+      const url = window.URL.createObjectURL(blob)
       setPreviewUrl(url)
     } catch {
       toast.error("فشل فتح التقرير")
@@ -113,10 +106,6 @@ function Reports() {
                   <FaDownload />
                 </button>
 
-                <button onClick={() => handleDelete(item.id)}>
-                  <FaTrash />
-                </button>
-
               </div>
 
             </div>
@@ -128,7 +117,10 @@ function Reports() {
       {previewUrl && (
         <div
           className={reportStyles.previewOverlay}
-          onClick={() => setPreviewUrl(null)}
+          onClick={() => {
+            window.URL.revokeObjectURL(previewUrl)
+            setPreviewUrl(null)
+          }}
         >
           <div
             className={reportStyles.previewBox}

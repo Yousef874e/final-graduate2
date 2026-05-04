@@ -13,7 +13,9 @@ function ResetPassword() {
   const { token: paramToken } = useParams()
 
   const email = searchParams.get("email")
-  const token = paramToken || decodeURIComponent(searchParams.get("token") || "")
+
+  const rawToken = paramToken || searchParams.get("token") || ""
+  const token = decodeURIComponent(rawToken)
 
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -94,7 +96,7 @@ function ResetPassword() {
     }
 
     if (password.length < 8 || !isStrongPassword(password)) {
-      toast.error("كلمة المرور ضعيفة ❌")
+      toast.error("كلمة المرور لازم تكون 8 حروف وتحتوي على حرف كبير وصغير ورقم ❌")
       return
     }
 
@@ -114,14 +116,16 @@ function ResetPassword() {
 
       toast.success("تم تغيير كلمة السر ✅")
 
-      navigate("/login")
+      setTimeout(() => {
+        navigate("/login")
+      }, 1500)
 
     } catch (err) {
 
       const errorMsg =
         err?.response?.data?.errors?.[0] ||
         err?.response?.data?.title ||
-        "الكود غير صحيح ❌"
+        "الرابط انتهى أو غير صحيح ❌"
 
       toast.error(errorMsg)
 
