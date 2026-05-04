@@ -1,53 +1,30 @@
 import "../../assets/login.css"
 import logo from "../../assets/images/logo.png"
-import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa"
+import { FaEye, FaEyeSlash } from "react-icons/fa"
 import { MdEmail } from "react-icons/md"
 import { IoArrowForward } from "react-icons/io5"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { login } from "../../api/authService"
+import { login, googleLogin } from "../../api/authService"
+import { setAuth } from "../../utils/auth"
 import toast from "react-hot-toast"
 
 function LoginPage() {
-
   const navigate = useNavigate()
+  const googleBtnRef = useRef(null)
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async () => {
-
-    if (!email.trim() || !password.trim()) {
-      toast.error("من فضلك املأ البيانات ❌")
-      return
-    }
-
+  const handleGoogleCallback = async (response) => {
     try {
-      setLoading(true)
+      const res = await googleLogin(response.credential)
+      setAuth(res)
 
-      const data = await login({ email, password })
-
-      if (data.requiresPasswordChange) {
-        toast("لازم تغير كلمة المرور 🔐")
-        navigate("/reset-password")
-        return
-      }
-
-      localStorage.setItem("accessToken", data.accessToken)
-      localStorage.setItem("refreshToken", data.refreshToken)
-
-      const role = data.roles?.[0]
-
-      if (!role) {
-        toast.error("Role غير معروف ❌")
-        return
-      }
-
-      localStorage.setItem("role", role)
-
-      toast.success("تم تسجيل الدخول ✅")
+      const role = res?.roles?.[0]
+      toast.success("تم تسجيل الدخول بجوجل ✅")
 
       if (role === "Admin") {
         navigate("/dashboard/admin")
@@ -58,7 +35,89 @@ function LoginPage() {
       }
 
     } catch (err) {
+      console.error("❌ GOOGLE ERROR:", err)
+      toast.error("فشل تسجيل الدخول بجوجل ❌")
+    }
+  }
 
+  useEffect(() => {
+    const initGoogle = () => {
+      if (!window.google || !googleBtnRef.current) return
+
+      window.google.accounts.id.initialize({
+        client_id: "470189378307-c74it8k81hpbmjhm0mekifk7n0fdpfjq.apps.googleusercontent.com",
+        callback: handleGoogleCallback,
+      })
+
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: "outline",
+        size: "large",
+        width: "100%",
+        text: "signin_with",
+        locale: "ar",
+      })
+    }
+
+    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]')
+
+    if (existingScript) {
+      if (window.google) {
+        initGoogle()
+      } else {
+        existingScript.addEventListener("load", initGoogle)
+      }
+    } else {
+      const script = document.createElement("script")
+      script.src = "https://accounts.google.com/gsi/client"
+      script.async = true
+      script.defer = true
+      script.onload = initGoogle
+      document.body.appendChild(script)
+    }
+  }, [])
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      toast.error("من فضلك املأ البيانات ❌")
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      const data = await login({
+        email: email.trim(),
+        password: password.trim()
+      })
+
+      if (data.requiresPasswordChange) {
+        toast("لازم تغير كلمة المرور 🔐")
+        navigate("/reset-password")
+        return
+      }
+
+      setAuth(data)
+
+      const role = data.roles?.[0] || data.role
+
+      if (!role) {
+        toast.error("Role غير معروف ❌")
+        return
+      }
+
+      toast.success("تم تسجيل الدخول ✅")
+
+      if (role === "Admin") {
+        navigate("/dashboard/admin", { replace: true })
+      } else if (role === "Parent") {
+        navigate("/dashboard/parent", { replace: true })
+      } else if (role === "Specialist") {
+        navigate("/dashboard/specialist", { replace: true })
+      } else {
+        navigate("/", { replace: true })
+      }
+
+    } catch (err) {
       const errorMsg =
         err?.response?.data?.errors?.[0] ||
         err?.response?.data?.title ||
@@ -70,10 +129,6 @@ function LoginPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleGoogleLogin = () => {
-    toast("قريبًا تسجيل الدخول بجوجل 🚀")
   }
 
   return (
@@ -94,8 +149,12 @@ function LoginPage() {
             <p className="signup-subtitle">سجل الدخول للمتابعة</p>
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); handleLogin() }}>
-
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleLogin()
+            }}
+          >
             <div className="input-box">
               <MdEmail className="input-icon" />
               <input
@@ -128,15 +187,15 @@ function LoginPage() {
               {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
               <IoArrowForward />
             </button>
-
           </form>
 
           <div className="divider">أو</div>
 
-          <button className="google-btn" onClick={handleGoogleLogin}>
-            <FaGoogle />
-            تسجيل  بجوجل
-          </button>
+          {/* Google بيرسم الزرار هنا */}
+          <div
+            ref={googleBtnRef}
+            style={{ display: "flex", justifyContent: "center", marginTop: "8px" }}
+          />
 
           <p className="register">
             ليس لديك حساب؟
@@ -150,20 +209,20 @@ function LoginPage() {
 
       <div className="login-left">
         <div className="overlay">
-
-          <h2>صحة طفلك<br />في أيدي أمينة.</h2>
-
+          <h2>
+            صحة طفلك
+            <br />
+            في أيدي أمينة.
+          </h2>
           <p>
             انضم إلى مجتمع رفيق واستفد من أحدث التقنيات
             في متابعة وعلاج الأطفال.
           </p>
-
           <div className="features">
             <div className="feature">✔ خطط علاجية معتمدة</div>
             <div className="feature">✔ تواصل مع الأخصائيين</div>
             <div className="feature">✔ تقارير دورية</div>
           </div>
-
         </div>
       </div>
 

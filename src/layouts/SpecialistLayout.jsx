@@ -17,17 +17,23 @@ import styles from "../assets/dashboard.module.css"
 import logo from "../assets/images/logo.png"
 import { useState } from "react"
 import { useApp } from "../Context/AppContext"
+import { clearAuth } from "../utils/auth"
 
 function SpecialistLayout() {
-
   const navigate = useNavigate()
   const location = useLocation()
-  const { data, profileImage } = useApp()
+  const { data, profileImage, email } = useApp()
 
   const [showNotifications, setShowNotifications] = useState(false)
 
   const alerts = data?.alerts || {}
-  const userName = data?.specialistName || "Doctor"
+
+  const userName =
+    data?.specialistName ||
+    data?.fullName ||
+    data?.name ||
+    localStorage.getItem("userName") ||
+    "Doctor"
 
   const notificationsCount =
     (alerts?.childrenWithoutUpcomingAppointments || 0) +
@@ -54,6 +60,7 @@ function SpecialistLayout() {
 
         <div className="logo-container">
           <span className="logo-text">رفيق</span>
+
           <div className="logo-circle">
             <img src={logo} alt="logo" />
           </div>
@@ -62,49 +69,89 @@ function SpecialistLayout() {
         <ul>
 
           <li>
-            <NavLink to="/dashboard/specialist" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaHome /> الرئيسية
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/specialist/patients" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist/patients"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaUsers /> ملفات المرضى
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/specialist/appointments" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist/appointments"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaCalendarAlt /> المواعيد
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/specialist/reports" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist/reports"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaFileMedical /> التقارير
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/specialist/chat" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist/chat"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaComment /> الرسائل
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/specialist/exercises" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist/exercises"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaDumbbell /> التمارين
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/specialist/settings" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist/settings"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaCog /> الإعدادات
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/specialist/profile" className={({ isActive }) => isActive ? styles.active : ""}>
+            <NavLink
+              to="/dashboard/specialist/profile"
+              className={({ isActive }) =>
+                isActive ? styles.active : ""
+              }
+            >
               <FaUser /> الملف الشخصي
             </NavLink>
           </li>
@@ -112,10 +159,14 @@ function SpecialistLayout() {
           <li className={styles.logout}>
             <div
               onClick={() => {
-                localStorage.clear()
+                clearAuth()
                 navigate("/login", { replace: true })
               }}
-              style={{ cursor: "pointer", display: "flex", gap: "8px" }}
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                gap: "8px"
+              }}
             >
               <FaSignOutAlt /> تسجيل الخروج
             </div>
@@ -144,7 +195,9 @@ function SpecialistLayout() {
             <div style={{ position: "relative" }}>
               <FaBell
                 className={styles.iconCircle}
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() =>
+                  setShowNotifications(!showNotifications)
+                }
               />
 
               {notificationsCount > 0 && (
@@ -155,27 +208,37 @@ function SpecialistLayout() {
 
               {showNotifications && (
                 <div className={styles.dropdown}>
+
                   {alerts?.childrenWithoutUpcomingAppointments > 0 && (
                     <p>⚠️ في أطفال بدون مواعيد</p>
                   )}
+
                   {alerts?.childrenWithLowAccuracy > 0 && (
                     <p>📉 في أطفال محتاجين متابعة</p>
                   )}
+
                   {notificationsCount === 0 && (
                     <p>لا يوجد إشعارات</p>
                   )}
+
                 </div>
               )}
             </div>
 
             <div
               className={styles.userBox}
-              onClick={() => navigate("/dashboard/specialist/profile")}
+              onClick={() =>
+                navigate("/dashboard/specialist/profile")
+              }
             >
               <span>{userName}</span>
 
               {profileImage ? (
-                <img src={profileImage} className={styles.avatar} />
+                <img
+                  src={profileImage}
+                  alt="profile"
+                  className={styles.avatar}
+                />
               ) : (
                 <FaUser className={styles.iconCircle} />
               )}

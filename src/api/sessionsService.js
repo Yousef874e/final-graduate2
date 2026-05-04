@@ -1,7 +1,9 @@
 import axiosClient from "./axiosClient"
 
-export const getSessionsByChild = async (childId) => {
-  const res = await axiosClient.get(`/Sessions/child/${childId}`)
+export const getSessionsByChild = async (childId, params = {}) => {
+  const res = await axiosClient.get(`/Sessions/child/${childId}`, {
+    params
+  })
   return res.data
 }
 
@@ -11,7 +13,11 @@ export const getSessionById = async (id) => {
 }
 
 export const startSession = async (data) => {
-  const res = await axiosClient.post("/Sessions/start", data)
+  const res = await axiosClient.post("/Sessions/start", {
+    childId: data.childId,
+    exerciseId: data.exerciseId,
+    treatmentPlanExerciseId: data.treatmentPlanExerciseId
+  })
   return res.data
 }
 

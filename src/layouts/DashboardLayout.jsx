@@ -16,21 +16,18 @@ import styles from "../assets/dashboard.module.css"
 import logo from "../assets/images/logo.png"
 import { useState } from "react"
 import { useApp } from "../Context/AppContext"
+import { clearAuth } from "../utils/auth"
 
 function DashboardLayout() {
-
   const navigate = useNavigate()
   const location = useLocation()
-  const { data, profileImage } = useApp()
+
+  // 👇 جبنا الاسم من الـ Context
+  const { data, profileImage, userName, email } = useApp()
 
   const [showNotifications, setShowNotifications] = useState(false)
 
   const alerts = data?.alerts || {}
-
-  const userName =
-    data?.parentName ||
-    data?.specialistName ||
-    "User"
 
   const notificationsCount =
     (alerts?.childrenWithoutUpcomingAppointments || 0) +
@@ -53,6 +50,7 @@ function DashboardLayout() {
   return (
     <div className={styles.dashboard}>
 
+      {/* Sidebar */}
       <div className={styles.sidebar}>
 
         <div className="logo-container">
@@ -115,21 +113,27 @@ function DashboardLayout() {
           <li className={styles.logout}>
             <div
               onClick={() => {
-                localStorage.clear()
+                clearAuth()
                 navigate("/login", { replace: true })
               }}
-              style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}
             >
               <FaSignOutAlt /> تسجيل الخروج
             </div>
           </li>
 
         </ul>
-
       </div>
 
+      {/* Main */}
       <div className={styles.main}>
 
+        {/* Header */}
         <div className={styles.header}>
 
           <div className={styles.headerRight}>
@@ -137,13 +141,14 @@ function DashboardLayout() {
 
             {isDashboard && (
               <p className={styles.welcome}>
-                مرحباً، {userName}
+                مرحباً، {userName} 👋
               </p>
             )}
           </div>
 
           <div className={styles.headerLeft}>
 
+            {/* Notifications */}
             <div style={{ position: "relative" }}>
               <FaBell
                 className={styles.iconCircle}
@@ -161,9 +166,11 @@ function DashboardLayout() {
                   {alerts?.childrenWithoutUpcomingAppointments > 0 && (
                     <p>⚠️ في طفل بدون مواعيد</p>
                   )}
+
                   {alerts?.childrenWithLowAccuracy > 0 && (
                     <p>📉 في طفل محتاج متابعة</p>
                   )}
+
                   {notificationsCount === 0 && (
                     <p>لا يوجد إشعارات</p>
                   )}
@@ -171,6 +178,7 @@ function DashboardLayout() {
               )}
             </div>
 
+            {/* User Box */}
             <div
               className={styles.userBox}
               onClick={() => navigate("/dashboard/profile")}
@@ -184,7 +192,7 @@ function DashboardLayout() {
                   className={styles.avatar}
                 />
               ) : (
-                <FaUser className={styles.iconCircle}/>
+                <FaUser className={styles.iconCircle} />
               )}
             </div>
 

@@ -1,6 +1,6 @@
 import axiosClient from "./axiosClient"
 
-export const getChildren = async (params) => {
+export const getChildren = async (params = {}) => {
   const res = await axiosClient.get("/Children", { params })
   return res.data
 }
@@ -20,13 +20,26 @@ export const updateChild = async (childId, data) => {
   return res.data
 }
 
-export const updateChildProfile = async (childId, data) => {
-  return updateChild(childId, data)
-}
+export const updateChildProfile = updateChild
 
 export const deleteChild = async (childId) => {
-  const res = await axiosClient.delete(`/Children/${childId}`)
-  return res.data || true
+  await axiosClient.delete(`/Children/${childId}`)
+  return true
+}
+
+export const assignSpecialist = async (childId, specialistProfileId) => {
+  const res = await axiosClient.put(
+    `/Children/${childId}/specialist`,
+    { specialistProfileId }
+  )
+  return res.data
+}
+
+export const removeSpecialist = async (childId) => {
+  const res = await axiosClient.delete(
+    `/Children/${childId}/specialist`
+  )
+  return res.data
 }
 
 export const setChildImage = async (childId, mediaId) => {
@@ -34,10 +47,19 @@ export const setChildImage = async (childId, mediaId) => {
     `/Children/${childId}/profile-image`,
     { mediaId }
   )
-  return res.data || true
+  return res.data
 }
 
 export const getChildImage = async (childId) => {
-  const res = await axiosClient.get(`/Children/${childId}/profile-image`)
+  const res = await axiosClient.get(
+    `/Children/${childId}/profile-image`
+  )
+  return res.data
+}
+
+export const deleteChildImage = async (childId) => {
+  const res = await axiosClient.delete(
+    `/Children/${childId}/profile-image`
+  )
   return res.data
 }

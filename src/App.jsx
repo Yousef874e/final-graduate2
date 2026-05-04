@@ -46,7 +46,7 @@ function App() {
     <AppProvider>
       <BrowserRouter>
 
-        <Toaster position="top-center" toastOptions={{ duration: 650 }} />
+        <Toaster position="top-center" toastOptions={{ duration: 950 }} />
 
         <Routes>
 
@@ -58,9 +58,9 @@ function App() {
           <Route path="/register/specialist" element={<RegisterPage />} />
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          <Route path="/child-imge" element={<ChildImage />} />
+          <Route path="/child-image" element={<ChildImage />} />
           <Route path="/child-info-step1" element={<ChildInfoStep1 />} />
 
           {/* Parent */}
@@ -99,24 +99,25 @@ function App() {
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
-          {/* Specialist 🔥 */}
+          {/* Specialist */}
           <Route
-  path="/dashboard/specialist"
-  element={
-    <ProtectedRoute>
-      <SpecialistLayout />
-    </ProtectedRoute>
-  }
->
-  <Route index element={<SpecialistDashboard />} />
-  <Route path="patients" element={<SpecialistPatients />} />
-  <Route path="appointments" element={<SpecialistAppointments />} />
-  <Route path="reports" element={<SpecialistReports />} />
-  <Route path="chat" element={<SpecialistChat />} />
-  <Route path="exercises" element={<SpecialistExercise />} />
-  <Route path="settings" element={<SpecialistSettings />} />
-  <Route path="profile" element={<SpecialistProfile />} />
-</Route>
+            path="/dashboard/specialist"
+            element={
+              <ProtectedRoute>
+                <SpecialistLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<SpecialistDashboard />} />
+            <Route path="patients" element={<SpecialistPatients />} />
+            <Route path="appointments" element={<SpecialistAppointments />} />
+            <Route path="reports" element={<SpecialistReports />} />
+            <Route path="chat" element={<SpecialistChat />} />
+            <Route path="exercises" element={<SpecialistExercise />} />
+            <Route path="settings" element={<SpecialistSettings />} />
+            <Route path="profile" element={<SpecialistProfile />} />
+          </Route>
+
         </Routes>
 
       </BrowserRouter>

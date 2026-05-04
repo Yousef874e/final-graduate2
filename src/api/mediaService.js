@@ -2,9 +2,6 @@ import axiosClient from "./axiosClient"
 
 const upload = async (url, formData, onProgress) => {
   const res = await axiosClient.post(url, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data"
-    },
     onUploadProgress: (e) => {
       if (onProgress && e.total) {
         const percent = Math.round((e.loaded * 100) / e.total)
@@ -15,18 +12,41 @@ const upload = async (url, formData, onProgress) => {
   return res.data
 }
 
-export const uploadImage = (formData, onProgress) => {
-  return upload("/Media/upload/image", formData, onProgress)
-}
+export const uploadFile = (file, data = {}, onProgress) => {
+  const formData = new FormData()
+  formData.append("File", file)
+  formData.append("Description", data.description || "")
+  formData.append("Category", data.category || 0)
+  formData.append("ChildId", data.childId || 0)
 
-export const uploadVideo = (formData, onProgress) => {
-  return upload("/Media/upload/video", formData, onProgress)
-}
-
-export const uploadFile = (formData, onProgress) => {
   return upload("/Media/upload", formData, onProgress)
 }
 
+export const uploadImage = (file, data, onProgress) => {
+  const formData = new FormData()
+  formData.append("File", file)
+  formData.append("Description", data?.description || "")
+  formData.append("Category", data?.category || 0)
+
+  if (data?.childId) {
+    formData.append("ChildId", data.childId)
+  }
+
+  return upload("/Media/upload/image", formData, onProgress)
+}
+
+export const uploadVideo = (file, data, onProgress) => {
+  const formData = new FormData()
+  formData.append("File", file)
+  formData.append("Description", data?.description || "")
+  formData.append("Category", data?.category || 0)
+
+  if (data?.childId) {
+    formData.append("ChildId", data.childId)
+  }
+
+  return upload("/Media/upload/video", formData, onProgress)
+}
 export const getMediaPaged = async (params) => {
   const res = await axiosClient.get("/Media/paged", { params })
   return res.data

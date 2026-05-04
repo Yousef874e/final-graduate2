@@ -27,32 +27,45 @@ function SpecialistAppointments() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
 
-  const loadChildren = async () => {
+  const loadAppointments = async () => {
     try {
       const res = await getChildren()
-      setChildren(res?.items || [])
-    } catch {
-      toast.error("فشل تحميل الأطفال")
-    }
-  }
+      const childrenList = res?.items || []
 
-  const loadAppointments = async () => {
-    if (!childId) return
-    try {
-      const res = await getAppointmentsByChildId(childId)
-      setAppointments(res?.items || [])
+      setChildren(childrenList)
+
+      let allAppointments = []
+
+      const promises = childrenList.map(async (child) => {
+        try {
+          const res = await getAppointmentsByChildId(child.id)
+          const items = res?.items || []
+
+          return items.map(a => ({
+            ...a,
+            childName: child.fullName
+          }))
+        } catch {
+          return []
+        }
+      })
+
+      const results = await Promise.all(promises)
+
+      results.forEach(arr => {
+        allAppointments.push(...arr)
+      })
+
+      setAppointments(allAppointments)
+
     } catch {
       toast.error("فشل تحميل المواعيد")
     }
   }
 
   useEffect(() => {
-    loadChildren()
-  }, [])
-
-  useEffect(() => {
     loadAppointments()
-  }, [childId])
+  }, [])
 
   const handleSubmit = async () => {
 
@@ -71,7 +84,10 @@ function SpecialistAppointments() {
       return
     }
 
-    const scheduledAtUtc = new Date(`${date}T${time}`).toISOString()
+    const localDate = new Date(`${date}T${time}`)
+    const scheduledAtUtc = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000
+    ).toISOString()
 
     try {
       if (editId) {
@@ -233,7 +249,7 @@ function SpecialistAppointments() {
         <div className={styles.overlay}>
           <div className={styles.modal}>
 
-            <select value={childId} onChange={(e) => setChildId(e.target.value)}>
+            <select value={childId} onChange={(e) => setChildId(Number(e.target.value))}>
               <option value="">اختر الطفل</option>
               {children.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -272,6 +288,7 @@ function SpecialistAppointments() {
 
             <div>
               <h4>{a.notes || "جلسة"}</h4>
+              <p>{a.childName}</p>
               <p>{new Date(a.scheduledAtUtc).toLocaleDateString()}</p>
             </div>
 

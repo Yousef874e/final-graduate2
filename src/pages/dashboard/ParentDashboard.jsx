@@ -17,21 +17,28 @@ function ParentDashboard() {
   const appointments = data?.upcomingAppointments || []
   const overview = data?.overview || {}
 
-  const appointment = appointments[0]
+  // 🔥 ترتيب أقرب موعد
+  const appointment = appointments
+    .sort((a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc))[0]
+
   const child = children[0]
 
   let day = ""
   let month = ""
   let time = ""
+  let isToday = false
 
   if (appointment?.scheduledAtUtc) {
     const date = new Date(appointment.scheduledAtUtc)
+
     day = date.getDate()
     month = date.toLocaleString("ar-EG", { month: "short" })
     time = date.toLocaleTimeString("ar-EG", {
       hour: "2-digit",
       minute: "2-digit"
     })
+
+    isToday = date.toDateString() === new Date().toDateString()
   }
 
   const handleStartSession = async () => {
@@ -59,7 +66,7 @@ function ParentDashboard() {
         return
       }
 
-      navigate(`/exercise/${exercise.exerciseId}`, {
+      navigate(`/dashboard/exercises?id=${exercise.exerciseId}`, {
         state: { treatmentPlanExerciseId: exercise.id }
       })
 
@@ -84,7 +91,11 @@ function ParentDashboard() {
         <div className={styles.heroRight}>
 
           <span className={styles.tag}>
-            {appointment ? "جلسة اليوم" : "لا يوجد جلسات"}
+            {appointment
+              ? isToday
+                ? "جلسة اليوم"
+                : "جلسة قادمة"
+              : "لا يوجد جلسات"}
           </span>
 
           <h2>جاهز للتمرين؟</h2>
@@ -96,7 +107,7 @@ function ParentDashboard() {
               className={styles.outlineBtn}
               onClick={() => {
                 if (appointment) {
-                  navigate(`/dashboard/sessions?appointmentId=${appointment.appointmentId}`)
+                  navigate(`/dashboard/appointments?appointmentId=${appointment.id}`)
                 } else {
                   toast.error("لا يوجد جلسة حالياً ❌")
                 }
@@ -127,6 +138,7 @@ function ParentDashboard() {
 
       <div className={styles.cards}>
 
+        {/* إنجازات */}
         <div className={styles.card}>
           <h4>إنجازات الأسبوع</h4>
 
@@ -142,6 +154,7 @@ function ParentDashboard() {
           </span>
         </div>
 
+        {/* الموعد القادم */}
         <div className={styles.card}>
           <h4>الموعد القادم</h4>
 
@@ -161,7 +174,7 @@ function ParentDashboard() {
 
               <button
                 className={styles.confirmBtn}
-                onClick={() => navigate("/dashboard/sessions")}
+                onClick={() => navigate(`/dashboard/appointments?appointmentId=${appointment.id}`)}
               >
                 عرض الجلسة
               </button>
@@ -171,6 +184,7 @@ function ParentDashboard() {
           )}
         </div>
 
+        {/* الطفل */}
         <div className={styles.card}>
           <h4>
             {child ? child.childName : "لا يوجد طفل"}

@@ -4,6 +4,7 @@ import { changePassword } from "../../api/authService"
 import { getSpecialistDashboard } from "../../api/dashboardService"
 import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
+import { clearAuth } from "../../utils/auth"
 
 function Settings() {
 
@@ -59,7 +60,7 @@ function Settings() {
 
       toast.success("تم تغيير كلمة المرور")
 
-      localStorage.clear()
+      clearAuth()
 
       setTimeout(() => {
         navigate("/login")

@@ -38,12 +38,19 @@ export default function AdminAppointments() {
       setChildren(kids)
 
       const requests = kids.map(child =>
-        getAppointmentsByChildId(child.id)
+        getAppointmentsByChildId(child.id, {
+          pageNumber: 1,
+          pageSize: 50
+        })
       )
 
       const results = await Promise.all(requests)
-
       const allAppointments = results.flatMap(r => r.items || [])
+
+      allAppointments.sort(
+        (a, b) =>
+          new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc)
+      )
 
       setAppointments(allAppointments)
 
@@ -72,15 +79,19 @@ export default function AdminAppointments() {
 
   const filtered = appointments.filter(a => {
     const d = new Date(a.scheduledAtUtc)
-    return d.toDateString() === selectedDate.toDateString()
+    return (
+      d.getFullYear() === selectedDate.getFullYear() &&
+      d.getMonth() === selectedDate.getMonth() &&
+      d.getDate() === selectedDate.getDate()
+    )
   })
 
   const isValid = () => {
     return (
       form.childId &&
       form.scheduledAtUtc &&
-      form.durationMinutes >= 15 &&
-      form.durationMinutes <= 240
+      Number(form.durationMinutes) >= 15 &&
+      Number(form.durationMinutes) <= 240
     )
   }
 
@@ -139,6 +150,18 @@ export default function AdminAppointments() {
     }
   }
 
+  const prevMonth = () => {
+    setCurrentMonth(prev =>
+      new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+    )
+  }
+
+  const nextMonth = () => {
+    setCurrentMonth(prev =>
+      new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+    )
+  }
+
   return (
     <div className="appointments">
 
@@ -150,24 +173,27 @@ export default function AdminAppointments() {
       </div>
 
       <div className="month">
-        <button onClick={() =>
-          setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))
-        }>‹</button>
+        <button onClick={prevMonth}>‹</button>
 
         <span>
-          {currentMonth.toLocaleString("ar-EG", { month: "long", year: "numeric" })}
+          {currentMonth.toLocaleString("ar-EG", {
+            month: "long",
+            year: "numeric"
+          })}
         </span>
 
-        <button onClick={() =>
-          setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))
-        }>›</button>
+        <button onClick={nextMonth}>›</button>
       </div>
 
       <div className="days">
         {getDays().map((d, i) => (
           <div
             key={i}
-            className={`day ${d && selectedDate.toDateString() === d.toDateString() ? "active" : ""}`}
+            className={`day ${
+              d && selectedDate.toDateString() === d.toDateString()
+                ? "active"
+                : ""
+            }`}
             onClick={() => d && setSelectedDate(d)}
           >
             {d ? d.getDate() : ""}
@@ -176,21 +202,25 @@ export default function AdminAppointments() {
       </div>
 
       <div className="cards">
-        {filtered.map(a => {
-          const time = new Date(a.scheduledAtUtc)
+        {filtered.length === 0 ? (
+          <p className="empty">لا يوجد مواعيد</p>
+        ) : (
+          filtered.map(a => {
+            const time = new Date(a.scheduledAtUtc)
 
-          return (
-            <div className="card" key={a.id}>
-              <h3>{a.notes || "جلسة"}</h3>
-              <p>{time.toLocaleTimeString()}</p>
+            return (
+              <div className="card" key={a.id}>
+                <h3>{a.notes || "جلسة"}</h3>
+                <p>{time.toLocaleTimeString()}</p>
 
-              <div className="actions">
-                <button onClick={() => handleCancel(a.id)}>إلغاء</button>
-                <button onClick={() => handleComplete(a.id)}>إنهاء</button>
+                <div className="actions">
+                  <button onClick={() => handleCancel(a.id)}>إلغاء</button>
+                  <button onClick={() => handleComplete(a.id)}>إنهاء</button>
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
 
       {showModal && (
@@ -199,27 +229,43 @@ export default function AdminAppointments() {
 
             <h3>إضافة جلسة</h3>
 
-            <select onChange={e => setForm({ ...form, childId: e.target.value })}>
+            <select
+              value={form.childId}
+              onChange={e =>
+                setForm({ ...form, childId: e.target.value })
+              }
+            >
               <option value="">اختر الطفل</option>
               {children.map(c => (
-                <option key={c.id} value={c.id}>{c.fullName}</option>
+                <option key={c.id} value={c.id}>
+                  {c.fullName}
+                </option>
               ))}
             </select>
 
             <input
               type="datetime-local"
-              onChange={e => setForm({ ...form, scheduledAtUtc: e.target.value })}
+              value={form.scheduledAtUtc}
+              onChange={e =>
+                setForm({ ...form, scheduledAtUtc: e.target.value })
+              }
             />
 
             <input
               type="number"
               placeholder="مدة الجلسة (15-240 دقيقة)"
-              onChange={e => setForm({ ...form, durationMinutes: e.target.value })}
+              value={form.durationMinutes}
+              onChange={e =>
+                setForm({ ...form, durationMinutes: e.target.value })
+              }
             />
 
             <input
               placeholder="ملاحظات"
-              onChange={e => setForm({ ...form, notes: e.target.value })}
+              value={form.notes}
+              onChange={e =>
+                setForm({ ...form, notes: e.target.value })
+              }
             />
 
             <button

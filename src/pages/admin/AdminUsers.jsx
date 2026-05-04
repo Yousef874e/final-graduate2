@@ -3,11 +3,21 @@ import { useEffect, useState } from "react"
 import { FaCalendarAlt, FaFileAlt, FaLink, FaEllipsisV } from "react-icons/fa"
 import toast from "react-hot-toast"
 
-import { getChildren, deleteChild, updateChild } from "../../api/childrenService"
-import { getSessionsByChild } from "../../api/sessionsService"
+import {
+  getChildren,
+  deleteChild,
+  updateChild,
+  getChildImage
+} from "../../api/childrenService"
+
+import { getAppointmentsByChildId } from "../../api/appointmentsService"
 import { getMedicalReports } from "../../api/medicalReportsService"
 import { getProgressReports } from "../../api/progressReportsService"
-import { getSpecialists, assignSpecialistToChild } from "../../api/adminService"
+
+import {
+  getSpecialists,
+  assignSpecialistToChild
+} from "../../api/adminService"
 
 function AdminUsers() {
 
@@ -49,7 +59,21 @@ function AdminUsers() {
   const loadUsers = async () => {
     try {
       const res = await getChildren()
-      const data = res.items || []
+      let data = res.items || []
+
+      const promises = data.map(async (user) => {
+        if (!user.profileImageUrl) {
+          try {
+            const imageRes = await getChildImage(user.id)
+            if (imageRes?.url) {
+              user.profileImageUrl = imageRes.url
+            }
+          } catch {}
+        }
+        return user
+      })
+
+      data = await Promise.all(promises)
       setUsers(data)
       setFilteredUsers(data)
     } catch {
@@ -91,13 +115,20 @@ function AdminUsers() {
     return new Date().getFullYear() - new Date(date).getFullYear()
   }
 
+  const getStatus = (status) => {
+    if (status === 0) return "قيد الانتظار"
+    if (status === 1) return "مكتمل"
+    if (status === 2) return "ملغي"
+    return "-"
+  }
+
   const openReports = async (user) => {
     setSelectedUser(user)
     setShowReports(true)
 
     try {
-      const r1 = await getMedicalReports(user.id)
-      const r2 = await getProgressReports(user.id)
+      const r1 = await getMedicalReports(user.id, { pageNumber: 1, pageSize: 50 })
+      const r2 = await getProgressReports(user.id, { pageNumber: 1, pageSize: 50 })
 
       const medical = r1?.items || []
       const progress = r2?.items || []
@@ -106,7 +137,6 @@ function AdminUsers() {
         ...medical.map(r => ({ ...r, type: "medical" })),
         ...progress.map(r => ({ ...r, type: "progress" }))
       ])
-
     } catch {
       toast.error("فشل تحميل التقارير ❌")
     }
@@ -117,10 +147,13 @@ function AdminUsers() {
     setShowSessions(true)
 
     try {
-      const res = await getSessionsByChild(user.id)
+      const res = await getAppointmentsByChildId(user.id, {
+        pageNumber: 1,
+        pageSize: 50
+      })
       setSessions(res.items || [])
     } catch {
-      toast.error("فشل تحميل الجلسات ❌")
+      toast.error("فشل تحميل المواعيد ❌")
     }
   }
 
@@ -130,10 +163,16 @@ function AdminUsers() {
       return
     }
 
+    if (selectedUser.specialistProfileId) {
+      toast.error("الطفل مربوط بالفعل")
+      return
+    }
+
     try {
-      await assignSpecialistToChild(selectedUser.id, {
-        specialistProfileId: Number(selectedSpecialist)
-      })
+      await assignSpecialistToChild(
+        selectedUser.id,
+        Number(selectedSpecialist)
+      )
 
       toast.success("تم الربط ✅")
       setShowLink(false)
@@ -144,17 +183,33 @@ function AdminUsers() {
     }
   }
 
-  const deleteUser = async (id) => {
+  const deleteUser = async (user) => {
     try {
-      await deleteChild(id)
-      setUsers(users.filter(u => u.id !== id))
+      if (user.isActive) {
+        await updateChild(user.id, {
+          ...user,
+          isActive: false
+        })
+        toast.success("تم تعطيل المستخدم بدل الحذف ⚠️")
+        loadUsers()
+        return
+      }
+
+      await deleteChild(user.id)
+      setUsers(prev => prev.filter(u => u.id !== user.id))
       toast.success("تم الحذف 🗑️")
+
     } catch {
-      toast.error("فشل الحذف ❌")
+      toast.error("المستخدم مرتبط ببيانات ❌")
     }
   }
 
   const openEdit = (user) => {
+    if (!user.isActive) {
+      toast.error("مينفعش تعدل مستخدم غير نشط ❌")
+      return
+    }
+
     setSelectedUser(user)
     setEditForm({
       fullName: user.fullName || "",
@@ -164,17 +219,8 @@ function AdminUsers() {
   }
 
   const submitEdit = async () => {
-    if (!editForm.fullName || !editForm.dateOfBirth) {
-      toast.error("اكمل البيانات ❌")
-      return
-    }
-
     try {
-      await updateChild(selectedUser.id, {
-        fullName: editForm.fullName,
-        dateOfBirth: editForm.dateOfBirth
-      })
-
+      await updateChild(selectedUser.id, editForm)
       toast.success("تم التعديل ✏️")
       setShowEdit(false)
       loadUsers()
@@ -188,7 +234,6 @@ function AdminUsers() {
 
       <div className="users-header">
         <h2>ملفات المستخدمين</h2>
-
         <button className="filter-btn" onClick={() => setShowFilter(!showFilter)}>
           تصفية
         </button>
@@ -196,9 +241,9 @@ function AdminUsers() {
 
       {showFilter && (
         <div className="filter-box">
-          <button className={activeFilter === "all" ? "active" : ""} onClick={() => setActiveFilter("all")}>الكل</button>
-          <button className={activeFilter === "active" ? "active" : ""} onClick={() => setActiveFilter("active")}>مفعل</button>
-          <button className={activeFilter === "inactive" ? "active" : ""} onClick={() => setActiveFilter("inactive")}>غير مفعل</button>
+          <button onClick={() => setActiveFilter("all")}>الكل</button>
+          <button onClick={() => setActiveFilter("active")}>مفعل</button>
+          <button onClick={() => setActiveFilter("inactive")}>غير مفعل</button>
         </div>
       )}
 
@@ -219,15 +264,18 @@ function AdminUsers() {
                 <div>
                   <h3>{user.fullName}</h3>
                   <p>{calculateAge(user.dateOfBirth)} سنة</p>
+                  <span style={{ color: user.isActive ? "green" : "red" }}>
+                    {user.isActive ? "نشط" : "غير نشط"}
+                  </span>
                 </div>
               </div>
 
-              <FaEllipsisV className="menu-icon" onClick={() => setShowMenu(user.id)} />
+              <FaEllipsisV onClick={() => setShowMenu(showMenu === user.id ? null : user.id)} />
 
               {showMenu === user.id && (
                 <div className="dropdown">
                   <div onClick={() => openEdit(user)}>تعديل</div>
-                  <div onClick={() => deleteUser(user.id)}>حذف</div>
+                  <div onClick={() => deleteUser(user)}>حذف</div>
                 </div>
               )}
             </div>
@@ -235,22 +283,17 @@ function AdminUsers() {
             <div className="divider"></div>
 
             <div className="user-actions">
-
               <div onClick={() => { setSelectedUser(user); setShowLink(true) }}>
-                <FaLink />
-                <span>ربط</span>
+                <FaLink /> <span>ربط</span>
               </div>
 
               <div onClick={() => openSessions(user)}>
-                <FaCalendarAlt />
-                <span>المواعيد</span>
+                <FaCalendarAlt /> <span>المواعيد</span>
               </div>
 
               <div onClick={() => openReports(user)}>
-                <FaFileAlt />
-                <span>التقارير</span>
+                <FaFileAlt /> <span>التقارير</span>
               </div>
-
             </div>
 
           </div>
@@ -261,12 +304,18 @@ function AdminUsers() {
         <div className="modal">
           <div className="modal-content">
             <h3>التقارير</h3>
-            {reports.map((r, i) => (
-              <div key={r.id || i} className="item">
-                {r.type === "medical" && (r.notes || "تقرير طبي")}
-                {r.type === "progress" && (r.summary || "تقرير تقدم")}
-              </div>
-            ))}
+
+            {reports.length === 0 ? (
+              <p>لا يوجد تقارير</p>
+            ) : (
+              reports.map(r => (
+                <div key={r.id}>
+                  <p>{r.type}</p>
+                  <p>{new Date(r.createdAtUtc || r.createdAt).toLocaleDateString()}</p>
+                </div>
+              ))
+            )}
+
             <button onClick={() => setShowReports(false)}>إغلاق</button>
           </div>
         </div>
@@ -275,12 +324,19 @@ function AdminUsers() {
       {showSessions && (
         <div className="modal">
           <div className="modal-content">
-            <h3>الجلسات</h3>
-            {sessions.map((s, i) => (
-              <div key={i} className="item">
-                {new Date(s.createdAtUtc).toLocaleString()}
-              </div>
-            ))}
+            <h3>المواعيد</h3>
+
+            {sessions.length === 0 ? (
+              <p>لا يوجد مواعيد</p>
+            ) : (
+              sessions.map(s => (
+                <div key={s.id}>
+                  <p>{new Date(s.scheduledAtUtc).toLocaleString("ar-EG")}</p>
+                  <p>{getStatus(s.status)}</p>
+                </div>
+              ))
+            )}
+
             <button onClick={() => setShowSessions(false)}>إغلاق</button>
           </div>
         </div>
@@ -291,7 +347,7 @@ function AdminUsers() {
           <div className="modal-content">
             <h3>ربط طفل</h3>
 
-            <select onChange={(e) => setSelectedSpecialist(e.target.value)}>
+            <select value={selectedSpecialist} onChange={(e) => setSelectedSpecialist(e.target.value)}>
               <option value="">اختر أخصائي</option>
               {specialists.map(s => (
                 <option key={s.specialistProfileId} value={s.specialistProfileId}>
@@ -309,24 +365,24 @@ function AdminUsers() {
       {showEdit && (
         <div className="modal">
           <div className="modal-content">
-
             <h3>تعديل</h3>
 
             <input
               value={editForm.fullName}
-              onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
-              placeholder="الاسم"
+              onChange={(e) =>
+                setEditForm({ ...editForm, fullName: e.target.value })
+              }
             />
 
             <input
               type="date"
               value={editForm.dateOfBirth}
-              onChange={e => setEditForm({ ...editForm, dateOfBirth: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, dateOfBirth: e.target.value })
+              }
             />
 
             <button onClick={submitEdit}>حفظ</button>
-            <button onClick={() => setShowEdit(false)}>إغلاق</button>
-
           </div>
         </div>
       )}

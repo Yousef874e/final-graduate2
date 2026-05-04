@@ -8,6 +8,8 @@ import banner from "../../assets/images/banner.png"
 function AdminDashboard() {
   const [data, setData] = useState({})
   const [system, setSystem] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     loadData()
@@ -15,14 +17,21 @@ function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const dash = await getAdminDashboard()
-      const sys = await getSystemMonitoring()
+      const [dash, sys] = await Promise.all([
+        getAdminDashboard(),
+        getSystemMonitoring()
+      ])
       setData(dash || {})
       setSystem(sys || {})
-    } catch (e) {
-      console.log(e)
+    } catch {
+      setError("حدث خطأ")
+    } finally {
+      setLoading(false)
     }
   }
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>{error}</div>
 
   return (
     <div className="admin-page">
@@ -39,9 +48,17 @@ function AdminDashboard() {
         <img src={banner} alt="banner" />
       </div>
 
-      <div className="alert">
-        يوجد {data?.alerts?.unassignedChildren || 0} أطفال غير مرتبطين تحتاج متابعة
-      </div>
+      {data?.alerts?.unassignedChildren > 0 && (
+        <div className="alert">
+          يوجد {data.alerts.unassignedChildren} أطفال غير مرتبطين تحتاج متابعة
+        </div>
+      )}
+
+      {data?.alerts?.childrenWithoutReports > 0 && (
+        <div className="alert">
+          يوجد {data.alerts.childrenWithoutReports} أطفال بدون تقارير
+        </div>
+      )}
 
       <div className="stats">
 
@@ -83,12 +100,18 @@ function AdminDashboard() {
           <div className="activity-item">
             عدد أولياء الأمور: {data?.overview?.totalParents || 0}
           </div>
+          <div className="activity-item">
+            متوسط الجلسات لكل طفل: {data?.engagement?.averageSessionsPerChild || 0}
+          </div>
+          <div className="activity-item">
+            متوسط التقارير لكل طفل: {data?.engagement?.averageReportsPerChild || 0}
+          </div>
         </div>
 
         <div className="system">
-          <div className="system-item">Total Users: {system?.totalUsers || 0}</div>
-          <div className="system-item">Active Users: {system?.activeUsers || 0}</div>
-          <div className="system-item">Total Sessions: {system?.totalSessions || 0}</div>
+          <div className="system-item">إجمالي المستخدمين: {system?.totalUsers || 0}</div>
+          <div className="system-item">المستخدمين النشطين: {system?.activeUsers || 0}</div>
+          <div className="system-item">إجمالي الجلسات: {system?.totalSessions || 0}</div>
         </div>
 
       </div>

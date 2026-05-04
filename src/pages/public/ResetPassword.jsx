@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams, useParams } from "react-router-dom"
 import { resetPassword } from "../../api/authService"
 import logo from "../../assets/images/logo.png"
 import "../../assets/login.css"
@@ -10,9 +10,10 @@ function ResetPassword() {
 
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { token: paramToken } = useParams()
 
   const email = searchParams.get("email")
-  const token = decodeURIComponent(searchParams.get("token") || "")
+  const token = paramToken || decodeURIComponent(searchParams.get("token") || "")
 
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)

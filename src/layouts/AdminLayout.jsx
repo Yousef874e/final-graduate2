@@ -6,6 +6,7 @@ import {
 } from "react-icons/fa"
 import { Outlet, useNavigate, useLocation } from "react-router-dom"
 import { useState } from "react"
+import { clearAuth } from "../utils/auth"
 
 function AdminLayout() {
 
@@ -17,7 +18,7 @@ function AdminLayout() {
   const [showNotif, setShowNotif] = useState(false)
 
   const handleLogout = () => {
-    localStorage.clear()
+    clearAuth()
     navigate("/login", { replace: true })
   }
 

@@ -1,18 +1,21 @@
 import "../../assets/adminLibrary.css"
 import { useEffect, useState } from "react"
-import { FaPlus, FaDumbbell } from "react-icons/fa"
+import { FaPlus, FaDumbbell, FaTrash } from "react-icons/fa"
 import toast from "react-hot-toast"
 
 import {
   getExercises,
   createExercise,
-  updateExercise
+  updateExercise,
+  deleteExercise
 } from "../../api/exerciseService"
 
-import { uploadFile } from "../../api/mediaService"
+import {
+  uploadImage,
+  uploadVideo
+} from "../../api/mediaService"
 
 function AdminLibrary() {
-
   const [exercises, setExercises] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [search, setSearch] = useState("")
@@ -34,7 +37,7 @@ function AdminLibrary() {
 
   const loadExercises = async () => {
     try {
-      const res = await getExercises()
+      const res = await getExercises({ PageNumber: 1, PageSize: 50 })
       setExercises(res.items || [])
     } catch {
       toast.error("فشل تحميل التمارين ❌")
@@ -44,11 +47,17 @@ function AdminLibrary() {
   const uploadMedia = async () => {
     if (!form.file) return null
 
-    const data = new FormData()
-    data.append("file", form.file)
-    data.append("category", 1)
+    let res
 
-    const res = await uploadFile(data)
+    if (form.file.type.startsWith("image")) {
+      res = await uploadImage(form.file, { category: 1 })
+    } else if (form.file.type.startsWith("video")) {
+      res = await uploadVideo(form.file, { category: 1 })
+    } else {
+      toast.error("ارفع صورة أو فيديو فقط ❌")
+      return null
+    }
+
     return res.id
   }
 
@@ -63,7 +72,7 @@ function AdminLibrary() {
 
       await createExercise({
         name: form.name,
-        exerciseType: Number(form.exerciseType),
+        exerciseType: form.exerciseType,
         description: form.description,
         mediaId
       })
@@ -71,8 +80,8 @@ function AdminLibrary() {
       toast.success("تم إضافة التمرين ✅")
       closeModal()
       loadExercises()
-
-    } catch {
+    } catch (err) {
+      console.log(err.response?.data)
       toast.error("فشل الإضافة ❌")
     }
   }
@@ -87,7 +96,7 @@ function AdminLibrary() {
 
       await updateExercise(selectedExercise.id, {
         name: form.name,
-        exerciseType: Number(form.exerciseType),
+        exerciseType: form.exerciseType,
         description: form.description,
         mediaId,
         isActive: selectedExercise.isActive
@@ -96,9 +105,22 @@ function AdminLibrary() {
       toast.success("تم التعديل ✅")
       closeModal()
       loadExercises()
-
-    } catch {
+    } catch (err) {
+      console.log(err.response?.data)
       toast.error("فشل التعديل ❌")
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("متأكد عايز تحذف التمرين؟")) return
+
+    try {
+      await deleteExercise(id)
+      setExercises(prev => prev.filter(ex => ex.id !== id))
+      toast.success("تم الحذف ✅")
+    } catch (err) {
+      console.log(err.response?.data)
+      toast.error("فشل الحذف ❌")
     }
   }
 
@@ -131,6 +153,7 @@ function AdminLibrary() {
     setShowModal(false)
     setIsEdit(false)
     setSelectedExercise(null)
+
     setForm({
       name: "",
       exerciseType: "",
@@ -139,19 +162,19 @@ function AdminLibrary() {
     })
   }
 
-  const filtered = exercises.filter(ex => {
-    const matchSearch = ex.name?.toLowerCase().includes(search.toLowerCase())
+  const filtered = exercises.filter((ex) => {
+    const matchSearch =
+      ex.name?.toLowerCase().includes(search.toLowerCase())
 
     if (activeFilter === "all") return matchSearch
 
-    return matchSearch && ex.exerciseType === Number(activeFilter)
+    return matchSearch && ex.exerciseType === activeFilter
   })
 
   return (
     <div className="library-page">
 
       <div className="top-bar">
-
         <button className="add-btn" onClick={openCreate}>
           <FaPlus /> إنشاء تمرين جديد
         </button>
@@ -166,9 +189,9 @@ function AdminLibrary() {
 
       <div className="filters">
         <button onClick={() => setActiveFilter("all")}>الكل</button>
-        <button onClick={() => setActiveFilter(1)}>علاج طبيعي</button>
-        <button onClick={() => setActiveFilter(2)}>نطق</button>
-        <button onClick={() => setActiveFilter(3)}>تكامل حسي</button>
+        <button onClick={() => setActiveFilter("UpperBody")}>علاج طبيعي</button>
+        <button onClick={() => setActiveFilter("Speech")}>نطق</button>
+        <button onClick={() => setActiveFilter("Sensory")}>تكامل حسي</button>
       </div>
 
       <div className="grid">
@@ -176,13 +199,25 @@ function AdminLibrary() {
           <div className="card" key={ex.id}>
 
             <div className="icon">
-              <FaDumbbell />
+              {ex.mediaThumbnailUrl ? (
+                <img src={ex.mediaThumbnailUrl} alt="" />
+              ) : ex.mediaUrl ? (
+                <video src={ex.mediaUrl} controls />
+              ) : (
+                <FaDumbbell />
+              )}
             </div>
 
             <h3>{ex.name}</h3>
             <p className="desc">{ex.description}</p>
 
-            <button onClick={() => openEdit(ex)}>تعديل</button>
+            <div className="actions">
+              <button onClick={() => openEdit(ex)}>تعديل</button>
+
+              <button onClick={() => handleDelete(ex.id)}>
+                <FaTrash />
+              </button>
+            </div>
 
           </div>
         ))}
@@ -192,40 +227,62 @@ function AdminLibrary() {
         <div className="modal">
           <div className="modal-content">
 
-            <h2>{isEdit ? "تعديل التمرين" : "إضافة تمرين"}</h2>
+            <h2>
+              {isEdit ? "تعديل التمرين" : "إضافة تمرين"}
+            </h2>
 
             <input
               placeholder="اسم التمرين"
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, name: e.target.value })
+              }
             />
 
             <select
               value={form.exerciseType}
-              onChange={(e) => setForm({ ...form, exerciseType: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  exerciseType: e.target.value
+                })
+              }
             >
               <option value="">نوع التمرين</option>
-              <option value="1">علاج طبيعي</option>
-              <option value="2">نطق</option>
-              <option value="3">تكامل حسي</option>
+              <option value="UpperBody">علاج طبيعي</option>
+              <option value="Speech">نطق</option>
+              <option value="Sensory">تكامل حسي</option>
             </select>
 
             <textarea
               placeholder="الوصف"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  description: e.target.value
+                })
+              }
             />
 
             <input
               type="file"
-              onChange={(e) => setForm({ ...form, file: e.target.files[0] })}
+              accept="image/*,video/*"
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  file: e.target.files[0]
+                })
+              }
             />
 
             <button onClick={isEdit ? handleUpdate : handleCreate}>
               {isEdit ? "حفظ" : "إضافة"}
             </button>
 
-            <button onClick={closeModal}>إغلاق</button>
+            <button onClick={closeModal}>
+              إغلاق
+            </button>
 
           </div>
         </div>

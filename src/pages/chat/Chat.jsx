@@ -7,12 +7,13 @@ import {
   markMessageRead
 } from "../../api/messagesService"
 import { getChildren } from "../../api/childrenService"
+//import { getSpecialistUserId } from "../../api/specialistsHelper"
 import toast from "react-hot-toast"
 
 function Chat() {
 
-  const { data, role } = useApp()
-  const myId = data?.userId
+  const { role, userId } = useApp()
+  const myId = Number(userId)
 
   const [children, setChildren] = useState([])
   const [activeChild, setActiveChild] = useState(null)
@@ -33,9 +34,9 @@ function Chat() {
       setChildren(list)
 
       if (list.length) {
-        const first = list[0]
-        setActiveChild(first)
-        await loadMessages(first.childId)
+        const child = list[0]
+        setActiveChild(child)
+        loadMessages(child.id)
       }
 
     } catch {
@@ -44,18 +45,20 @@ function Chat() {
   }
 
   const loadMessages = async (childId) => {
+    if (!childId) return
+
     setLoading(true)
+
     try {
       const res = await getChildMessages(childId)
       const msgs = res.items || []
-
       setMessages(msgs)
 
-      msgs.forEach(m => {
-        if (!m.isRead && m.receiverUserId === myId) {
-          markMessageRead(m.id)
-        }
-      })
+      await Promise.all(
+        msgs
+          .filter(m => !m.isRead && Number(m.receiverUserId) === myId)
+          .map(m => markMessageRead(m.id))
+      )
 
       scrollDown()
 
@@ -66,46 +69,38 @@ function Chat() {
     }
   }
 
-  const getReceiverId = () => {
-    if (!activeChild) return null
-
-    return role === "Parent"
-      ? activeChild.specialistId
-      : activeChild.parentId
-  }
-
   const handleSend = async () => {
     if (!text.trim() || !activeChild) return
 
-    const receiverId = getReceiverId()
+    let receiverId = null
+
+    if (role === "Parent") {
+      receiverId = await getSpecialistUserId(
+        activeChild.specialistProfileId
+      )
+    } else {
+      receiverId = activeChild.parentUserId
+    }
+
     if (!receiverId) {
-      toast.error("لا يمكن تحديد المستقبل")
+      toast.error("الطفل غير مربوط ❌")
       return
     }
 
-    const tempMsg = {
-      id: Date.now(),
-      content: text,
-      senderUserId: myId
-    }
-
-    setMessages(prev => [...prev, tempMsg])
-    setText("")
-    scrollDown()
-
     try {
       const newMsg = await sendMessage({
-        childId: activeChild.childId,
-        receiverUserId: receiverId,
-        content: tempMsg.content
+        childId: activeChild.id,
+        receiverUserId: Number(receiverId),
+        content: text
       })
 
-      setMessages(prev =>
-        prev.map(m => (m.id === tempMsg.id ? newMsg : m))
-      )
+      setMessages(prev => [...prev, newMsg])
+      setText("")
+      scrollDown()
 
-    } catch {
-      toast.error("فشل الإرسال")
+    } catch (err) {
+      console.log(err)
+      toast.error("فشل الإرسال ❌")
     }
   }
 
@@ -121,14 +116,16 @@ function Chat() {
       <div className={styles.sidebar}>
         {children.map(c => (
           <div
-            key={c.childId}
-            className={`${styles.chatItem} ${activeChild?.childId === c.childId ? styles.active : ""}`}
-            onClick={async () => {
+            key={c.id}
+            className={`${styles.chatItem} ${
+              activeChild?.id === c.id ? styles.active : ""
+            }`}
+            onClick={() => {
               setActiveChild(c)
-              await loadMessages(c.childId)
+              loadMessages(c.id)
             }}
           >
-            {c.childName}
+            {c.fullName}
           </div>
         ))}
       </div>
@@ -136,23 +133,20 @@ function Chat() {
       <div className={styles.chatArea}>
 
         <div className={styles.header}>
-          <h3>
-            {activeChild?.childName || "اختر محادثة"}
-          </h3>
+          <h3>{activeChild?.fullName || "اختر محادثة"}</h3>
         </div>
 
         <div className={styles.messages}>
-
           {loading ? (
             <p>Loading...</p>
           ) : messages.length === 0 ? (
-            <p className={styles.empty}>لا توجد رسائل</p>
+            <p>لا توجد رسائل</p>
           ) : (
             messages.map(msg => (
               <div
                 key={msg.id}
                 className={
-                  msg.senderUserId === myId
+                  Number(msg.senderUserId) === myId
                     ? styles.myMsg
                     : styles.otherMsg
                 }
@@ -163,7 +157,6 @@ function Chat() {
           )}
 
           <div ref={bottomRef}></div>
-
         </div>
 
         <div className={styles.inputBox}>

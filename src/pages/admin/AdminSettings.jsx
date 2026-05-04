@@ -1,9 +1,11 @@
 import "../../assets/adminSettings.css"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { changePassword } from "../../api/authService"
 import toast from "react-hot-toast"
+import { useNavigate } from "react-router-dom"
 
 function AdminSettings() {
+  const navigate = useNavigate()
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -17,9 +19,40 @@ function AdminSettings() {
     messages: true
   })
 
+  useEffect(() => {
+    const savedImage = localStorage.getItem("profileImage")
+    const savedNotifications = localStorage.getItem("notifications")
+
+    if (savedImage) setPreview(savedImage)
+    if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
+  }, [])
+
   const handleImageChange = (file) => {
     if (!file) return
-    setPreview(URL.createObjectURL(file))
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("ارفع صورة فقط ❌")
+      return
+    }
+
+    const maxSize = 2 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast.error("حجم الصورة كبير ❌")
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPreview(reader.result)
+      localStorage.setItem("profileImage", reader.result)
+    }
+
+    reader.readAsDataURL(file)
+  }
+
+  const handleSaveSettings = () => {
+    localStorage.setItem("notifications", JSON.stringify(notifications))
+    toast.success("تم الحفظ ✅")
   }
 
   const handleChangePassword = async () => {
@@ -31,6 +64,13 @@ function AdminSettings() {
     try {
       await changePassword(passwordForm)
       toast.success("تم تغيير كلمة المرور 🔒")
+
+      localStorage.removeItem("token")
+
+      setTimeout(() => {
+        navigate("/login")
+      }, 1000)
+
       setPasswordForm({ currentPassword: "", newPassword: "" })
     } catch {
       toast.error("فشل ❌")
@@ -41,7 +81,6 @@ function AdminSettings() {
     <div className="settings-page">
 
       <div className="card profile-card">
-
         <h3>الملف المهني</h3>
 
         <div className="profile-wrapper">
@@ -62,18 +101,16 @@ function AdminSettings() {
           </label>
         </div>
 
-        <button className="btn primary">
+        <button className="btn primary" onClick={handleSaveSettings}>
           حفظ التغييرات
         </button>
       </div>
 
       <div className="card">
-
         <h3>الإشعارات والتنبيهات</h3>
 
         <div className="notif-item">
           <span>تنبيهات المواعيد</span>
-
           <div
             className={`switch ${notifications.appointments ? "active" : ""}`}
             onClick={() =>
@@ -87,7 +124,6 @@ function AdminSettings() {
 
         <div className="notif-item">
           <span>رسائل المرضى</span>
-
           <div
             className={`switch ${notifications.messages ? "active" : ""}`}
             onClick={() =>
@@ -98,11 +134,9 @@ function AdminSettings() {
             }
           />
         </div>
-
       </div>
 
       <div className="card">
-
         <h3>الأمان</h3>
 
         <div className="input-group">
@@ -130,7 +164,6 @@ function AdminSettings() {
         <button className="btn primary" onClick={handleChangePassword}>
           تغيير كلمة المرور
         </button>
-
       </div>
 
     </div>

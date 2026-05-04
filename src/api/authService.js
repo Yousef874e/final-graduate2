@@ -24,7 +24,16 @@ export const resetPassword = async (data) => {
   const res = await axiosClient.post("/Account/reset-password", data)
   return res.data
 }
+
 export const changePassword = async (data) => {
   const res = await axiosClient.post("/Account/change-password", data)
+  return res.data
+}
+
+// ✅ Google Login
+export const googleLogin = async (idToken) => {
+  const res = await axiosClient.post("/Auth/google-login", {
+    idToken
+  })
   return res.data
 }

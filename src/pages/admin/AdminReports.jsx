@@ -4,11 +4,14 @@ import { FaDownload, FaPlus } from "react-icons/fa"
 import toast from "react-hot-toast"
 
 import { getChildren } from "../../api/childrenService"
-import { getMedicalReports, createMedicalReport, downloadMedicalReport } from "../../api/medicalReportsService"
+import {
+  getMedicalReports,
+  createMedicalReport,
+  downloadMedicalReport
+} from "../../api/medicalReportsService"
 import { uploadFile } from "../../api/mediaService"
 
 function AdminReports() {
-
   const [reports, setReports] = useState([])
   const [children, setChildren] = useState([])
   const [search, setSearch] = useState("")
@@ -29,54 +32,69 @@ function AdminReports() {
       const res = await getChildren()
       setChildren(res.items || [])
     } catch {
-      toast.error("فشل تحميل الأطفال")
+      toast.error("فشل تحميل الأطفال ❌")
     }
   }
 
   const loadReports = async (childId) => {
     if (!childId) return
+
     try {
-      const res = await getMedicalReports(childId)
+      const res = await getMedicalReports(childId, {
+        pageNumber: 1,
+        pageSize: 50
+      })
       setReports(res.items || [])
     } catch {
-      toast.error("فشل تحميل التقارير")
+      toast.error("فشل تحميل التقارير ❌")
+    }
+  }
+
+  const handleDownload = async (id) => {
+    try {
+      const url = await downloadMedicalReport(id)
+      window.open(url, "_blank")
+    } catch {
+      toast.error("فشل تحميل التقرير ❌")
     }
   }
 
   const handleUpload = async () => {
     if (!form.childId || !form.file) {
-      toast.error("كمل البيانات")
+      toast.error("كمل البيانات ❌")
       return
     }
 
     try {
-      const data = new FormData()
-      data.append("file", form.file)
-      data.append("category", 3)
-      data.append("childId", form.childId)
-
-      const uploadRes = await uploadFile(data)
+      const uploadRes = await uploadFile(
+        form.file,
+        {
+          description: form.notes,
+          category: 3,
+          childId: Number(form.childId)
+        }
+      )
 
       await createMedicalReport({
         childId: Number(form.childId),
         mediaId: uploadRes.id,
-        notes: form.notes
+        notes: form.notes || ""
       })
 
-      toast.success("تم رفع التقرير")
+      toast.success("تم رفع التقرير ✅")
 
       setShowModal(false)
 
-      loadReports(form.childId)
+      await loadReports(form.childId)
 
       setForm({
         childId: "",
         notes: "",
         file: null
       })
-
-    } catch {
-      toast.error("فشل الرفع")
+    } catch (err) {
+      console.log(err.response?.data)
+      toast.error("فشل رفع التقرير ❌")
     }
   }
 
@@ -86,12 +104,10 @@ function AdminReports() {
 
   return (
     <div className="reports-page">
-
       <div className="reports-header">
         <h2>التقارير الطبية</h2>
-
         <button className="add-btn" onClick={() => setShowModal(true)}>
-          <FaPlus /> إنشاء تقرير جديد
+          <FaPlus /> إنشاء تقرير
         </button>
       </div>
 
@@ -104,28 +120,29 @@ function AdminReports() {
       </div>
 
       <div className="reports-list">
-        {filteredReports.map((r) => (
-          <div className="report-card" key={r.id}>
+        {filteredReports.length === 0 ? (
+          <p>لا يوجد تقارير</p>
+        ) : (
+          filteredReports.map(r => (
+            <div className="report-card" key={r.id}>
+              <div className="report-info">
+                <h4>{r.notes || "تقرير"}</h4>
+                <p>{new Date(r.createdAtUtc).toLocaleDateString()}</p>
+              </div>
 
-            <div className="report-info">
-              <h4>{r.notes || "تقرير"}</h4>
-              <p>{new Date(r.createdAtUtc).toLocaleDateString()}</p>
+              <div className="report-actions">
+                <button onClick={() => handleDownload(r.id)}>
+                  <FaDownload />
+                </button>
+              </div>
             </div>
-
-            <div className="report-actions">
-              <button onClick={() => downloadMedicalReport(r.id)}>
-                <FaDownload />
-              </button>
-            </div>
-
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {showModal && (
         <div className="modal">
           <div className="modal-content">
-
             <h3>إضافة تقرير</h3>
 
             <select
@@ -137,34 +154,38 @@ function AdminReports() {
             >
               <option value="">اختر الطفل</option>
               {children.map(c => (
-                <option key={c.id} value={c.id}>{c.fullName}</option>
+                <option key={c.id} value={c.id}>
+                  {c.fullName}
+                </option>
               ))}
             </select>
 
             <textarea
               placeholder="ملاحظات"
               value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, notes: e.target.value })
+              }
             />
 
             <input
               type="file"
               accept="application/pdf"
-              onChange={(e) => setForm({ ...form, file: e.target.files[0] })}
+              onChange={(e) =>
+                setForm({ ...form, file: e.target.files[0] })
+              }
             />
 
             <button className="upload-btn" onClick={handleUpload}>
-              رفع التقرير
+              رفع
             </button>
 
             <button className="close-btn" onClick={() => setShowModal(false)}>
               إغلاق
             </button>
-
           </div>
         </div>
       )}
-
     </div>
   )
 }

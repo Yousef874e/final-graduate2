@@ -40,23 +40,42 @@ function Sessions() {
     setSelectedDay(1)
   }
 
+  // 🔥 تحويل status لنص
+  const getStatus = (a) => {
+    switch (a.status) {
+      case 1: return { text: "قادم", color: "#2196F3" }
+      case 2: return { text: "تم التعديل", color: "#FF9800" }
+      case 3: return { text: "ملغي", color: "gray" }
+      case 4: return { text: "مكتمل", color: "green" }
+      case 5: return { text: "فات", color: "red" }
+      default: return { text: "", color: "black" }
+    }
+  }
+
+  // 🔥 fallback لو الباك متأخر
+  const isPast = (date) => new Date(date) < new Date()
+
+  // 🔥 دمج البيانات
   const mergedData = useMemo(() => [
     ...appointments.map(a => ({
-      id: a?.id,
+      id: a.id,
       type: "appointment",
       title: "جلسة علاج طبيعي",
-      doctor: a?.specialistName || "غير معروف",
-      time: a?.scheduledAtUtc
+      doctor: a.specialistName || "غير معروف",
+      time: a.scheduledAtUtc,
+      status: a.status,
+      raw: a
     })),
     ...sessions.map(s => ({
-      id: s?.id,
+      id: s.id,
       type: "session",
       title: "جلسة تمرين",
       doctor: "تمرين",
-      time: s?.startedAtUtc || s?.createdAtUtc
+      time: s.startedAtUtc || s.createdAtUtc
     }))
   ], [appointments, sessions])
 
+  // 🔥 فلترة اليوم
   const filteredData = useMemo(() => {
     return mergedData
       .filter(item => {
@@ -71,18 +90,17 @@ function Sessions() {
       .sort((a, b) => new Date(a.time) - new Date(b.time))
   }, [mergedData, selectedDay, month, year])
 
-  const now = useMemo(() => new Date(), [])
-
+  // 🔥 أقرب موعد قادم (حسب status)
   const nextAppointment = useMemo(() => {
     return appointments
-      .filter(a => a?.scheduledAtUtc && new Date(a.scheduledAtUtc) > now)
+      .filter(a => a.status === 1 || a.status === 2)
       .sort((a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc))[0]
-  }, [appointments, now])
+  }, [appointments])
 
   let timeLeft = "لا يوجد مواعيد قادمة"
 
   if (nextAppointment) {
-    const diff = new Date(nextAppointment.scheduledAtUtc) - now
+    const diff = new Date(nextAppointment.scheduledAtUtc) - new Date()
     const minutes = Math.floor(diff / (1000 * 60))
 
     if (minutes > 60) {
@@ -90,7 +108,7 @@ function Sessions() {
     } else if (minutes > 0) {
       timeLeft = `متبقي ${minutes} دقيقة`
     } else {
-      timeLeft = "قريبًا"
+      timeLeft = "جاري الآن أو انتهى"
     }
   }
 
@@ -99,6 +117,7 @@ function Sessions() {
 
       <div className={sessionStyles.sessionsLayout}>
 
+        {/* LEFT */}
         <div className={sessionStyles.leftSide}>
 
           <div className={`${styles.card} ${sessionStyles.nextSession}`}>
@@ -126,6 +145,7 @@ function Sessions() {
 
         </div>
 
+        {/* RIGHT */}
         <div>
 
           <div className={styles.card}>
@@ -167,6 +187,21 @@ function Sessions() {
                   (item.type === "session" && item.id === Number(sessionId)) ||
                   (item.type === "appointment" && item.id === Number(appointmentId))
 
+                let statusUI = null
+
+                if (item.type === "appointment") {
+                  const status = getStatus(item.raw)
+
+                  // fallback لو الوقت عدى ولسه مش Missed
+                  const fallbackMissed =
+                    (item.raw.status === 1 || item.raw.status === 2) &&
+                    isPast(item.time)
+
+                  statusUI = fallbackMissed
+                    ? { text: "فات", color: "red" }
+                    : status
+                }
+
                 return (
                   <div
                     key={item.id}
@@ -179,6 +214,7 @@ function Sessions() {
                       <h4>{item.title}</h4>
                       <p>{item.doctor}</p>
                     </div>
+
                     <div>
                       <p>
                         {new Date(item.time).toLocaleTimeString("ar-EG", {
@@ -186,7 +222,14 @@ function Sessions() {
                           minute: "2-digit"
                         })}
                       </p>
+
+                      {statusUI && (
+                        <small style={{ color: statusUI.color }}>
+                          {statusUI.text}
+                        </small>
+                      )}
                     </div>
+
                   </div>
                 )
               })

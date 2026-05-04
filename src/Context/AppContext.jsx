@@ -1,10 +1,23 @@
-import { createContext, useContext, useEffect, useState } from "react"
-import { getParentDashboard, getSpecialistDashboard } from "../api/dashboardService"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { getParentDashboard, getSpecialistDashboard, getAdminDashboard } from "../api/dashboardService"
 import { getSessionsByChild } from "../api/sessionsService"
 import { getAppointmentsByChildId } from "../api/appointmentsService"
 import { getSpecialistProfileImage } from "../api/specialistProfileService"
 
 const AppContext = createContext()
+
+// 🔥 استخراج userId من التوكن
+const getUserIdFromToken = () => {
+  try {
+    const token = localStorage.getItem("accessToken")
+    if (!token) return null
+
+    const payload = JSON.parse(atob(token.split(".")[1]))
+    return payload.nameid || payload.sub
+  } catch {
+    return null
+  }
+}
 
 export const AppProvider = ({ children }) => {
 
@@ -13,25 +26,31 @@ export const AppProvider = ({ children }) => {
   const [sessions, setSessions] = useState([])
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [userName, setUserName] = useState("")
+  const [email, setEmail] = useState("")
 
-  const role = localStorage.getItem("role")
+  const roles = JSON.parse(localStorage.getItem("roles") || "[]")
+  const role = roles[0]
 
-  const loadData = async () => {
+  const userId = getUserIdFromToken() // 🔥 مهم
+
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
 
       let dashboardRes
 
-      if (role === "Specialist") {
+      if (role === "Admin") {
+        dashboardRes = await getAdminDashboard()
+      } else if (role === "Specialist") {
         dashboardRes = await getSpecialistDashboard()
-      } else {
+      } else if (role === "Parent") {
         dashboardRes = await getParentDashboard()
       }
 
       const dashboardData = dashboardRes || {}
       setData(dashboardData)
 
-      // Profile Image
       if (role === "Specialist") {
         try {
           const img = await getSpecialistProfileImage()
@@ -47,36 +66,70 @@ export const AppProvider = ({ children }) => {
         )
       }
 
-      // Parent Only Data
-      if (role !== "Specialist") {
+      if (role === "Parent") {
 
-        const childId = dashboardData?.children?.[0]?.childId
+        const children = dashboardData?.children || []
 
-        if (!childId) {
+        if (children.length === 0) {
           setSessions([])
           setAppointments([])
         } else {
 
-          const [sessionsRes, appointmentsRes] = await Promise.all([
-            getSessionsByChild(childId),
-            getAppointmentsByChildId(childId)
-          ])
+          let allSessions = []
+          let allAppointments = []
 
-          setSessions(sessionsRes?.items || [])
-          setAppointments(appointmentsRes?.items || [])
+          const promises = children.map(async (child) => {
+            try {
+              const [sessionsRes, appointmentsRes] = await Promise.all([
+                getSessionsByChild(child.childId),
+                getAppointmentsByChildId(child.childId)
+              ])
+
+              return {
+                sessions: (sessionsRes?.items || []).map(s => ({
+                  ...s,
+                  childName: child.childName
+                })),
+                appointments: (appointmentsRes?.items || []).map(a => ({
+                  ...a,
+                  childName: child.childName
+                }))
+              }
+            } catch {
+              return { sessions: [], appointments: [] }
+            }
+          })
+
+          const results = await Promise.all(promises)
+
+          results.forEach(r => {
+            allSessions.push(...r.sessions)
+            allAppointments.push(...r.appointments)
+          })
+
+          setSessions(allSessions)
+          setAppointments(allAppointments)
         }
       }
 
     } catch (err) {
-      console.error(err)
+      console.error("Context Error:", err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [role])
 
   useEffect(() => {
-    loadData()
-  }, [])
+    const name = localStorage.getItem("userName")
+    if (name) setUserName(name)
+
+    const userEmail = localStorage.getItem("email")
+    if (userEmail) setEmail(userEmail)
+
+    if (role) {
+      loadData()
+    }
+  }, [loadData, role])
 
   return (
     <AppContext.Provider
@@ -87,7 +140,10 @@ export const AppProvider = ({ children }) => {
         appointments,
         loading,
         loadData,
-        role
+        role,
+        userName,
+        email,
+        userId // 🔥 المهم
       }}
     >
       {children}

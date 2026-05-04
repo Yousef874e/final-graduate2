@@ -1,6 +1,6 @@
 import styles from "../../assets/exerciseDetails.module.css"
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 import { getExerciseById } from "../../api/exerciseService"
 import { startSession, submitSessionVideo } from "../../api/sessionsService"
 import { uploadVideo } from "../../api/mediaService"
@@ -10,8 +10,10 @@ import toast from "react-hot-toast"
 
 function ExerciseDetails() {
 
-  const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const { loadData } = useApp()
+
+  const id = searchParams.get("id")
 
   const [exercise, setExercise] = useState(null)
   const [loading, setLoading] = useState(true)

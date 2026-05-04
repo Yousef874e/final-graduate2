@@ -6,6 +6,7 @@ import { getChildProfile, updateChildProfile, setChildImage } from "../../api/ch
 import { getParentProfileImage, setParentProfileImage } from "../../api/parentProfileService"
 import { uploadImage } from "../../api/mediaService"
 import toast from "react-hot-toast"
+import { clearAuth } from "../../utils/auth"
 
 function Profile() {
 
@@ -169,7 +170,7 @@ function Profile() {
             <button
               className={styles.logout}
               onClick={() => {
-                localStorage.clear()
+                clearAuth()
                 navigate("/login")
               }}
             >

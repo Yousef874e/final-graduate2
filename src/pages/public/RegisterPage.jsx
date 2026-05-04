@@ -1,18 +1,17 @@
 import "../../assets/register.css"
 import logo from "../../assets/images/logo.png"
 import sideImg from "../../assets/images/ggg.png"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { FaUser, FaPhone, FaEye, FaEyeSlash } from "react-icons/fa"
 import { MdEmail } from "react-icons/md"
 import { FcGoogle } from "react-icons/fc"
 import { IoArrowForward } from "react-icons/io5"
-import { registerParent, registerSpecialist } from "../../api/authService"
+import { registerParent, registerSpecialist, googleLogin } from "../../api/authService"
 import { setAuth } from "../../utils/auth"
 import toast from "react-hot-toast"
 
 function RegisterPage() {
-
   const navigate = useNavigate()
 
   const [role, setRole] = useState("parent")
@@ -31,10 +30,67 @@ function RegisterPage() {
     bio: ""
   })
 
+  useEffect(() => {
+    const script = document.createElement("script")
+    script.src = "https://accounts.google.com/gsi/client"
+    script.async = true
+    script.defer = true
+    document.body.appendChild(script)
+  }, [])
+
+  // ✅ Google باستخدام idToken (credential)
+  const handleGoogleCallback = async (response) => {
+    try {
+      console.log("🔥 ID TOKEN:", response.credential)
+
+      const res = await googleLogin(response.credential)
+
+      console.log("🔥 GOOGLE RESPONSE:", res)
+
+      setAuth(res)
+      localStorage.setItem("userName", res.fullName || "")
+
+      const roleName = res?.roles?.[0]
+
+      toast.success("تم تسجيل الدخول بجوجل ✅")
+
+      if (roleName === "Parent") {
+        if (res.children && res.children.length > 0) {
+          navigate("/dashboard/parent")
+        } else {
+          navigate("/child-info-step1")
+        }
+      } else if (roleName === "Specialist") {
+        navigate("/dashboard/specialist")
+      } else if (roleName === "Admin") {
+        navigate("/dashboard/admin")
+      } else {
+        toast.error("Role غير معروف ❌")
+      }
+    } catch (err) {
+      console.log("❌ GOOGLE ERROR:", err)
+      toast.error("فشل تسجيل الدخول ❌")
+    }
+  }
+
+  const handleGoogleLogin = () => {
+    if (!window.google) {
+      toast.error("Google مش جاهز ❌")
+      return
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: "470189378307-c74it8k81hpbmjhm0mekifk7n0fdpfjq.apps.googleusercontent.com",
+      callback: handleGoogleCallback
+    })
+
+    window.google.accounts.id.prompt()
+  }
+
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     })
   }
 
@@ -52,18 +108,10 @@ function RegisterPage() {
     if (text.length < 20) return false
     if (text.split(" ").length < 3) return false
     if (!/[a-zA-Z\u0600-\u06FF]/.test(text)) return false
-    const words = text.split(" ")
-    const uniqueWords = new Set(words)
-    if (uniqueWords.size < 2) return false
     return true
   }
 
-  const handleGoogleRegister = () => {
-    window.location.href = "https://your-api.com/api/auth/google"
-  }
-
   const handleRegister = async () => {
-
     if (!form.fullName || !form.email || !form.password || !form.confirmPassword) {
       toast.error("من فضلك املى كل البيانات ❌")
       return
@@ -91,12 +139,12 @@ function RegisterPage() {
 
     if (role === "specialist") {
       if (!isValidSpecialization(form.specialization)) {
-        toast.error("اكتب تخصص واضح❌")
+        toast.error("اكتب تخصص واضح ❌")
         return
       }
 
       if (!isValidBio(form.bio)) {
-        toast.error("اكتب نبذة مفهومة (على الأقل 3 كلمات) ❌")
+        toast.error("اكتب نبذة مفهومة ❌")
         return
       }
     }
@@ -104,7 +152,6 @@ function RegisterPage() {
     setLoading(true)
 
     try {
-
       let res
 
       if (role === "parent") {
@@ -125,6 +172,8 @@ function RegisterPage() {
         })
       }
 
+      console.log("🔥 REGISTER RESPONSE:", res)
+
       if (res.requiresPasswordChange) {
         toast("لازم تغير كلمة المرور 🔐")
         navigate("/reset-password")
@@ -132,6 +181,7 @@ function RegisterPage() {
       }
 
       setAuth(res)
+      localStorage.setItem("userName", form.fullName)
 
       const roleName = res?.roles?.[0]
 
@@ -146,16 +196,9 @@ function RegisterPage() {
       } else {
         toast.error("Role غير معروف ❌")
       }
-
     } catch (err) {
-
-      const errorMsg =
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.title ||
-        "فيه خطأ ❌"
-
-      toast.error(errorMsg)
-
+      console.log("❌ REGISTER ERROR:", err)
+      toast.error("فيه خطأ ❌")
     } finally {
       setLoading(false)
     }
@@ -163,7 +206,6 @@ function RegisterPage() {
 
   return (
     <div className="signup-container">
-
       <div className="signup-right">
         <div className="signup-box">
 
@@ -172,7 +214,7 @@ function RegisterPage() {
               <div className="logo-circle">
                 <img src={logo} alt="logo" />
               </div>
-              <span className="logo-text">رفيق</span>
+              <span className="logo-text">Rafiq</span>
             </div>
 
             <h2 className="signup-title">إنشاء حساب جديد</h2>
@@ -183,6 +225,7 @@ function RegisterPage() {
             <button
               className={`role-btn ${role === "parent" ? "active" : ""}`}
               onClick={() => setRole("parent")}
+              type="button"
             >
               <FaUser /> ولي أمر
             </button>
@@ -190,6 +233,7 @@ function RegisterPage() {
             <button
               className={`role-btn ${role === "specialist" ? "active" : ""}`}
               onClick={() => setRole("specialist")}
+              type="button"
             >
               👨‍⚕️ أخصائي
             </button>
@@ -274,7 +318,10 @@ function RegisterPage() {
               value={form.password}
               onChange={handleChange}
             />
-            <span className="eye" onClick={() => setShowPassword(!showPassword)}>
+            <span
+              className="eye"
+              onClick={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
@@ -287,26 +334,36 @@ function RegisterPage() {
               value={form.confirmPassword}
               onChange={handleChange}
             />
-            <span className="eye" onClick={() => setShowConfirm(!showConfirm)}>
+            <span
+              className="eye"
+              onClick={() => setShowConfirm(!showConfirm)}
+            >
               {showConfirm ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
 
-          <button className="main-btn" onClick={handleRegister} disabled={loading}>
-            {loading ? "جاري الإنشاء..." : `إنشاء حساب ${role === "parent" ? "ولي أمر" : "أخصائي"}`}
+          <button
+            className="main-btn"
+            onClick={handleRegister}
+            disabled={loading}
+            type="button"
+          >
+            {loading
+              ? "جاري الإنشاء..."
+              : `إنشاء حساب ${role === "parent" ? "ولي أمر" : "أخصائي"}`}
             <IoArrowForward />
           </button>
 
           <div className="split-line">أو سجل عن طريق</div>
 
           <div className="social-box">
-            <button onClick={handleGoogleRegister}>
+            <button onClick={handleGoogleLogin} type="button">
               <FcGoogle /> تسجيل بجوجل
             </button>
           </div>
 
           <p className="login-redirect">
-            لديك حساب؟ 
+            لديك حساب؟
             <span onClick={() => navigate("/login")}>
               سجل الدخول
             </span>
@@ -318,9 +375,8 @@ function RegisterPage() {
       <div className="signup-left">
         <img src={sideImg} alt="img" />
         <h3>مجتمع داعم ومتكامل</h3>
-        <p>انضم لأكثر من 5000 عائلة تشارك نفس الرحلة والاهتمامات</p>
+        <p>انضم لأكثر من 5000 عائلة تشارك نفس الرحله والاهتمامات</p>
       </div>
-
     </div>
   )
 }
