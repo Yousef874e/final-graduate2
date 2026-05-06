@@ -1,109 +1,106 @@
-import "../../assets/login.css"
-import logo from "../../assets/images/logo.png"
-import { FaEye, FaEyeSlash } from "react-icons/fa"
-import { MdEmail } from "react-icons/md"
-import { IoArrowForward } from "react-icons/io5"
-import { useState, useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
-import { login, googleLogin } from "../../api/authService"
-import { setAuth } from "../../utils/auth"
-import { initGoogleAuth, renderGoogleButton } from "../../utils/googleAuth"
-import toast from "react-hot-toast"
+import "../../assets/login.css";
+import logo from "../../assets/images/logo.png";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { MdEmail } from "react-icons/md";
+import { IoArrowForward } from "react-icons/io5";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { login, googleLogin } from "../../api/authService";
+import { setAuth } from "../../utils/auth";
+import { initGoogleAuth, renderGoogleButton } from "../../utils/googleAuth";
+import toast from "react-hot-toast";
 
 function LoginPage() {
-  const navigate = useNavigate()
-  const googleBtnRef = useRef(null)
+  const navigate = useNavigate();
+  const googleBtnRef = useRef(null);
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleGoogleCallback = async (response) => {
     try {
-      const res = await googleLogin(response.credential)
+      const res = await googleLogin(response.credential);
 
-      setAuth(res)
+      setAuth(res);
 
-      const role = res?.roles?.[0]
+      const role = res?.roles?.[0];
 
-      toast.success("تم تسجيل الدخول بجوجل ✅")
+      toast.success("تم تسجيل الدخول بجوجل ✅");
 
       if (role === "Admin") {
-        navigate("/dashboard/admin", { replace: true })
+        navigate("/dashboard/admin", { replace: true });
       } else if (role === "Parent") {
-        navigate("/dashboard/parent", { replace: true })
+        navigate("/dashboard/parent", { replace: true });
       } else if (role === "Specialist") {
-        navigate("/dashboard/specialist", { replace: true })
+        navigate("/dashboard/specialist", { replace: true });
       }
-
     } catch {
-      toast.error("فشل تسجيل الدخول بجوجل ❌")
+      toast.error("فشل تسجيل الدخول بجوجل ❌");
     }
-  }
+  };
 
   useEffect(() => {
-    initGoogleAuth(handleGoogleCallback)
+    initGoogleAuth(handleGoogleCallback);
 
     setTimeout(() => {
-      renderGoogleButton(googleBtnRef.current)
-    }, 300)
-  }, [])
+      renderGoogleButton(googleBtnRef.current);
+    }, 300);
+  }, []);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      toast.error("من فضلك املأ البيانات ❌")
-      return
+      toast.error("من فضلك املأ البيانات ❌");
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       const data = await login({
         email: email.trim(),
-        password: password.trim()
-      })
+        password: password.trim(),
+      });
 
       if (data.requiresPasswordChange) {
-        toast("لازم تغير كلمة المرور 🔐")
-        navigate("/reset-password")
-        return
+        toast("لازم تغير كلمة المرور 🔐");
+        navigate("/reset-password");
+        return;
       }
 
-      setAuth(data)
+      setAuth(data);
 
-      const role = data.roles?.[0] || data.role
+      const role = data.roles?.[0] || data.role;
 
       if (!role) {
-        toast.error("Role غير معروف ❌")
-        return
+        toast.error("Role غير معروف ❌");
+        return;
       }
 
-      toast.success("تم تسجيل الدخول ✅")
+      toast.success("تم تسجيل الدخول ✅");
 
       if (role === "Admin") {
-        navigate("/dashboard/admin", { replace: true })
+        navigate("/dashboard/admin", { replace: true });
       } else if (role === "Parent") {
-        navigate("/dashboard/parent", { replace: true })
+        navigate("/dashboard/parent", { replace: true });
       } else if (role === "Specialist") {
-        navigate("/dashboard/specialist", { replace: true })
+        navigate("/dashboard/specialist", { replace: true });
       } else {
-        navigate("/", { replace: true })
+        navigate("/", { replace: true });
       }
-
     } catch (err) {
       const errorMsg =
         err?.response?.data?.errors?.[0] ||
         err?.response?.data?.title ||
         err?.message ||
-        "فشل تسجيل الدخول ❌"
+        "فشل تسجيل الدخول ❌";
 
-      toast.error(errorMsg)
-
+      toast.error(errorMsg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="login">
@@ -123,8 +120,8 @@ function LoginPage() {
 
           <form
             onSubmit={(e) => {
-              e.preventDefault()
-              handleLogin()
+              e.preventDefault();
+              handleLogin();
             }}
           >
             <div className="input-box">
@@ -146,12 +143,18 @@ function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
               />
-              <span className="eye" onClick={() => setShowPassword(!showPassword)}>
+              <span
+                className="eye"
+                onClick={() => setShowPassword(!showPassword)}
+              >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
             </div>
 
-            <div className="forget" onClick={() => navigate("/forgot-password")}>
+            <div
+              className="forget"
+              onClick={() => navigate("/forgot-password")}
+            >
               نسيت كلمة السر؟
             </div>
 
@@ -165,14 +168,16 @@ function LoginPage() {
 
           <div
             ref={googleBtnRef}
-            style={{ display: "flex", justifyContent: "center", marginTop: "8px" }}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "8px",
+            }}
           />
 
           <p className="register">
             ليس لديك حساب؟
-            <span onClick={() => navigate("/register/parent")}>
-              أنشئ حساب
-            </span>
+            <span onClick={() => navigate("/register/parent")}>أنشئ حساب</span>
           </p>
         </div>
       </div>
@@ -185,8 +190,7 @@ function LoginPage() {
             في أيدي أمينة.
           </h2>
           <p>
-            انضم إلى مجتمع رفيق واستفد من أحدث التقنيات
-            في متابعة وعلاج الأطفال.
+            انضم إلى مجتمع رفيق واستفد من أحدث التقنيات في متابعة وعلاج الأطفال.
           </p>
           <div className="features">
             <div className="feature">✔ خطط علاجية معتمدة</div>
@@ -196,7 +200,7 @@ function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default LoginPage
+export default LoginPage;

@@ -1,135 +1,172 @@
-import styles from "../../assets/profile.module.css"
-import dashboardStyles from "../../assets/dashboard.module.css"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import styles from "../../assets/profile.module.css";
+import dashboardStyles from "../../assets/dashboard.module.css";
+
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   getChildProfile,
-  updateChildProfile,
   setChildImage,
-  getChildImage
-} from "../../api/childrenService"
+  getChildImage,
+} from "../../api/childrenService";
+
 import {
   getParentProfileImage,
-  setParentProfileImage
-} from "../../api/parentProfileService"
-import { uploadImage } from "../../api/mediaService"
-import toast from "react-hot-toast"
-import { clearAuth } from "../../utils/auth"
+  setParentProfileImage,
+  getParentProfile,
+  updateParentProfile,
+} from "../../api/parentProfileService";
+
+import { uploadImage } from "../../api/mediaService";
+
+import { useApp } from "../../Context/AppContext";
+
+import toast from "react-hot-toast";
+
+import { clearAuth } from "../../utils/auth";
 
 function Profile() {
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
-  const childId = Number(localStorage.getItem("childId"))
+  const { data } = useApp();
 
-  const [child, setChild] = useState({})
-  const [childImage, setChildImageUrl] = useState(null)
-  const [parentImage, setParentImage] = useState(null)
+  const childId = data?.children?.[0]?.childId;
 
-  const [childPreview, setChildPreview] = useState(null)
-  const [parentPreview, setParentPreview] = useState(null)
+  const [child, setChild] = useState({});
 
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [parent, setParent] = useState({});
+
+  const [childImage, setChildImageUrl] = useState(null);
+
+  const [parentImage, setParentImage] = useState(null);
+
+  const [childPreview, setChildPreview] = useState(null);
+
+  const [parentPreview, setParentPreview] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (childId) {
+      fetchData();
+    }
+  }, [childId]);
 
   const fetchData = async () => {
     try {
-      const [childRes, childImg, parentImg] = await Promise.all([
+      setLoading(true);
+
+      const [childRes, childImg, parentImg, parentRes] = await Promise.all([
         getChildProfile(childId),
+
         getChildImage(childId),
-        getParentProfileImage()
-      ])
 
-      setChild(childRes || {})
-      setChildImageUrl(childImg?.url || null)
-      setParentImage(parentImg?.url || null)
+        getParentProfileImage(),
 
-    } catch {
-      toast.error("فشل تحميل البيانات")
+        getParentProfile(),
+      ]);
+
+      setChild(childRes || {});
+
+      setParent(parentRes || {});
+
+      setChildImageUrl(childImg?.url || null);
+
+      setParentImage(parentImg?.url || null);
+    } catch (err) {
+      console.log(err);
+
+      toast.error("فشل تحميل البيانات");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleChildChange = (e) => {
-    setChild(prev => ({
+  const handleParentChange = (e) => {
+    setParent((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
-    }))
-  }
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const handleSave = async () => {
-    setSaving(true)
     try {
-      await updateChildProfile(childId, {
-        fullName: child.fullName,
-        dateOfBirth: child.dateOfBirth,
-        gender: child.gender,
-        diagnosis: child.diagnosis
-      })
+      setSaving(true);
 
-      toast.success("تم الحفظ")
-    } catch {
-      toast.error("فشل الحفظ")
+      await updateParentProfile({
+        fullName: parent.fullName,
+
+        phoneNumber: parent.phoneNumber,
+
+        address: parent.address,
+      });
+
+      toast.success("تم حفظ البيانات");
+    } catch (err) {
+      console.log(err);
+
+      toast.error("فشل الحفظ");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleChildImage = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const file = e.target.files[0];
 
-    setChildPreview(URL.createObjectURL(file))
+    if (!file) return;
+
+    setChildPreview(URL.createObjectURL(file));
 
     try {
       const res = await uploadImage(file, {
-        category: 2
-      })
+        category: 2,
+      });
 
       await setChildImage(childId, {
-        mediaId: res.id
-      })
+        mediaId: res.id,
+      });
 
-      setChildImageUrl(res.url)
+      setChildImageUrl(res.url);
 
-      toast.success("تم تغيير صورة الطفل")
+      toast.success("تم تغيير صورة الطفل");
     } catch {
-      toast.error("فشل رفع الصورة")
+      toast.error("فشل رفع الصورة");
     }
-  }
+  };
 
   const handleParentImage = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const file = e.target.files[0];
 
-    setParentPreview(URL.createObjectURL(file))
+    if (!file) return;
+
+    setParentPreview(URL.createObjectURL(file));
 
     try {
       const res = await uploadImage(file, {
-        category: 2
-      })
+        category: 2,
+      });
 
       await setParentProfileImage({
-        mediaId: res.id
-      })
+        mediaId: res.id,
+      });
 
-      setParentImage(res.url)
+      setParentImage(res.url);
 
-      toast.success("تم تغيير الصورة")
+      toast.success("تم تغيير الصورة");
     } catch {
-      toast.error("فشل رفع الصورة")
+      toast.error("فشل رفع الصورة");
     }
-  }
+  };
 
-  if (loading) return <p>Loading...</p>
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className={dashboardStyles.specialistsPage}>
-
       <div className={styles.header}>
         <h2 className={dashboardStyles.pageTitle}>الملف الشخصي</h2>
 
@@ -143,14 +180,77 @@ function Profile() {
       </div>
 
       <div className={styles.container}>
+        {/* بيانات الأب */}
+
+        <div className={styles.right}>
+          <div className={styles.profileCard}>
+            <img
+              src={parentPreview || parentImage || "/avatar.png"}
+              className={styles.avatar}
+            />
+
+            <h3>{parent.fullName || "ولي الأمر"}</h3>
+
+            <div className={styles.parentInfo}>
+              <div className={styles.parentField}>
+                <label>اسم ولي الأمر</label>
+
+                <input
+                  name="fullName"
+                  value={parent.fullName || ""}
+                  onChange={handleParentChange}
+                  placeholder="اسم ولي الأمر"
+                />
+              </div>
+
+              <div className={styles.parentField}>
+                <label>رقم الهاتف</label>
+
+                <input
+                  name="phoneNumber"
+                  value={parent.phoneNumber || ""}
+                  onChange={handleParentChange}
+                  placeholder="رقم الهاتف"
+                />
+              </div>
+
+              <div className={styles.parentField}>
+                <label>العنوان</label>
+
+                <input
+                  name="address"
+                  value={parent.address || ""}
+                  onChange={handleParentChange}
+                  placeholder="العنوان"
+                />
+              </div>
+            </div>
+
+            <label className={styles.uploadBtn}>
+              تغيير الصورة
+              <input type="file" hidden onChange={handleParentImage} />
+            </label>
+
+            <button
+              className={styles.logout}
+              onClick={() => {
+                clearAuth();
+
+                navigate("/login");
+              }}
+            >
+              تسجيل الخروج
+            </button>
+          </div>
+        </div>
+
+        {/* بيانات الطفل */}
 
         <div className={styles.left}>
-
           <div className={styles.card}>
             <h3>بيانات الطفل</h3>
 
             <div className={styles.childBox}>
-
               <img
                 src={childPreview || childImage || "/avatar.png"}
                 className={styles.avatar}
@@ -166,65 +266,28 @@ function Profile() {
 
             <div className={styles.grid}>
               <input
-                name="fullName"
                 value={child.fullName || ""}
-                onChange={handleChildChange}
+                readOnly
                 placeholder="اسم الطفل"
               />
 
               <input
-                type="date"
-                name="dateOfBirth"
                 value={child.dateOfBirth?.split("T")[0] || ""}
-                onChange={handleChildChange}
+                readOnly
+                placeholder="تاريخ الميلاد"
               />
 
               <input
-                name="diagnosis"
                 value={child.diagnosis || ""}
-                onChange={handleChildChange}
+                readOnly
                 placeholder="التشخيص"
               />
             </div>
-
           </div>
-
         </div>
-
-        <div className={styles.right}>
-
-          <div className={styles.profileCard}>
-
-            <img
-              src={parentPreview || parentImage || "/avatar.png"}
-              className={styles.avatar}
-            />
-
-            <h3>ولي الأمر</h3>
-
-            <label className={styles.uploadBtn}>
-              تغيير الصورة
-              <input type="file" hidden onChange={handleParentImage} />
-            </label>
-
-            <button
-              className={styles.logout}
-              onClick={() => {
-                clearAuth()
-                navigate("/login")
-              }}
-            >
-              تسجيل الخروج
-            </button>
-
-          </div>
-
-        </div>
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default Profile
+export default Profile;

@@ -24,7 +24,7 @@
   background: white;
   padding: 15px;
   border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
   z-index: 10;
 }
 
@@ -68,7 +68,7 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4,1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 15px;
 }
 
@@ -77,7 +77,7 @@
   padding: 20px;
   border-radius: 16px;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .bottom {
@@ -86,11 +86,12 @@
   gap: 15px;
 }
 
-.activities, .system {
+.activities,
+.system {
   background: white;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .activity-item {
@@ -106,7 +107,7 @@
 
 @media (max-width: 1024px) {
   .stats {
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .bottom {
@@ -123,7 +124,6 @@
     grid-template-columns: 1fr;
   }
 }
-
 
 .admin-page {
   padding: 20px;
@@ -155,10 +155,9 @@
 }
 .activeFilter button {
   font-size: 18px;
-  
 }
 filter-box button {
-font-size: 18px;
+  font-size: 18px;
 }
 
 .search {
@@ -179,7 +178,7 @@ font-size: 18px;
   background: white;
   border-radius: 18px;
   padding: 15px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   transition: 0.3s;
   position: relative;
 }
@@ -232,7 +231,7 @@ font-size: 18px;
   background: white;
   border-radius: 10px;
   padding: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
 .dropdown div {
@@ -275,7 +274,7 @@ font-size: 18px;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -301,7 +300,7 @@ font-size: 18px;
 
 /* ===== Responsive ===== */
 
-/* تابلت */
+
 @media (max-width: 1024px) {
   .admin-page {
     padding: 15px;
@@ -316,9 +315,7 @@ font-size: 18px;
   }
 }
 
-/* موبايل */
 @media (max-width: 768px) {
-
   .users-header {
     flex-direction: column;
     align-items: flex-start;
@@ -361,7 +358,6 @@ font-size: 18px;
 }
 
 @media (max-width: 480px) {
-
   .admin-page {
     padding: 10px;
   }
@@ -404,7 +400,7 @@ font-size: 18px;
   padding: 10px;
   background: #fff;
   border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   flex-wrap: wrap;
 }
 

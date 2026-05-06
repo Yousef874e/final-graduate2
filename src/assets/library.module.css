@@ -1,91 +1,217 @@
 .search {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+  padding: 16px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  font-size: 15px;
+  margin-bottom: 24px;
+  transition: 0.2s;
 }
 
-.tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+.search:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
 }
 
-.tabs button {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 20px;
-  background: #eee;
-  cursor: pointer;
-  font-size: 18px;
-}
-.tabs button:hover {
-  background:#1abc9c ;
-}
-
-.activeTab {
-  background: #1abc9c;
- color: black;
-}
 .progressBox {
-  background: linear-gradient(90deg, #1abc9c, #16a085);
-  padding: 20px;
-  border-radius: 15px;
-  color: white;
-  margin-bottom: 20px;
+  background: white;
+  padding: 24px;
+  border-radius: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eef2f7;
 }
-.progressBox p{
-  color: black;
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progressTitle {
   font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.progressPercent {
+  font-size: 20px;
+  font-weight: 800;
+  color: #14b8a6;
 }
 
 .progressBar {
-  height: 8px;
-  background:white;
-  border-radius: 10px;
-  margin-top: 10px;
+  width: 100%;
+  height: 18px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
 }
 
 .progressFill {
   height: 100%;
-  background: white;
-  border-radius: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #14b8a6, #22c55e);
+  transition: width 0.5s ease;
+  position: relative;
 }
 
+.progressFill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  filter: blur(10px);
+}
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 26px;
 }
 
 .card {
   background: white;
-  padding: 15px;
-  border-radius: 15px;
-  box-shadow: 0 0 10px #00000010;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eef2f7;
+  transition: 0.25s;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.12);
+}
+
+.imageBox {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  background: linear-gradient(135deg, #dff7f3, #b9efe6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playOverlay {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #0f766e;
+  font-weight: bold;
+  position: absolute;
+  z-index: 2;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .image {
   width: 100%;
-  height: 120px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 10px;
+}
+
+.card h4 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  padding: 18px 20px 8px;
+  line-height: 1.5;
 }
 
 .desc {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 10px;
+  padding: 0 20px;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 18px;
 }
-.doneBtn {
-  background: #d1fae5;
-  color: #065f46;
+
+.infoBox {
+  padding: 0 20px 18px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.infoItem {
+  background: #f0fdfa;
+  color: #0f766e;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.card button {
+  width: calc(100% - 40px);
+  margin: 0 20px 20px;
   border: none;
-  padding: 10px;
-  border-radius: 10px;
-  width: 100%;
-  cursor: not-allowed;
-  font-weight: bold;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.card button:hover {
+  transform: scale(1.02);
+}
+
+.doneBtn {
+  background: #119698;
+  color: white;
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: #64748b;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.loading {
+  text-align: center;
+  padding: 80px 20px;
+  color: #14b8a6;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .imageBox {
+    height: 220px;
+  }
+
+  .card h4 {
+    font-size: 20px;
+  }
+
+  .desc {
+    font-size: 15px;
+  }
+
+  .progressHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }

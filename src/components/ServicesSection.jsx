@@ -3,7 +3,7 @@ import { FaUserFriends, FaComments, FaShieldAlt, FaHeart, FaPlay, FaChartLine } 
 
 function ServicesSection() {
   return (
-    <section className="services">
+    <section className="services" id="services">
 
       <span className="section-tag">لماذا رفيق؟</span>
 

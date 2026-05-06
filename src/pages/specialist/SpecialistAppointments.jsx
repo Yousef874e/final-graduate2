@@ -1,232 +1,222 @@
-import styles from "../../assets/appointments.module.css"
-import { useEffect, useState } from "react"
+import styles from "../../assets/appointments.module.css";
+import { useEffect, useState } from "react";
 import {
   createAppointment,
   getAppointmentsByChildId,
   updateAppointment,
   cancelAppointment,
-  completeAppointment
-} from "../../api/appointmentsService"
-import { getChildren } from "../../api/childrenService"
-import toast from "react-hot-toast"
+  completeAppointment,
+} from "../../api/appointmentsService";
+import { getChildren } from "../../api/childrenService";
+import toast from "react-hot-toast";
 
 function SpecialistAppointments() {
+  const [appointments, setAppointments] = useState([]);
+  const [children, setChildren] = useState([]);
 
-  const [appointments, setAppointments] = useState([])
-  const [children, setChildren] = useState([])
+  const [childId, setChildId] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState(null);
 
-  const [childId, setChildId] = useState("")
-  const [showForm, setShowForm] = useState(false)
-  const [editId, setEditId] = useState(null)
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [duration, setDuration] = useState(30);
+  const [notes, setNotes] = useState("");
 
-  const [date, setDate] = useState("")
-  const [time, setTime] = useState("")
-  const [duration, setDuration] = useState(30)
-  const [notes, setNotes] = useState("")
-
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const loadAppointments = async () => {
     try {
-      const res = await getChildren()
-      const childrenList = res?.items || []
+      const res = await getChildren();
+      const childrenList = res?.items || [];
+      setChildren(childrenList);
 
-      setChildren(childrenList)
-
-      let allAppointments = []
+      let allAppointments = [];
 
       const promises = childrenList.map(async (child) => {
         try {
-          const res = await getAppointmentsByChildId(child.id)
-          const items = res?.items || []
+          const res = await getAppointmentsByChildId(child.id);
+          const items = res?.items || [];
 
-          return items.map(a => ({
+          return items.map((a) => ({
             ...a,
-            childName: child.fullName
-          }))
+            childName: child.fullName,
+          }));
         } catch {
-          return []
+          return [];
         }
-      })
+      });
 
-      const results = await Promise.all(promises)
+      const results = await Promise.all(promises);
 
-      results.forEach(arr => {
-        allAppointments.push(...arr)
-      })
+      results.forEach((arr) => {
+        allAppointments.push(...arr);
+      });
 
-      setAppointments(allAppointments)
-
+      setAppointments(allAppointments);
     } catch {
-      toast.error("فشل تحميل المواعيد")
+      toast.error("فشل تحميل المواعيد");
     }
-  }
+  };
 
   useEffect(() => {
-    loadAppointments()
-  }, [])
+    loadAppointments();
+  }, []);
 
   const handleSubmit = async () => {
+    if (!childId) return toast.error("اختار طفل");
+    if (!date || !time) return toast.error("حدد التاريخ والوقت");
 
-    if (!childId) {
-      toast.error("اختار طفل")
-      return
-    }
+    const [hours, minutes] = time.split(":").map(Number);
 
-    if (!date || !time) {
-      toast.error("حدد التاريخ والوقت")
-      return
-    }
+    const localDate = new Date(date);
+    localDate.setHours(hours, minutes, 0, 0);
 
-    if (duration < 15 || duration > 240) {
-      toast.error("المدة لازم من 15 لـ 240 دقيقة")
-      return
-    }
+    if (localDate <= new Date()) return toast.error("لازم وقت في المستقبل");
 
-    const localDate = new Date(`${date}T${time}`)
-    const scheduledAtUtc = new Date(
-      localDate.getTime() - localDate.getTimezoneOffset() * 60000
-    ).toISOString()
+    const scheduledAtUtc = localDate.toISOString();
 
     try {
       if (editId) {
         await updateAppointment(editId, {
           scheduledAtUtc,
           durationMinutes: Number(duration),
-          notes
-        })
-        toast.success("تم التعديل")
+          notes,
+        });
+        toast.success("تم التعديل");
       } else {
         await createAppointment({
           childId: Number(childId),
           scheduledAtUtc,
           durationMinutes: Number(duration),
-          notes
-        })
-        toast.success("تم الإضافة")
+          notes,
+        });
+        toast.success("تم الإضافة");
       }
 
-      handleCancel()
-      loadAppointments()
-
-    } catch {
-      toast.error("فشل العملية")
+      handleCancel();
+      loadAppointments();
+    } catch (err) {
+      console.log(err);
+      toast.error("فشل العملية");
     }
-  }
+  };
 
   const handleEdit = (a) => {
-    setEditId(a.id)
-    setShowForm(true)
+    setEditId(a.id);
+    setShowForm(true);
 
-    const d = new Date(a.scheduledAtUtc)
+    const d = new Date(a.scheduledAtUtc);
 
-    setDate(d.toISOString().split("T")[0])
-    setTime(d.toTimeString().slice(0, 5))
-    setDuration(a.durationMinutes)
-    setNotes(a.notes || "")
-    setChildId(a.childId)
-  }
+    setDate(d.toLocaleDateString("en-CA"));
+    setTime(
+      d.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+    );
+
+    setDuration(a.durationMinutes);
+    setNotes(a.notes || "");
+    setChildId(a.childId);
+  };
 
   const handleCancelAppointment = async (id) => {
     try {
-      await cancelAppointment(id)
-      toast.success("تم الإلغاء")
-      loadAppointments()
-    } catch {
-      toast.error("فشل الإلغاء")
+      await cancelAppointment(id);
+      setAppointments((prev) => prev.filter((a) => a.id !== id));
+      toast.success("تم الإلغاء");
+    } catch (err) {
+      console.log(err);
+      toast.error("لا يمكن إلغاء هذا الموعد");
     }
-  }
+  };
 
   const handleCompleteAppointment = async (id) => {
     try {
-      await completeAppointment(id)
-      toast.success("تم الإنهاء")
-      loadAppointments()
-    } catch {
-      toast.error("فشل الإنهاء")
+      await completeAppointment(id);
+      toast.success("تم الإنهاء");
+      loadAppointments();
+    } catch (err) {
+      console.log(err);
+      toast.error("لا يمكن إنهاء هذا الموعد");
     }
-  }
+  };
 
   const handleCancel = () => {
-    setShowForm(false)
-    setEditId(null)
-    setDate("")
-    setTime("")
-    setDuration(30)
-    setNotes("")
-  }
+    setShowForm(false);
+    setEditId(null);
+    setDate("");
+    setTime("");
+    setDuration(30);
+    setNotes("");
+    setChildId("");
+  };
 
   const nextMonth = () => {
-    const d = new Date(currentDate)
-    d.setMonth(d.getMonth() + 1)
-    setCurrentDate(d)
-  }
+    const d = new Date(currentDate);
+    d.setMonth(d.getMonth() + 1);
+    setCurrentDate(d);
+  };
 
   const prevMonth = () => {
-    const d = new Date(currentDate)
-    d.setMonth(d.getMonth() - 1)
-    setCurrentDate(d)
-  }
+    const d = new Date(currentDate);
+    d.setMonth(d.getMonth() - 1);
+    setCurrentDate(d);
+  };
 
   const getMonthDays = () => {
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
 
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    const days = []
+    const days = [];
 
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null)
-    }
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
 
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i))
-    }
-
-    return days
-  }
+    return days;
+  };
 
   const hasAppointment = (day) => {
-    if (!day) return false
+    if (!day) return false;
     return appointments.some(
-      (a) =>
-        new Date(a.scheduledAtUtc).toDateString() === day.toDateString()
-    )
-  }
+      (a) => new Date(a.scheduledAtUtc).toDateString() === day.toDateString(),
+    );
+  };
 
-  const filteredAppointments = appointments.filter((a) => {
-    return new Date(a.scheduledAtUtc).toDateString() === selectedDate.toDateString()
-  })
+  const filteredAppointments = appointments.filter(
+    (a) =>
+      new Date(a.scheduledAtUtc).toDateString() === selectedDate.toDateString(),
+  );
 
   return (
     <div className={styles.container}>
-
       <div className={styles.header}>
         <button onClick={() => setShowForm(true)}>+ إضافة موعد</button>
       </div>
 
       <div className={styles.calendar}>
-
         <div className={styles.calendarTop}>
           <button onClick={prevMonth}>‹</button>
-
           <h3>
             {currentDate.toLocaleString("ar-EG", {
               month: "long",
-              year: "numeric"
+              year: "numeric",
             })}
           </h3>
-
           <button onClick={nextMonth}>›</button>
         </div>
 
         <div className={styles.grid}>
-
           {["ح", "ن", "ث", "ر", "خ", "ج", "س"].map((d, i) => (
-            <div key={i} className={styles.dayName}>{d}</div>
+            <div key={i} className={styles.dayName}>
+              {d}
+            </div>
           ))}
 
           {getMonthDays().map((d, i) => (
@@ -240,16 +230,16 @@ function SpecialistAppointments() {
               {d ? d.getDate() : ""}
             </div>
           ))}
-
         </div>
-
       </div>
 
       {showForm && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
-
-            <select value={childId} onChange={(e) => setChildId(Number(e.target.value))}>
+            <select
+              value={childId}
+              onChange={(e) => setChildId(Number(e.target.value))}
+            >
               <option value="">اختر الطفل</option>
               {children.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -258,8 +248,16 @@ function SpecialistAppointments() {
               ))}
             </select>
 
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
 
             <input
               type="number"
@@ -267,51 +265,54 @@ function SpecialistAppointments() {
               onChange={(e) => setDuration(Number(e.target.value))}
             />
 
-            <input
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
+            <input value={notes} onChange={(e) => setNotes(e.target.value)} />
 
             <div className={styles.actions}>
               <button onClick={handleSubmit}>حفظ</button>
-              <button className={styles.cancel} onClick={handleCancel}>إلغاء</button>
+              <button className={styles.cancel} onClick={handleCancel}>
+                إلغاء
+              </button>
             </div>
-
           </div>
         </div>
       )}
 
       <div className={styles.list}>
-
         {filteredAppointments.map((a) => (
           <div key={a.id} className={styles.card}>
-
             <div>
               <h4>{a.notes || "جلسة"}</h4>
               <p>{a.childName}</p>
-              <p>{new Date(a.scheduledAtUtc).toLocaleDateString()}</p>
+
+              <p>{new Date(a.scheduledAtUtc).toLocaleDateString("ar-EG")}</p>
             </div>
 
             <div className={styles.cardActions}>
               <span>
-                {new Date(a.scheduledAtUtc).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit"
+                {new Date(a.scheduledAtUtc).toLocaleTimeString("ar-EG", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
                 })}
               </span>
 
-              <button onClick={() => handleEdit(a)}>تعديل</button>
-              <button onClick={() => handleCancelAppointment(a.id)}>إلغاء</button>
-              <button onClick={() => handleCompleteAppointment(a.id)}>إنهاء</button>
+              {a.status === 1 && (
+                <>
+                  <button onClick={() => handleEdit(a)}>تعديل</button>
+                  <button onClick={() => handleCancelAppointment(a.id)}>
+                    إلغاء
+                  </button>
+                  <button onClick={() => handleCompleteAppointment(a.id)}>
+                    إنهاء
+                  </button>
+                </>
+              )}
             </div>
-
           </div>
         ))}
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default SpecialistAppointments
+export default SpecialistAppointments;

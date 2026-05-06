@@ -8,193 +8,274 @@ import {
   FaUser,
   FaBell,
   FaDumbbell,
-  FaComment
-} from "react-icons/fa"
+  FaComment,
+} from "react-icons/fa";
 
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom"
-import styles from "../assets/dashboard.module.css"
-import logo from "../assets/images/logo.png"
-import { useState, useEffect, useRef } from "react"
-import { useApp } from "../Context/AppContext"
-import { clearAuth } from "../utils/auth"
-import toast from "react-hot-toast"
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+
+import styles from "../assets/dashboard.module.css";
+
+import logo from "../assets/images/logo.png";
+
+import { useState, useEffect, useRef } from "react";
+
+import { useApp } from "../Context/AppContext";
+
+import { clearAuth } from "../utils/auth";
+
+import toast from "react-hot-toast";
+
+import {
+  getParentProfile,
+  getParentProfileImage,
+} from "../api/parentProfileService";
 
 function DashboardLayout() {
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
-  const location = useLocation()
+  const location = useLocation();
 
-  const { data, profileImage, userName, loadData } = useApp()
+  const { data, loadData } = useApp();
 
-  const [showNotifications, setShowNotifications] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false);
 
-  const alerts = data?.alerts || {}
+  const [parent, setParent] = useState({});
+
+  const [profileImage, setProfileImage] = useState(null);
+
+  const alerts = data?.alerts || {};
 
   const notificationsCount =
     (alerts?.childrenWithoutUpcomingAppointments || 0) +
-    (alerts?.childrenWithLowAccuracy || 0)
+    (alerts?.childrenWithLowAccuracy || 0);
 
-  const prevCountRef = useRef(0)
+  const prevCountRef = useRef(0);
+
+  useEffect(() => {
+    loadParentData();
+  }, []);
+
+  const loadParentData = async () => {
+    try {
+      const [parentRes, imageRes] = await Promise.all([
+        getParentProfile(),
+
+        getParentProfileImage(),
+      ]);
+
+      setParent(parentRes || {});
+
+      setProfileImage(imageRes?.url || null);
+    } catch {
+      console.log("failed loading parent data");
+    }
+  };
 
   useEffect(() => {
     const count =
       (alerts?.childrenWithoutUpcomingAppointments || 0) +
-      (alerts?.childrenWithLowAccuracy || 0)
+      (alerts?.childrenWithLowAccuracy || 0);
 
     if (count > prevCountRef.current) {
-      const diff = count - prevCountRef.current
-      toast.success(`عندك ${diff} إشعار جديد 🔔`)
+      const diff = count - prevCountRef.current;
+
+      toast.success(`عندك ${diff} إشعار جديد 🔔`);
     }
 
-    prevCountRef.current = count
-  }, [alerts])
+    prevCountRef.current = count;
+  }, [alerts]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      loadData()
-    }, 10000)
+      loadData();
+    }, 10000);
 
-    return () => clearInterval(interval)
-  }, [loadData])
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const titles = {
     "/dashboard/parent": "لوحة التحكم",
+
     "/dashboard/appointments": "الجدول الزمني",
+
     "/dashboard/library": "المكتبة",
+
     "/dashboard/reports": "التقارير",
+
     "/dashboard/chat": "الشات",
+
     "/dashboard/exercises": "التمارين",
+
     "/dashboard/settings": "الإعدادات",
-    "/dashboard/profile": "الملف الشخصي"
-  }
 
-  const currentTitle = titles[location.pathname] || "لوحة التحكم"
-  const isDashboard = location.pathname === "/dashboard/parent"
+    "/dashboard/profile": "الملف الشخصي",
+  };
 
-  const displayName = userName || "مستخدم"
+  const currentTitle = titles[location.pathname] || "لوحة التحكم";
+
+  const isDashboard = location.pathname === "/dashboard/parent";
 
   return (
     <div className={styles.dashboard}>
-
       <div className={styles.sidebar}>
-
         <div className="logo-container">
           <span className="logo-text">رفيق</span>
+
           <div className="logo-circle">
             <img src={logo} alt="logo" />
           </div>
         </div>
 
         <ul>
-
           <li>
-            <NavLink to="/dashboard/parent" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaHome /> الرئيسية
+            <NavLink
+              to="/dashboard/parent"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaHome />
+              الرئيسية
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/appointments" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaCalendarAlt /> الجدول
+            <NavLink
+              to="/dashboard/appointments"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaCalendarAlt />
+              الجدول
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/library" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaBook /> المكتبة
+            <NavLink
+              to="/dashboard/library"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaBook />
+              المكتبة
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/exercises" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaDumbbell /> التمارين
+            <NavLink
+              to="/dashboard/exercises"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaDumbbell />
+              التمارين
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/reports" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaChartBar /> التقارير
+            <NavLink
+              to="/dashboard/reports"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaChartBar />
+              التقارير
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/chat" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaComment /> الشات
+            <NavLink
+              to="/dashboard/chat"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaComment />
+              الشات
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/settings" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaCog /> الإعدادات
+            <NavLink
+              to="/dashboard/settings"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaCog />
+              الإعدادات
             </NavLink>
           </li>
 
           <li>
-            <NavLink to="/dashboard/profile" className={({ isActive }) => isActive ? styles.active : ""}>
-              <FaUser /> الملف الشخصي
+            <NavLink
+              to="/dashboard/profile"
+              className={({ isActive }) => (isActive ? styles.active : "")}
+            >
+              <FaUser />
+              الملف الشخصي
             </NavLink>
           </li>
 
           <li className={styles.logout}>
             <div
               onClick={() => {
-                clearAuth()
-                navigate("/login", { replace: true })
+                clearAuth();
+
+                navigate("/login", {
+                  replace: true,
+                });
               }}
               style={{
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: "8px"
+                gap: "8px",
               }}
             >
-              <FaSignOutAlt /> تسجيل الخروج
+              <FaSignOutAlt />
+              تسجيل الخروج
             </div>
           </li>
-
         </ul>
       </div>
 
       <div className={styles.main}>
-
         <div className={styles.header}>
-
           <div className={styles.headerRight}>
             <h3>{currentTitle}</h3>
 
             {isDashboard && (
               <p className={styles.welcome}>
-                مرحباً، {displayName} 👋
+                مرحباً،
+                {parent?.fullName || "ولي الأمر"} 👋
               </p>
             )}
           </div>
 
           <div className={styles.headerLeft}>
-
-            <div style={{ position: "relative" }}>
+            <div
+              style={{
+                position: "relative",
+              }}
+            >
               <FaBell
                 className={styles.iconCircle}
                 onClick={() => setShowNotifications(!showNotifications)}
               />
 
               {notificationsCount > 0 && (
-                <span className={styles.badge}>
-                  {notificationsCount}
-                </span>
+                <span className={styles.badge}>{notificationsCount}</span>
               )}
 
               {showNotifications && (
-                <div className={styles.dropdown}>
-                  {alerts?.childrenWithoutUpcomingAppointments > 0 && (
-                    <p>⚠️ في طفل بدون مواعيد</p>
-                  )}
+                <div className={styles.notificationsBox}>
+                  {notificationsCount === 0 ? (
+                    <p className={styles.emptyNotification}>لا يوجد إشعارات</p>
+                  ) : (
+                    <>
+                      {alerts?.childrenWithoutUpcomingAppointments > 0 && (
+                        <div className={styles.notificationItem}>
+                          يوجد أطفال بدون مواعيد قادمة
+                        </div>
+                      )}
 
-                  {alerts?.childrenWithLowAccuracy > 0 && (
-                    <p>📉 في طفل محتاج متابعة</p>
-                  )}
-
-                  {notificationsCount === 0 && (
-                    <p>لا يوجد إشعارات</p>
+                      {alerts?.childrenWithLowAccuracy > 0 && (
+                        <div className={styles.notificationItem}>
+                          يوجد أطفال بنسبة دقة منخفضة
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -204,7 +285,7 @@ function DashboardLayout() {
               className={styles.userBox}
               onClick={() => navigate("/dashboard/profile")}
             >
-              <span>{displayName}</span>
+              <span>{parent?.fullName || "ولي الأمر"}</span>
 
               <div className={styles.avatarWrapper}>
                 {profileImage ? (
@@ -218,17 +299,13 @@ function DashboardLayout() {
                 )}
               </div>
             </div>
-
           </div>
-
         </div>
 
         <Outlet />
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default DashboardLayout
+export default DashboardLayout;

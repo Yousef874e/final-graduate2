@@ -10,7 +10,7 @@ import {
 
 function ContactSection() {
   return (
-    <section className="contact">
+    <section className="contact"id="contact">
       <div className="contact-container">
         <div className="contact-form">
           <h3>أرسل لنا رسالة</h3>
@@ -55,11 +55,7 @@ function ContactSection() {
       </div>
 
       <div className="footer">
-        <div className="socials">
-          <FaLinkedin />
-          <FaInstagram />
-          <FaTwitter />
-        </div>
+        
         <p>© 2026 رفيق جميع الحقوق محفوظة</p>
       </div>
     </section>

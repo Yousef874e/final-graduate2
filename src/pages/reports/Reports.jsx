@@ -1,74 +1,85 @@
-import styles from "../../assets/dashboard.module.css"
-import reportStyles from "../../assets/reports.module.css"
-import { useEffect, useState } from "react"
+import styles from "../../assets/dashboard.module.css";
+import reportStyles from "../../assets/reports.module.css";
+import { useEffect, useState } from "react";
 import {
   getMedicalReports,
-  downloadMedicalReport
-} from "../../api/medicalReportsService"
-import { FaDownload, FaFilePdf, FaEye } from "react-icons/fa"
-import toast from "react-hot-toast"
+  downloadMedicalReport,
+} from "../../api/medicalReportsService";
+import { useApp } from "../../Context/AppContext";
+import { FaDownload, FaFilePdf, FaEye } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 function Reports() {
+  const { data } = useApp();
 
-  const [reports, setReports] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [previewUrl, setPreviewUrl] = useState(null)
-
-  const childId = localStorage.getItem("childId")
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const childId = data?.children?.[0]?.childId;
 
   useEffect(() => {
-    fetchReports()
-  }, [])
+    if (childId) {
+      fetchReports();
+    }
+  }, [childId]);
 
   const fetchReports = async () => {
     try {
-      const res = await getMedicalReports(childId)
-      setReports(res?.items || [])
+      const res = await getMedicalReports(childId);
+      setReports(res?.items || []);
     } catch {
-      toast.error("فشل تحميل التقارير")
+      toast.error("فشل تحميل التقارير");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
+  };
   const handleDownload = async (id) => {
     try {
-      const blob = await downloadMedicalReport(id)
-      const url = window.URL.createObjectURL(blob)
+      const result = await downloadMedicalReport(id);
 
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `report-${id}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
+      if (typeof result === "string") {
+        window.open(result, "_blank");
+      } else {
+        const url = window.URL.createObjectURL(result);
 
-      window.URL.revokeObjectURL(url)
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `report-${id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        window.URL.revokeObjectURL(url);
+      }
     } catch {
-      toast.error("فشل تحميل التقرير")
+      toast.error("فشل تحميل التقرير");
     }
-  }
+  };
 
+  // 🔥 preview
   const handlePreview = async (id) => {
     try {
-      const blob = await downloadMedicalReport(id)
-      const url = window.URL.createObjectURL(blob)
-      setPreviewUrl(url)
+      const result = await downloadMedicalReport(id);
+
+      if (typeof result === "string") {
+        setPreviewUrl(result);
+      } else {
+        const url = window.URL.createObjectURL(result);
+        setPreviewUrl(url);
+      }
     } catch {
-      toast.error("فشل فتح التقرير")
+      toast.error("فشل فتح التقرير");
     }
-  }
+  };
 
   return (
     <div className={styles.specialistsPage}>
-
       <h2 className={styles.pageTitle}>التقارير الطبية</h2>
       <p className={styles.pageDesc}>
         جميع التقارير الطبية الخاصة بطفلك في مكان واحد
       </p>
 
       <div className={reportStyles.list}>
-
         {loading ? (
           <p>Loading...</p>
         ) : reports.length === 0 ? (
@@ -76,9 +87,7 @@ function Reports() {
         ) : (
           reports.map((item) => (
             <div key={item.id} className={reportStyles.card}>
-
               <div className={reportStyles.left}>
-
                 <div className={reportStyles.icon}>
                   <FaFilePdf />
                 </div>
@@ -93,11 +102,9 @@ function Reports() {
                     {new Date(item.createdAtUtc).toLocaleDateString("ar-EG")}
                   </p>
                 </div>
-
               </div>
 
               <div className={reportStyles.actions}>
-
                 <button onClick={() => handlePreview(item.id)}>
                   <FaEye />
                 </button>
@@ -105,21 +112,17 @@ function Reports() {
                 <button onClick={() => handleDownload(item.id)}>
                   <FaDownload />
                 </button>
-
               </div>
-
             </div>
           ))
         )}
-
       </div>
-
       {previewUrl && (
         <div
           className={reportStyles.previewOverlay}
           onClick={() => {
-            window.URL.revokeObjectURL(previewUrl)
-            setPreviewUrl(null)
+            window.URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
           }}
         >
           <div
@@ -130,9 +133,8 @@ function Reports() {
           </div>
         </div>
       )}
-
     </div>
-  )
+  );
 }
 
-export default Reports
+export default Reports;

@@ -1,110 +1,151 @@
-import { useState } from "react"
-import styles from "../../assets/dashboard.module.css"
-import { FaPlay } from "react-icons/fa"
-import { useNavigate } from "react-router-dom"
-import toast from "react-hot-toast"
-import { useApp } from "../../Context/AppContext"
-import { getTreatmentPlans } from "../../api/treatmentPlansService"
+import { useState } from "react";
+
+import styles from "../../assets/dashboard.module.css";
+
+import { FaPlay } from "react-icons/fa";
+
+import { useNavigate } from "react-router-dom";
+
+import toast from "react-hot-toast";
+
+import { useApp } from "../../Context/AppContext";
+
+import { getTreatmentPlans } from "../../api/treatmentPlansService";
+
+import { getSessionsByChild } from "../../api/sessionsService";
 
 function ParentDashboard() {
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
-  const { data } = useApp()
+  const { data } = useApp();
 
-  const [starting, setStarting] = useState(false)
+  const [starting, setStarting] = useState(false);
 
-  const children = data?.children || []
-  const appointments = data?.upcomingAppointments || []
-  const overview = data?.overview || {}
+  const children = data?.children || [];
 
-  const appointment = appointments
-    .sort((a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc))[0]
+  const appointments = data?.upcomingAppointments || [];
 
-  const child = children[0]
+  const overview = data?.overview || {};
 
-  let day = ""
-  let month = ""
-  let time = ""
-  let isToday = false
+  const appointment = appointments.sort(
+    (a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc),
+  )[0];
+
+  const child = children[0];
+
+  let day = "";
+  let month = "";
+  let time = "";
+  let isToday = false;
 
   if (appointment?.scheduledAtUtc) {
-    const date = new Date(appointment.scheduledAtUtc)
+    const date = new Date(appointment.scheduledAtUtc);
 
-    day = date.getDate()
-    month = date.toLocaleString("ar-EG", { month: "short" })
+    day = date.getDate();
+
+    month = date.toLocaleString("ar-EG", {
+      month: "short",
+    });
+
     time = date.toLocaleTimeString("ar-EG", {
       hour: "2-digit",
-      minute: "2-digit"
-    })
+      minute: "2-digit",
+    });
 
-    isToday = date.toDateString() === new Date().toDateString()
+    isToday = date.toDateString() === new Date().toDateString();
   }
 
   const getLevel = (score) => {
-    if (score >= 90) return "ممتاز 🔥"
-    if (score >= 80) return "جيد جدًا 👌"
-    if (score >= 70) return "جيد 🙂"
-    if (score >= 50) return "مقبول 😐"
-    return "ضعيف ❌"
-  }
+    if (score === null) return "جاري التحليل ⏳";
+
+    if (score >= 90) return "ممتاز 🔥";
+
+    if (score >= 80) return "جيد جدًا 👌";
+
+    if (score >= 70) return "جيد 🙂";
+
+    if (score >= 50) return "مقبول 😐";
+
+    return "ضعيف ❌";
+  };
 
   const getColor = (score) => {
-    if (score >= 80) return "#22c55e"
-    if (score >= 60) return "#eab308"
-    return "#ef4444"
-  }
+    if (score === null) return "#94a3b8";
+
+    if (score >= 80) return "#22c55e";
+
+    if (score >= 60) return "#eab308";
+
+    return "#ef4444";
+  };
 
   const handleStartSession = async () => {
-
     if (!child?.childId) {
-      toast.error("لا يوجد طفل ❌")
-      return
+      toast.error("لا يوجد طفل ❌");
+
+      return;
     }
 
     try {
-      setStarting(true)
+      setStarting(true);
 
-      const plans = await getTreatmentPlans(child.childId)
-      const plan = plans?.items?.[0]
+      const plans = await getTreatmentPlans(child.childId);
+
+      const plan = plans?.items?.[0];
 
       if (!plan) {
-        toast.error("لا توجد خطة علاج ❌")
-        return
+        toast.error("لا توجد خطة علاج ❌");
+
+        return;
       }
 
-      const exercise = plan.exercises?.[0]
+      const sessionsRes = await getSessionsByChild(child.childId);
 
-      if (!exercise) {
-        toast.error("لا يوجد تمرين ❌")
-        return
+      const sessions = sessionsRes?.items || [];
+
+      const completedIds = sessions
+        .filter((s) => s.status === 5)
+        .map((s) => s.exerciseId);
+
+      const remainingExercise = plan.exercises?.find(
+        (ex) => !completedIds.includes(ex.exerciseId),
+      );
+
+      if (!remainingExercise) {
+        toast.success("تم إنهاء جميع التمارين ✅");
+
+        return;
       }
 
-      navigate(`/dashboard/exercises?id=${exercise.exerciseId}`, {
-        state: { treatmentPlanExerciseId: exercise.id }
-      })
-
+      navigate(`/dashboard/exercises/${remainingExercise.exerciseId}`, {
+        state: {
+          treatmentPlanExerciseId: remainingExercise.id,
+        },
+      });
     } catch (err) {
-
       const errorMsg =
         err?.response?.data?.errors?.[0] ||
         err?.response?.data?.title ||
-        "فشل بدء التمرين ❌"
+        "فشل بدء التمرين ❌";
 
-      toast.error(errorMsg)
-
+      toast.error(errorMsg);
     } finally {
-      setStarting(false)
+      setStarting(false);
     }
-  }
+  };
 
-  const score = Math.min(100, Math.max(0, child?.averageAccuracyScore || 0))
+  const hasScore =
+    child?.averageAccuracyScore !== null &&
+    child?.averageAccuracyScore !== undefined;
+
+  const score = hasScore
+    ? Math.min(100, Math.max(0, child.averageAccuracyScore))
+    : null;
 
   return (
     <>
       <div className={styles.hero}>
-
         <div className={styles.heroRight}>
-
           <span className={styles.tag}>
             {appointment
               ? isToday
@@ -114,17 +155,19 @@ function ParentDashboard() {
           </span>
 
           <h2>جاهز للتمرين؟</h2>
+
           <p>بقت خطوة واحدة لإكمال الهدف!</p>
 
           <div className={styles.heroBtns}>
-
             <button
               className={styles.outlineBtn}
               onClick={() => {
                 if (appointment) {
-                  navigate(`/dashboard/appointments?appointmentId=${appointment.appointmentId}`)
+                  navigate(
+                    `/dashboard/appointments?appointmentId=${appointment.appointmentId}`,
+                  );
                 } else {
-                  toast.error("لا يوجد جلسة حالياً ❌")
+                  toast.error("لا يوجد جلسة حالياً ❌");
                 }
               }}
             >
@@ -136,26 +179,30 @@ function ParentDashboard() {
               onClick={handleStartSession}
               disabled={starting}
             >
-              {starting ? "جاري البدء..." : <><FaPlay /> ابدأ التمرين</>}
+              {starting ? (
+                "جاري البدء..."
+              ) : (
+                <>
+                  <FaPlay /> ابدأ التمرين
+                </>
+              )}
             </button>
-
           </div>
-
         </div>
 
         <div className={styles.heroLeft}>
           <div
             className={styles.progressCircle}
-            style={{ color: getColor(score) }}
+            style={{
+              color: getColor(score),
+            }}
           >
-            {score}%
+            {score === null ? "..." : `${score}%`}
           </div>
         </div>
-
       </div>
 
       <div className={styles.cards}>
-
         <div className={styles.card}>
           <h4>إنجازات الأسبوع</h4>
 
@@ -179,18 +226,24 @@ function ParentDashboard() {
               <div className={styles.appointment}>
                 <div>
                   <h5>{appointment.specialistName}</h5>
+
                   <p>{time}</p>
                 </div>
 
                 <div className={styles.dateBox}>
                   <span>{month}</span>
+
                   <strong>{day}</strong>
                 </div>
               </div>
 
               <button
                 className={styles.confirmBtn}
-                onClick={() => navigate(`/dashboard/appointments?appointmentId=${appointment.appointmentId}`)}
+                onClick={() =>
+                  navigate(
+                    `/dashboard/appointments?appointmentId=${appointment.appointmentId}`,
+                  )
+                }
               >
                 عرض الجلسة
               </button>
@@ -201,14 +254,13 @@ function ParentDashboard() {
         </div>
 
         <div className={styles.card}>
-          <h4>
-            {child ? child.childName : "لا يوجد طفل"}
-          </h4>
+          <h4>{child ? child.childName : "لا يوجد طفل"}</h4>
 
           {child && (
             <>
               <div className={styles.childInfo}>
                 <span>{child.specialistName}</span>
+
                 <span>تقارير: {child.reportsCount}</span>
               </div>
 
@@ -216,15 +268,18 @@ function ParentDashboard() {
                 <div
                   className={styles.progressFill}
                   style={{
-                    width: `${score}%`,
-                    backgroundColor: getColor(score)
+                    width: score === null ? "0%" : `${score}%`,
+
+                    backgroundColor: getColor(score),
                   }}
                 />
               </div>
 
               <span
                 className={styles.good}
-                style={{ color: getColor(score) }}
+                style={{
+                  color: getColor(score),
+                }}
               >
                 {getLevel(score)}
               </span>
@@ -238,11 +293,9 @@ function ParentDashboard() {
             عرض الملف الكامل
           </span>
         </div>
-
       </div>
-
     </>
-  )
+  );
 }
 
-export default ParentDashboard
+export default ParentDashboard;

@@ -3,11 +3,6 @@ import { getAuth } from "../utils/auth"
 
 function ProtectedRoute({ children }) {
 
-  // مؤقتًا إلغاء الحماية
-  return children
-
-  // الكود القديم (سيبه عشان ترجعله بعدين)
-  /*
   const { token } = getAuth()
 
   if (!token || token === "undefined") {
@@ -15,7 +10,6 @@ function ProtectedRoute({ children }) {
   }
 
   return children
-  */
 }
 
 export default ProtectedRoute

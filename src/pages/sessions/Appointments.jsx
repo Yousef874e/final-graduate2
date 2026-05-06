@@ -1,118 +1,136 @@
-import styles from "../../assets/dashboard.module.css"
-import sessionStyles from "../../assets/sessions.module.css"
-import { useState, useMemo } from "react"
-import { useApp } from "../../Context/AppContext"
-import { useSearchParams } from "react-router-dom"
+import styles from "../../assets/dashboard.module.css";
+import sessionStyles from "../../assets/sessions.module.css";
+import { useState, useMemo } from "react";
+import { useApp } from "../../Context/AppContext";
+import { useSearchParams } from "react-router-dom";
 
 function Sessions() {
+  const { sessions = [], appointments = [], loading } = useApp();
 
-  const {
-    sessions = [],
-    appointments = [],
-    loading
-  } = useApp()
+  const [params] = useSearchParams();
+  const sessionId = params.get("sessionId");
+  const appointmentId = params.get("appointmentId");
 
-  const [params] = useSearchParams()
-  const sessionId = params.get("sessionId")
-  const appointmentId = params.get("appointmentId")
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
 
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [selectedDay, setSelectedDay] = useState(new Date().getDate())
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
-  const year = currentDate.getFullYear()
-  const month = currentDate.getMonth()
-
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const monthNames = [
-    "يناير","فبراير","مارس","أبريل","مايو","يونيو",
-    "يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"
-  ]
+    "يناير",
+    "فبراير",
+    "مارس",
+    "أبريل",
+    "مايو",
+    "يونيو",
+    "يوليو",
+    "أغسطس",
+    "سبتمبر",
+    "أكتوبر",
+    "نوفمبر",
+    "ديسمبر",
+  ];
 
   const nextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1))
-    setSelectedDay(1)
-  }
+    setCurrentDate(new Date(year, month + 1, 1));
+    setSelectedDay(1);
+  };
 
   const prevMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1))
-    setSelectedDay(1)
-  }
+    setCurrentDate(new Date(year, month - 1, 1));
+    setSelectedDay(1);
+  };
 
   const getStatus = (a) => {
     switch (a.status) {
-      case 1: return { text: "قادم", color: "#2196F3" }
-      case 2: return { text: "تم التعديل", color: "#FF9800" }
-      case 3: return { text: "ملغي", color: "gray" }
-      case 4: return { text: "مكتمل", color: "green" }
-      case 5: return { text: "فات", color: "red" }
-      default: return { text: "", color: "black" }
+      case 1:
+        return { text: "قادم", color: "#2196F3" };
+      case 2:
+        return { text: "تم التعديل", color: "#FF9800" };
+      case 3:
+        return { text: "ملغي", color: "gray" };
+      case 4:
+        return { text: "مكتمل", color: "green" };
+      case 5:
+        return { text: "فات", color: "red" };
+      default:
+        return { text: "", color: "black" };
     }
-  }
+  };
 
-  const isPast = (date) => new Date(date) < new Date()
-
-  const mergedData = useMemo(() => [
-    ...appointments.map(a => ({
-      id: a.id,
-      type: "appointment",
-      title: "جلسة علاج طبيعي",
-      doctor: a.specialistName || "غير معروف",
-      time: a.scheduledAtUtc,
-      status: a.status,
-      raw: a
-    })),
-    ...sessions.map(s => ({
-      id: s.id,
-      type: "session",
-      title: "جلسة تمرين",
-      doctor: "تمرين",
-      time: s.startedAtUtc || s.createdAtUtc
-    }))
-  ], [appointments, sessions])
+  const isPast = (date) => new Date(date).getTime() < Date.now();
+  const mergedData = useMemo(
+    () => [
+      ...appointments.map((a) => ({
+        id: a.id,
+        type: "appointment",
+        title: "جلسة علاج طبيعي",
+        doctor: a.specialistName || "أخصائي",
+        time: a.scheduledAtUtc,
+        status: a.status,
+        raw: a,
+      })),
+      ...sessions.map((s) => ({
+        id: s.id,
+        type: "session",
+        title: "جلسة تمرين",
+        doctor: "تمرين",
+        time: s.startedAtUtc || s.createdAtUtc,
+      })),
+    ],
+    [appointments, sessions],
+  );
 
   const filteredData = useMemo(() => {
     return mergedData
-      .filter(item => {
-        if (!item.time) return false
-
-        const itemDate = new Date(item.time)
-        const selectedDate = new Date(year, month, selectedDay)
-
-        return itemDate.toLocaleDateString() === selectedDate.toLocaleDateString()
+      .filter((item) => {
+        if (!item.time) return false;
+        const d = new Date(item.time);
+        return (
+          d.getFullYear() === year &&
+          d.getMonth() === month &&
+          d.getDate() === selectedDay
+        );
       })
-      .sort((a, b) => new Date(a.time) - new Date(b.time))
-  }, [mergedData, selectedDay, month, year])
+      .sort((a, b) => new Date(a.time) - new Date(b.time));
+  }, [mergedData, selectedDay, month, year]);
 
   const nextAppointment = useMemo(() => {
     return appointments
-      .filter(a => a.status === 1 || a.status === 2)
-      .sort((a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc))[0]
-  }, [appointments])
+      .filter(
+        (a) =>
+          (a.status === 1 || a.status === 2) &&
+          new Date(a.scheduledAtUtc).getTime() > Date.now(),
+      )
+      .sort(
+        (a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc),
+      )[0];
+  }, [appointments]);
 
-  let timeLeft = "لا يوجد مواعيد قادمة"
+  let timeLeft = "لا يوجد مواعيد قادمة";
 
   if (nextAppointment) {
-    const diff = new Date(nextAppointment.scheduledAtUtc) - new Date()
-    const minutes = Math.floor(diff / (1000 * 60))
+    const diff =
+      new Date(nextAppointment.scheduledAtUtc).getTime() - Date.now();
+    const minutes = Math.floor(diff / (1000 * 60));
 
     if (minutes > 60) {
-      timeLeft = `متبقي ${Math.floor(minutes / 60)} ساعة`
+      timeLeft = `متبقي ${Math.floor(minutes / 60)} ساعة`;
     } else if (minutes > 0) {
-      timeLeft = `متبقي ${minutes} دقيقة`
+      timeLeft = `متبقي ${minutes} دقيقة`;
     } else {
-      timeLeft = "جاري الآن أو انتهى"
+      timeLeft = "جاري الآن";
     }
   }
 
   return (
     <div style={{ padding: "20px" }}>
-
       <div className={sessionStyles.sessionsLayout}>
-
         <div className={sessionStyles.leftSide}>
-
           <div className={`${styles.card} ${sessionStyles.nextSession}`}>
             <h4>تذكير القادم</h4>
             <p>{timeLeft}</p>
@@ -121,10 +139,13 @@ function Sessions() {
               <div className={sessionStyles.nextBox}>
                 جلسة قادمة <br />
                 <small>
-                  {new Date(nextAppointment.scheduledAtUtc).toLocaleTimeString("ar-EG", {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                  })}
+                  {new Date(nextAppointment.scheduledAtUtc).toLocaleTimeString(
+                    "ar-EG",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    },
+                  )}
                 </small>
               </div>
             )}
@@ -135,20 +156,20 @@ function Sessions() {
             <p>{sessions.length} جلسة</p>
             <p>{appointments.length} مواعيد</p>
           </div>
-
         </div>
 
         <div>
-
           <div className={styles.card}>
-            <div style={{display:"flex", justifyContent:"space-between"}}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
               <button onClick={prevMonth}>◀</button>
-              <h4>{monthNames[month]} {year}</h4>
+              <h4>
+                {monthNames[month]} {year}
+              </h4>
               <button onClick={nextMonth}>▶</button>
             </div>
 
             <div className={sessionStyles.calendarBox}>
-              {days.map(d => (
+              {days.map((d) => (
                 <div
                   key={d}
                   onClick={() => setSelectedDay(d)}
@@ -163,34 +184,31 @@ function Sessions() {
           </div>
 
           <div className={sessionStyles.sessionsList}>
-
             <h4>مواعيد {selectedDay}</h4>
 
-            {loading ? (
+            {loading && filteredData.length === 0 ? (
               <p>Loading...</p>
             ) : filteredData.length === 0 ? (
-              <div className={sessionStyles.emptyBox}>
-                لا توجد مواعيد
-              </div>
+              <div className={sessionStyles.emptyBox}>لا توجد مواعيد</div>
             ) : (
               filteredData.map((item) => {
-
                 const isActive =
                   (item.type === "session" && item.id === Number(sessionId)) ||
-                  (item.type === "appointment" && item.id === Number(appointmentId))
+                  (item.type === "appointment" &&
+                    item.id === Number(appointmentId));
 
-                let statusUI = null
+                let statusUI = null;
 
                 if (item.type === "appointment") {
-                  const status = getStatus(item.raw)
+                  const status = getStatus(item.raw);
 
                   const fallbackMissed =
                     (item.raw.status === 1 || item.raw.status === 2) &&
-                    isPast(item.time)
+                    isPast(item.time);
 
                   statusUI = fallbackMissed
                     ? { text: "فات", color: "red" }
-                    : status
+                    : status;
                 }
 
                 return (
@@ -198,7 +216,7 @@ function Sessions() {
                     key={item.id}
                     className={`${styles.card} ${sessionStyles.sessionItem}`}
                     style={{
-                      border: isActive ? "2px solid #4CAF50" : ""
+                      border: isActive ? "2px solid #4CAF50" : "",
                     }}
                   >
                     <div>
@@ -210,7 +228,7 @@ function Sessions() {
                       <p>
                         {new Date(item.time).toLocaleTimeString("ar-EG", {
                           hour: "2-digit",
-                          minute: "2-digit"
+                          minute: "2-digit",
                         })}
                       </p>
 
@@ -220,20 +238,15 @@ function Sessions() {
                         </small>
                       )}
                     </div>
-
                   </div>
-                )
+                );
               })
             )}
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default Sessions
+export default Sessions;

@@ -1,182 +1,268 @@
-import styles from "../../assets/chat.module.css"
-import { useEffect, useState, useRef } from "react"
-import { useApp } from "../../Context/AppContext"
+import styles from "../../assets/chat.module.css";
+
+import { useEffect, useState, useRef } from "react";
+
+import { useApp } from "../../Context/AppContext";
+
 import {
   getChildMessages,
   sendMessage,
   markMessageRead,
-  getConversations
-} from "../../api/messagesService"
-import { startConnection } from "../../api/chatHub.js"
-import toast from "react-hot-toast"
+  getConversations,
+} from "../../api/messagesService";
+
+import { getChildProfile } from "../../api/childrenService";
+
+import { getParentProfileById } from "../../api/parentProfileService";
+
+import { startConnection } from "../../api/chatHub.js";
+
+import toast from "react-hot-toast";
 
 function Chat() {
+  const { userId, role, specialistName } = useApp();
 
-  const { userId } = useApp()
-  const myId = Number(userId)
+  const myId = Number(userId);
 
-  const [conversations, setConversations] = useState([])
-  const [activeChat, setActiveChat] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [text, setText] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [conversations, setConversations] = useState([]);
 
-  const bottomRef = useRef()
-  const connectionRef = useRef(null)
-  const activeChatRef = useRef(null)
+  const [activeChat, setActiveChat] = useState(null);
+
+  const [messages, setMessages] = useState([]);
+
+  const [text, setText] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  const bottomRef = useRef();
+
+  const connectionRef = useRef(null);
+
+  const activeChatRef = useRef(null);
 
   useEffect(() => {
-    loadConversations()
-    initSignalR()
+    loadConversations();
+
+    initSignalR();
 
     return () => {
-      connectionRef.current?.off("ReceiveMessage")
-    }
-  }, [])
+      connectionRef.current?.off("ReceiveMessage");
+    };
+  }, []);
 
   const initSignalR = async () => {
-    const conn = await startConnection()
-    connectionRef.current = conn
+    const conn = await startConnection();
 
-    conn.on("ReceiveMessage", async (message) => {
+    connectionRef.current = conn;
 
-      if (message.childId !== activeChatRef.current?.childId) return
+    conn.on(
+      "ReceiveMessage",
 
-      setMessages(prev => {
-        if (prev.find(m => m.id === message.id)) return prev
-        return [...prev, message]
-      })
+      async (message) => {
+        if (message.childId !== activeChatRef.current?.childId) return;
 
-      setConversations(prev =>
-        prev.map(c =>
-          c.childId === message.childId
-            ? { ...c, lastMessage: message.content }
-            : c
-        )
-      )
+        setMessages((prev) => {
+          if (prev.find((m) => m.id === message.id)) return prev;
 
-      if (Number(message.receiverUserId) === myId) {
-        await markMessageRead(message.id)
-      }
+          return [...prev, message];
+        });
 
-      scrollDown()
-    })
-  }
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.childId === message.childId
+              ? {
+                  ...c,
+                  lastMessage: message.content,
+                }
+              : c,
+          ),
+        );
+
+        if (Number(message.receiverUserId) === myId) {
+          await markMessageRead(message.id);
+        }
+
+        scrollDown();
+      },
+    );
+  };
 
   const loadConversations = async () => {
     try {
-      const res = await getConversations()
-      const list = res || []
-      setConversations(list)
+      const res = await getConversations();
+
+      let list = res || [];
+
+      if (role === "Specialist") {
+        list = await Promise.all(
+          list.map(async (chat) => {
+            try {
+              const child = await getChildProfile(chat.childId);
+
+              const parent = await getParentProfileById(child.parentProfileId);
+
+              return {
+                ...chat,
+
+                parentName: parent.fullName,
+              };
+            } catch {
+              return {
+                ...chat,
+
+                parentName: "ولي الأمر",
+              };
+            }
+          }),
+        );
+      }
+
+      setConversations(list);
 
       if (list.length) {
-        const chat = list[0]
-        setActiveChat(chat)
-        activeChatRef.current = chat
-        loadMessages(chat.childId)
+        const firstChat = list[0];
+
+        setActiveChat(firstChat);
+
+        activeChatRef.current = firstChat;
+
+        loadMessages(firstChat.childId);
       }
     } catch {
-      toast.error("فشل تحميل المحادثات")
+      toast.error("فشل تحميل المحادثات");
     }
-  }
+  };
 
   const loadMessages = async (childId) => {
-    if (!childId) return
+    if (!childId) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const res = await getChildMessages(childId)
-      const msgs = (res.items || []).sort(
-        (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc)
-      )
+      const res = await getChildMessages(childId);
 
-      setMessages(msgs)
+      const msgs = (res.items || []).sort(
+        (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc),
+      );
+
+      setMessages(msgs);
 
       await Promise.all(
         msgs
-          .filter(m => !m.isRead && Number(m.receiverUserId) === myId)
-          .map(m => markMessageRead(m.id))
-      )
 
-      scrollDown()
+          .filter((m) => !m.isRead && Number(m.receiverUserId) === myId)
+
+          .map((m) => markMessageRead(m.id)),
+      );
+
+      scrollDown();
     } catch {
-      toast.error("فشل تحميل الرسائل")
+      toast.error("فشل تحميل الرسائل");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSend = async () => {
-    if (!text.trim() || !activeChat) return
+    if (!text.trim() || !activeChat) return;
 
-    const receiverId = activeChat.otherUserId
+    const receiverId = activeChat.otherUserId;
 
     if (!receiverId) {
-      toast.error("لا يوجد مستقبل ❌")
-      return
+      toast.error("لا يوجد مستقبل ❌");
+
+      return;
     }
 
     try {
       const newMsg = await sendMessage({
         childId: activeChat.childId,
+
         receiverUserId: Number(receiverId),
-        content: text
-      })
 
-      setMessages(prev => {
-        if (prev.find(m => m.id === newMsg.id)) return prev
-        return [...prev, newMsg]
-      })
+        content: text,
+      });
 
-      setConversations(prev =>
-        prev.map(c =>
+      setMessages((prev) => {
+        if (prev.find((m) => m.id === newMsg.id)) return prev;
+
+        return [...prev, newMsg];
+      });
+
+      setConversations((prev) =>
+        prev.map((c) =>
           c.childId === activeChat.childId
-            ? { ...c, lastMessage: newMsg.content }
-            : c
-        )
-      )
+            ? {
+                ...c,
+                lastMessage: newMsg.content,
+              }
+            : c,
+        ),
+      );
 
-      setText("")
-      scrollDown()
+      setText("");
 
+      scrollDown();
     } catch {
-      toast.error("فشل الإرسال ❌")
+      toast.error("فشل الإرسال ❌");
     }
-  }
+  };
 
   const scrollDown = () => {
     setTimeout(() => {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, 100)
-  }
+      bottomRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 100);
+  };
 
   return (
     <div className={styles.container}>
-
       <div className={styles.sidebar}>
-        {conversations.map(c => (
+        {conversations.map((c) => (
           <div
             key={c.conversationId}
-            className={`${styles.chatItem} ${
-              activeChat?.conversationId === c.conversationId ? styles.active : ""
-            }`}
+            className={`
+              ${styles.chatItem}
+
+              ${
+                activeChat?.conversationId === c.conversationId
+                  ? styles.active
+                  : ""
+              }
+            `}
             onClick={() => {
-              setActiveChat(c)
-              activeChatRef.current = c
-              loadMessages(c.childId)
+              setActiveChat(c);
+
+              activeChatRef.current = c;
+
+              loadMessages(c.childId);
             }}
           >
-            <div>{c.childName}</div>
-            <small>{c.lastMessage}</small>
+            <h4>
+              {role === "Parent"
+                ? specialistName || "الأخصائي"
+                : c.parentName || "ولي الأمر"}
+            </h4>
+
+            <small>الطفل: {c.childName}</small>
+
+            <p>{c.lastMessage}</p>
           </div>
         ))}
       </div>
 
       <div className={styles.chatArea}>
-
         <div className={styles.header}>
-          <h3>{activeChat?.childName || "اختر محادثة"}</h3>
+          <h3>
+            {role === "Parent"
+              ? specialistName || "الأخصائي"
+              : activeChat?.parentName || "ولي الأمر"}
+
+            {" • "}
+
+            {activeChat?.childName}
+          </h3>
         </div>
 
         <div className={styles.messages}>
@@ -185,21 +271,27 @@ function Chat() {
           ) : messages.length === 0 ? (
             <p>لا توجد رسائل</p>
           ) : (
-            messages.map(msg => (
-              <div
-                key={msg.id}
-                className={
-                  Number(msg.senderUserId) === myId
-                    ? styles.myMsg
-                    : styles.otherMsg
-                }
-              >
-                {msg.content}
-              </div>
-            ))
+            messages.map((msg) => {
+              const isMine = Number(msg.senderUserId) === myId;
+
+              return (
+                <div
+                  key={msg.id}
+                  className={isMine ? styles.myMsg : styles.otherMsg}
+                >
+                  <p>{msg.content}</p>
+
+                  {isMine && (
+                    <span className={styles.readMark}>
+                      {msg.isRead ? "✔✔" : "✔"}
+                    </span>
+                  )}
+                </div>
+              );
+            })
           )}
 
-          <div ref={bottomRef}></div>
+          <div ref={bottomRef} />
         </div>
 
         <div className={styles.inputBox}>
@@ -208,13 +300,12 @@ function Chat() {
             onChange={(e) => setText(e.target.value)}
             placeholder="اكتب رسالة..."
           />
+
           <button onClick={handleSend}>➤</button>
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default Chat
+export default Chat;

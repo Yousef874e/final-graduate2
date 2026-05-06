@@ -1,90 +1,101 @@
-import "../../assets/adminAppointments.css"
-import { useEffect, useState } from "react"
+import "../../assets/adminAppointments.css";
+import { useEffect, useState } from "react";
+
 import {
   getAppointmentsByChildId,
   createAppointment,
   cancelAppointment,
-  completeAppointment
-} from "../../api/appointmentsService"
-import { getChildren } from "../../api/childrenService"
-import toast from "react-hot-toast"
+  completeAppointment,
+} from "../../api/appointmentsService";
+
+import { getChildren } from "../../api/childrenService";
+
+import toast from "react-hot-toast";
 
 export default function AdminAppointments() {
+  const [appointments, setAppointments] = useState([]);
 
-  const [appointments, setAppointments] = useState([])
-  const [children, setChildren] = useState([])
+  const [children, setChildren] = useState([]);
 
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const [showModal, setShowModal] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const [showModal, setShowModal] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     childId: "",
     scheduledAtUtc: "",
     durationMinutes: "",
-    notes: ""
-  })
+    notes: "",
+  });
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const loadData = async () => {
     try {
-      const c = await getChildren()
-      const kids = c.items || []
-      setChildren(kids)
+      const c = await getChildren();
 
-      const requests = kids.map(child =>
+      const kids = c.items || [];
+
+      setChildren(kids);
+
+      const requests = kids.map((child) =>
         getAppointmentsByChildId(child.id, {
           pageNumber: 1,
-          pageSize: 50
-        })
-      )
+          pageSize: 50,
+        }),
+      );
 
-      const results = await Promise.all(requests)
-      const allAppointments = results.flatMap(r => r.items || [])
+      const results = await Promise.all(requests);
+
+      const allAppointments = results.flatMap((r) => r.items || []);
 
       allAppointments.sort(
-        (a, b) =>
-          new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc)
-      )
+        (a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc),
+      );
 
-      setAppointments(allAppointments)
-
+      setAppointments(allAppointments);
     } catch {
-      toast.error("فشل تحميل البيانات")
+      toast.error("فشل تحميل البيانات ❌");
     }
-  }
+  };
 
   const getDays = () => {
-    const year = currentMonth.getFullYear()
-    const month = currentMonth.getMonth()
+    const year = currentMonth.getFullYear();
 
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const month = currentMonth.getMonth();
 
-    const days = []
+    const firstDay = new Date(year, month, 1).getDay();
 
-    for (let i = 0; i < firstDay; i++) days.push(null)
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i))
+    const days = [];
+
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
     }
 
-    return days
-  }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
 
-  const filtered = appointments.filter(a => {
-    const d = new Date(a.scheduledAtUtc)
+    return days;
+  };
+
+  const filtered = appointments.filter((a) => {
+    const d = new Date(a.scheduledAtUtc);
+
     return (
       d.getFullYear() === selectedDate.getFullYear() &&
       d.getMonth() === selectedDate.getMonth() &&
       d.getDate() === selectedDate.getDate()
-    )
-  })
+    );
+  });
 
   const isValid = () => {
     return (
@@ -92,81 +103,111 @@ export default function AdminAppointments() {
       form.scheduledAtUtc &&
       Number(form.durationMinutes) >= 15 &&
       Number(form.durationMinutes) <= 240
-    )
-  }
+    );
+  };
 
   const submit = async () => {
     if (!isValid()) {
-      toast.error("اكمل البيانات صح ❌")
-      return
+      toast.error("اكمل البيانات صح ❌");
+
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await createAppointment({
         childId: Number(form.childId),
+
         scheduledAtUtc: new Date(form.scheduledAtUtc).toISOString(),
+
         durationMinutes: Number(form.durationMinutes),
-        notes: form.notes
-      })
 
-      toast.success("تم إضافة الجلسة ✅")
+        notes: form.notes,
+      });
 
-      setShowModal(false)
+      toast.success("تم إضافة الجلسة ✅");
+
+      setShowModal(false);
+
       setForm({
         childId: "",
         scheduledAtUtc: "",
         durationMinutes: "",
-        notes: ""
-      })
+        notes: "",
+      });
 
-      loadData()
-
+      loadData();
     } catch {
-      toast.error("فشل إضافة الجلسة ❌")
+      toast.error("فشل إضافة الجلسة ❌");
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
-  const handleCancel = async (id) => {
+  const handleCancel = async (appointment) => {
+    if (appointment.status !== 0) {
+      toast.error("لا يمكن إلغاء هذا الموعد ❌");
+
+      return;
+    }
+
     try {
-      await cancelAppointment(id)
-      toast.success("تم الإلغاء")
-      loadData()
-    } catch {
-      toast.error("فشل الإلغاء")
-    }
-  }
+      await cancelAppointment(appointment.id);
 
-  const handleComplete = async (id) => {
-    try {
-      await completeAppointment(id)
-      toast.success("تم إنهاء الجلسة")
-      loadData()
+      toast.success("تم الإلغاء ✅");
+
+      loadData();
     } catch {
-      toast.error("فشل إنهاء الجلسة")
+      toast.error("فشل الإلغاء ❌");
     }
-  }
+  };
+
+  const handleComplete = async (appointment) => {
+    if (appointment.status !== 0) {
+      toast.error("لا يمكن إنهاء هذا الموعد ❌");
+
+      return;
+    }
+
+    try {
+      await completeAppointment(appointment.id);
+
+      toast.success("تم إنهاء الجلسة ✅");
+
+      loadData();
+    } catch {
+      toast.error("فشل إنهاء الجلسة ❌");
+    }
+  };
 
   const prevMonth = () => {
-    setCurrentMonth(prev =>
-      new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
-    )
-  }
+    setCurrentMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+    );
+  };
 
   const nextMonth = () => {
-    setCurrentMonth(prev =>
-      new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
-    )
-  }
+    setCurrentMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+    );
+  };
+
+  const getStatusText = (status) => {
+    if (status === 0) return "قيد الانتظار";
+
+    if (status === 1) return "مكتمل";
+
+    if (status === 2) return "ملغي";
+
+    return "غير معروف";
+  };
 
   return (
     <div className="appointments">
-
       <div className="header">
         <h2>الجدول الزمني</h2>
+
         <button className="add-btn" onClick={() => setShowModal(true)}>
           + إضافة موعد
         </button>
@@ -178,7 +219,7 @@ export default function AdminAppointments() {
         <span>
           {currentMonth.toLocaleString("ar-EG", {
             month: "long",
-            year: "numeric"
+            year: "numeric",
           })}
         </span>
 
@@ -205,20 +246,55 @@ export default function AdminAppointments() {
         {filtered.length === 0 ? (
           <p className="empty">لا يوجد مواعيد</p>
         ) : (
-          filtered.map(a => {
-            const time = new Date(a.scheduledAtUtc)
+          filtered.map((a) => {
+            const time = new Date(a.scheduledAtUtc);
 
             return (
               <div className="card" key={a.id}>
                 <h3>{a.notes || "جلسة"}</h3>
-                <p>{time.toLocaleTimeString()}</p>
+
+                <p>
+                  {time.toLocaleTimeString("ar-EG", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+
+                <p>الحالة: {getStatusText(a.status)}</p>
 
                 <div className="actions">
-                  <button onClick={() => handleCancel(a.id)}>إلغاء</button>
-                  <button onClick={() => handleComplete(a.id)}>إنهاء</button>
+                  {a.status === 0 && (
+                    <>
+                      <button onClick={() => handleCancel(a)}>إلغاء</button>
+
+                      <button onClick={() => handleComplete(a)}>إنهاء</button>
+                    </>
+                  )}
+
+                  {a.status === 1 && (
+                    <span
+                      style={{
+                        color: "green",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      مكتمل ✅
+                    </span>
+                  )}
+
+                  {a.status === 2 && (
+                    <span
+                      style={{
+                        color: "red",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ملغي ❌
+                    </span>
+                  )}
                 </div>
               </div>
-            )
+            );
           })
         )}
       </div>
@@ -226,17 +302,20 @@ export default function AdminAppointments() {
       {showModal && (
         <div className="modal">
           <div className="modal-content">
-
             <h3>إضافة جلسة</h3>
 
             <select
               value={form.childId}
-              onChange={e =>
-                setForm({ ...form, childId: e.target.value })
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  childId: e.target.value,
+                })
               }
             >
               <option value="">اختر الطفل</option>
-              {children.map(c => (
+
+              {children.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.fullName}
                 </option>
@@ -246,8 +325,11 @@ export default function AdminAppointments() {
             <input
               type="datetime-local"
               value={form.scheduledAtUtc}
-              onChange={e =>
-                setForm({ ...form, scheduledAtUtc: e.target.value })
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  scheduledAtUtc: e.target.value,
+                })
               }
             />
 
@@ -255,16 +337,22 @@ export default function AdminAppointments() {
               type="number"
               placeholder="مدة الجلسة (15-240 دقيقة)"
               value={form.durationMinutes}
-              onChange={e =>
-                setForm({ ...form, durationMinutes: e.target.value })
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  durationMinutes: e.target.value,
+                })
               }
             />
 
             <input
               placeholder="ملاحظات"
               value={form.notes}
-              onChange={e =>
-                setForm({ ...form, notes: e.target.value })
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  notes: e.target.value,
+                })
               }
             />
 
@@ -279,11 +367,9 @@ export default function AdminAppointments() {
             <button className="close" onClick={() => setShowModal(false)}>
               إغلاق
             </button>
-
           </div>
         </div>
       )}
-
     </div>
-  )
+  );
 }

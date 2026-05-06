@@ -1,41 +1,36 @@
-import { useState } from "react"
-import { useNavigate, useSearchParams, useParams } from "react-router-dom"
-import { resetPassword } from "../../api/authService"
-import logo from "../../assets/images/logo.png"
-import "../../assets/login.css"
-import { FaEye, FaEyeSlash } from "react-icons/fa"
-import toast from "react-hot-toast"
+import { useState } from "react";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import { resetPassword } from "../../api/authService";
+import logo from "../../assets/images/logo.png";
+import "../../assets/login.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 function ResetPassword() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { token: paramToken } = useParams();
 
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const { token: paramToken } = useParams()
+  const email = searchParams.get("email");
 
-  const email = searchParams.get("email")
+  const rawToken = paramToken || searchParams.get("token") || "";
+  const token = decodeURIComponent(rawToken);
 
-  const rawToken = paramToken || searchParams.get("token") || ""
-  const token = decodeURIComponent(rawToken)
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
-
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const isStrongPassword = (pass) =>
-    /[A-Z]/.test(pass) &&
-    /[a-z]/.test(pass) &&
-    /[0-9]/.test(pass)
+    /[A-Z]/.test(pass) && /[a-z]/.test(pass) && /[0-9]/.test(pass);
 
   if (!email || !token) {
     return (
       <div className="login">
-
         <div className="login-right">
           <div className="form-box">
-
             <div className="signup-header">
               <div className="logo-container">
                 <div className="logo-circle">
@@ -56,13 +51,11 @@ function ResetPassword() {
             >
               إعادة المحاولة
             </button>
-
           </div>
         </div>
 
         <div className="login-left">
           <div className="overlay">
-
             <h2>
               صحة طفلك
               <br />
@@ -70,8 +63,8 @@ function ResetPassword() {
             </h2>
 
             <p>
-              انضم إلى مجتمع رفيق واستفد من أحدث التقنيات
-              في متابعة وعلاج الأطفال.
+              انضم إلى مجتمع رفيق واستفد من أحدث التقنيات في متابعة وعلاج
+              الأطفال.
             </p>
 
             <div className="features">
@@ -79,67 +72,62 @@ function ResetPassword() {
               <div className="feature">✔ تواصل مع الأخصائيين</div>
               <div className="feature">✔ تقارير دورية</div>
             </div>
-
           </div>
         </div>
-
       </div>
-    )
+    );
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!password || !confirmPassword) {
-      toast.error("املى كل البيانات ❌")
-      return
+      toast.error("املى كل البيانات ❌");
+      return;
     }
 
     if (password.length < 8 || !isStrongPassword(password)) {
-      toast.error("كلمة المرور لازم تكون 8 حروف وتحتوي على حرف كبير وصغير ورقم ❌")
-      return
+      toast.error(
+        "كلمة المرور لازم تكون 8 حروف وتحتوي على حرف كبير وصغير ورقم ❌",
+      );
+      return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("كلمة المرور غير متطابقة ❌")
-      return
+      toast.error("كلمة المرور غير متطابقة ❌");
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       await resetPassword({
         email,
         token,
-        newPassword: password
-      })
+        newPassword: password,
+      });
 
-      toast.success("تم تغيير كلمة السر ✅")
+      toast.success("تم تغيير كلمة السر ✅");
 
       setTimeout(() => {
-        navigate("/login")
-      }, 1500)
-
+        navigate("/login");
+      }, 1500);
     } catch (err) {
-
       const errorMsg =
         err?.response?.data?.errors?.[0] ||
         err?.response?.data?.title ||
-        "الرابط انتهى أو غير صحيح ❌"
+        "الرابط انتهى أو غير صحيح ❌";
 
-      toast.error(errorMsg)
-
+      toast.error(errorMsg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="login">
-
       <div className="login-right">
         <div className="form-box">
-
           <div className="signup-header">
             <div className="logo-container">
               <div className="logo-circle">
@@ -152,7 +140,6 @@ function ResetPassword() {
           </div>
 
           <form onSubmit={handleSubmit}>
-
             <div className="input-box">
               <input
                 type={showPassword ? "text" : "password"}
@@ -161,7 +148,10 @@ function ResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
               />
-              <span className="eye" onClick={() => setShowPassword(!showPassword)}>
+              <span
+                className="eye"
+                onClick={() => setShowPassword(!showPassword)}
+              >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
             </div>
@@ -174,7 +164,10 @@ function ResetPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={loading}
               />
-              <span className="eye" onClick={() => setShowConfirm(!showConfirm)}>
+              <span
+                className="eye"
+                onClick={() => setShowConfirm(!showConfirm)}
+              >
                 {showConfirm ? <FaEyeSlash /> : <FaEye />}
               </span>
             </div>
@@ -182,15 +175,12 @@ function ResetPassword() {
             <button className="login-btns" disabled={loading}>
               {loading ? "جاري التغيير..." : "تغيير كلمة السر"}
             </button>
-
           </form>
-
         </div>
       </div>
 
       <div className="login-left">
         <div className="overlay">
-
           <h2>
             صحة طفلك
             <br />
@@ -198,8 +188,7 @@ function ResetPassword() {
           </h2>
 
           <p>
-            انضم إلى مجتمع رفيق واستفد من أحدث التقنيات
-            في متابعة وعلاج الأطفال.
+            انضم إلى مجتمع رفيق واستفد من أحدث التقنيات في متابعة وعلاج الأطفال.
           </p>
 
           <div className="features">
@@ -207,12 +196,10 @@ function ResetPassword() {
             <div className="feature">✔ تواصل مع الأخصائيين</div>
             <div className="feature">✔ تقارير دورية</div>
           </div>
-
         </div>
       </div>
-
     </div>
-  )
+  );
 }
 
-export default ResetPassword
+export default ResetPassword;

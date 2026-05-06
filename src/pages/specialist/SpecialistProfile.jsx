@@ -1,67 +1,104 @@
-import styles from "../../assets/profiles.module.css"
-import { useEffect, useState } from "react"
-import { useApp } from "../../Context/AppContext"
+import styles from "../../assets/profiles.module.css";
+import { useEffect, useState } from "react";
+
 import {
+  getSpecialistProfile,
   getSpecialistProfileImage,
-  setSpecialistProfileImage
-} from "../../api/specialistProfileService"
-import toast from "react-hot-toast"
+  setSpecialistProfileImage,
+} from "../../api/specialistProfileService";
+
+import { uploadImage } from "../../api/mediaService";
+
+import toast from "react-hot-toast";
 
 function SpecialistProfile() {
+  const [profile, setProfile] = useState(null);
 
-  const { data, loadData } = useApp()
+  const [image, setImage] = useState(null);
 
-  const [image, setImage] = useState(null)
+  const [preview, setPreview] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    loadImage()
-  }, [])
+    loadProfile();
+    loadImage();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const res = await getSpecialistProfile();
+
+      setProfile(res || null);
+    } catch {
+      toast.error("فشل تحميل البروفايل");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadImage = async () => {
     try {
-      const res = await getSpecialistProfileImage()
-      setImage(res?.url || null)
-    } catch {
-      setImage(null)
+      const res = await getSpecialistProfileImage();
+
+      setImage(res?.url || null);
+    } catch (err) {
+      if (err?.response?.status === 404) {
+        setImage(null);
+        return;
+      }
+
+      toast.error("فشل تحميل الصورة");
     }
-  }
+  };
 
   const handleUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const file = e.target.files[0];
+
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("مسموح صور فقط")
-      return
+      toast.error("مسموح صور فقط");
+
+      return;
     }
+
+    setPreview(URL.createObjectURL(file));
 
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      setUploading(true);
 
-      await setSpecialistProfileImage(formData)
+      const media = await uploadImage(file, {
+        category: 2,
+      });
 
-      await loadImage()
-      await loadData()
+      await setSpecialistProfileImage({
+        mediaId: media.id,
+      });
 
-      toast.success("تم تحديث الصورة")
-    } catch {
-      toast.error("فشل رفع الصورة")
+      setImage(media.url);
+
+      toast.success("تم تحديث الصورة");
+    } catch (err) {
+      console.log(err);
+
+      toast.error("فشل رفع الصورة");
+    } finally {
+      setUploading(false);
     }
-  }
+  };
 
   return (
     <div className={styles.container}>
-
       <div className={styles.headerCard}>
-
         <div className={styles.cover}></div>
 
         <div className={styles.profileInfo}>
-
           <div className={styles.avatarWrapper}>
             <img
-              src={image || "/avatar.png"}
+              src={preview || image || "/avatar.png"}
               className={styles.avatar}
               alt=""
             />
@@ -71,29 +108,27 @@ function SpecialistProfile() {
               accept="image/*"
               onChange={handleUpload}
               className={styles.fileInput}
+              disabled={uploading}
             />
           </div>
 
           <div>
-            <h2>{data?.specialistName || "دكتور"}</h2>
-            <p>{data?.specialization || "تخصص"}</p>
+            <h2>{loading ? "Loading..." : profile?.fullName || "دكتور"}</h2>
+
+            <p>{profile?.specialization || "لا يوجد تخصص"}</p>
           </div>
-
         </div>
-
       </div>
 
       <div className={styles.grid}>
-
         <div className={styles.card}>
           <h3>نبذة عني</h3>
-          <p>{data?.bio || "لا يوجد وصف"}</p>
+
+          <p>{profile?.bio || "لا يوجد وصف"}</p>
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default SpecialistProfile
+export default SpecialistProfile;

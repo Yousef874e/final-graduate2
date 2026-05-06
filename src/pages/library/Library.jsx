@@ -1,100 +1,136 @@
-import styles from "../../assets/dashboard.module.css"
-import libraryStyles from "../../assets/library.module.css"
-import { useEffect, useState } from "react"
-import { getTreatmentPlans } from "../../api/treatmentPlansService"
-import { getSessionsByChild } from "../../api/sessionsService"
-import { useNavigate } from "react-router-dom"
-
+import styles from "../../assets/dashboard.module.css";
+import libraryStyles from "../../assets/library.module.css";
+import { useEffect, useState } from "react";
+import { getTreatmentPlans } from "../../api/treatmentPlansService";
+import { getSessionsByChild, startSession } from "../../api/sessionsService";
+import { getChildren } from "../../api/childrenService";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 function Library() {
-
-  const [plans, setPlans] = useState([])
-  const [sessions, setSessions] = useState([])
-  const [filtered, setFiltered] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const [search, setSearch] = useState("")
-  const [activeType, setActiveType] = useState("all")
-
-  const navigate = useNavigate()
-  const childId = localStorage.getItem("childId")
-
+  const [plans, setPlans] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const navigate = useNavigate();
   useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
+    loadData();
+  }, []);
+  const loadData = async () => {
     try {
+      setLoading(true);
 
-      if (!childId) {
-        setPlans([])
-        setSessions([])
-        setLoading(false)
-        return
+      const childrenRes = await getChildren();
+
+      const child = childrenRes?.items?.[0];
+
+      if (!child) {
+        setPlans([]);
+        setSessions([]);
+        setFiltered([]);
+
+        return;
       }
+
+      const childId = child.id;
 
       const [planRes, sessionRes] = await Promise.all([
         getTreatmentPlans(childId),
-        getSessionsByChild(childId)
-      ])
+        getSessionsByChild(childId),
+      ]);
 
-      const plansData = planRes?.items || []
+      const plansData = planRes?.items || [];
 
-      setPlans(plansData)
-      setSessions(sessionRes?.items || [])
+      setPlans(plansData);
 
-      const exercises = plansData.flatMap(p => p.exercises || [])
-      setFiltered(exercises)
+      setSessions(sessionRes?.items || []);
 
+      const exercises = plansData.flatMap((p) => p.exercises || []);
+
+      setFiltered(exercises);
     } catch (err) {
-      console.error(err)
+      console.error(err);
+
+      toast.error("فشل تحميل البيانات ❌");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-
-    let exercises = plans.flatMap(p => p.exercises || [])
+    let exercises = plans.flatMap((p) => p.exercises || []);
 
     if (search) {
-      exercises = exercises.filter(item =>
-        item.exerciseName?.toLowerCase().includes(search.toLowerCase())
-      )
+      exercises = exercises.filter((item) =>
+        item.exerciseName?.toLowerCase().includes(search.toLowerCase()),
+      );
     }
 
-    if (activeType !== "all") {
-      exercises = exercises.filter(item =>
-        String(item.exerciseType) === activeType
-      )
-    }
-
-    setFiltered(exercises)
-
-  }, [search, activeType, plans])
+    setFiltered(exercises);
+  }, [search, plans]);
 
   const completedExercises = new Set(
-    sessions
-      .filter(s => s.status === 4)
-      .map(s => s.exerciseId)
-  )
+    sessions.filter((s) => s.status === 5).map((s) => s.exerciseId),
+  );
 
   const isCompleted = (exerciseId) => {
-    return completedExercises.has(exerciseId)
-  }
+    return completedExercises.has(exerciseId);
+  };
 
-  const allExercises = plans.flatMap(p => p.exercises || [])
+  const allExercises = plans.flatMap((p) => p.exercises || []);
 
-  const completedCount = allExercises.filter(ex =>
-    completedExercises.has(ex.exerciseId)
-  ).length
+  const uniqueExercises = [
+    ...new Map(allExercises.map((ex) => [ex.exerciseId, ex])).values(),
+  ];
 
-  const progress = allExercises.length
-    ? Math.round((completedCount / allExercises.length) * 100)
-    : 0
+  const completedCount = uniqueExercises.filter((ex) =>
+    completedExercises.has(ex.exerciseId),
+  ).length;
+
+  const progress = uniqueExercises.length
+    ? Math.round((completedCount / uniqueExercises.length) * 100)
+    : 0;
+
+  const startExercise = async (item) => {
+    try {
+      const childrenRes = await getChildren();
+
+      const child = childrenRes?.items?.[0];
+
+      if (!child) {
+        toast.error("لا يوجد طفل ❌");
+
+        return;
+      }
+
+      const session = await startSession({
+        childId: child.id,
+
+        exerciseId: item.exerciseId,
+
+        treatmentPlanExerciseId: item.id,
+      });
+
+      navigate(`/dashboard/exercises/${item.exerciseId}`, {
+        state: {
+          sessionId: session.id,
+
+          treatmentPlanExerciseId: item.id,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+
+      toast.error("فشل بدء الجلسة ❌");
+    }
+  };
 
   return (
-    <div style={{ padding: "20px" }}>
-
+    <div
+      style={{
+        padding: "24px",
+      }}
+    >
       <h2 className={styles.pageTitle}>التمارين</h2>
 
       <input
@@ -105,89 +141,80 @@ function Library() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      <div className={libraryStyles.tabs}>
-
-        <button
-          className={activeType === "all" ? libraryStyles.activeTab : ""}
-          onClick={() => setActiveType("all")}
-        >
-          الكل
-        </button>
-
-        <button
-          className={activeType === "1" ? libraryStyles.activeTab : ""}
-          onClick={() => setActiveType("1")}
-        >
-          علاج طبيعي
-        </button>
-
-        <button
-          className={activeType === "2" ? libraryStyles.activeTab : ""}
-          onClick={() => setActiveType("2")}
-        >
-          تخاطب
-        </button>
-
-      </div>
-
       <div className={libraryStyles.progressBox}>
-        <p>تقدم التمارين {progress}%</p>
+        <div className={libraryStyles.progressHeader}>
+          <div className={libraryStyles.progressTitle}>تقدم التمارين</div>
+
+          <div className={libraryStyles.progressPercent}>{progress}%</div>
+        </div>
 
         <div className={libraryStyles.progressBar}>
           <div
             className={libraryStyles.progressFill}
-            style={{ width: `${progress}%` }}
+            style={{
+              width: `${progress}%`,
+            }}
           />
         </div>
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className={libraryStyles.loading}>جاري التحميل...</div>
       ) : filtered.length === 0 ? (
-        <p>لا يوجد تمارين</p>
+        <div className={libraryStyles.empty}>لا يوجد تمارين</div>
       ) : (
         <div className={libraryStyles.grid}>
-
-          {filtered.map(item => {
-
-            const completed = isCompleted(item.exerciseId)
+          {filtered.map((item) => {
+            const completed = isCompleted(item.exerciseId);
 
             return (
               <div key={item.exerciseId} className={libraryStyles.card}>
+                <div className={libraryStyles.imageBox}>
+                  <img
+                    src={item.mediaThumbnailUrl || "/default.png"}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                    alt=""
+                    className={libraryStyles.image}
+                  />
 
-                <img
-                  src={item.mediaThumbnailUrl || "/default.png"}
-                  alt=""
-                  className={libraryStyles.image}
-                />
+                  <div className={libraryStyles.playOverlay}>▶</div>
+                </div>
 
                 <h4>{item.exerciseName}</h4>
 
-                <p className={libraryStyles.desc}>
-                  عدد المرات: {item.expectedReps} × {item.sets}
-                </p>
+                <p className={libraryStyles.desc}>تمرين علاجي مخصص للطفل</p>
+
+                <div className={libraryStyles.infoBox}>
+                  <div className={libraryStyles.infoItem}>
+                    العدات: {item.expectedReps}
+                  </div>
+
+                  <div className={libraryStyles.infoItem}>
+                    الجولات: {item.sets}
+                  </div>
+
+                  <div className={libraryStyles.infoItem}>
+                    يومياً: {item.dailyFrequency}
+                  </div>
+                </div>
 
                 <button
-                  className={completed ? libraryStyles.doneBtn : styles.startBtn}
-                  onClick={() =>
-                    !completed &&
-                    navigate(`/exercise/${item.exerciseId}`, {
-                      state: { treatmentPlanExerciseId: item.id }
-                    })
+                  className={
+                    completed ? libraryStyles.doneBtn : styles.startBtn
                   }
+                  onClick={() => !completed && startExercise(item)}
                 >
                   {completed ? "مكتمل" : "ابدأ التمرين"}
                 </button>
-
               </div>
-            )
+            );
           })}
-
         </div>
       )}
-
     </div>
-  )
+  );
 }
 
-export default Library
+export default Library;

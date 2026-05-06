@@ -1,85 +1,84 @@
-import "../../assets/adminSettings.css"
-import { useState, useEffect } from "react"
-import { changePassword } from "../../api/authService"
-import toast from "react-hot-toast"
-import { useNavigate } from "react-router-dom"
+import "../../assets/adminSettings.css";
+import { useState, useEffect } from "react";
+import { changePassword } from "../../api/authService";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 function AdminSettings() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
-    newPassword: ""
-  })
+    newPassword: "",
+  });
 
-  const [preview, setPreview] = useState(null)
+  const [preview, setPreview] = useState(null);
 
   const [notifications, setNotifications] = useState({
     appointments: true,
-    messages: true
-  })
+    messages: true,
+  });
 
   useEffect(() => {
-    const savedImage = localStorage.getItem("profileImage")
-    const savedNotifications = localStorage.getItem("notifications")
+    const savedImage = localStorage.getItem("profileImage");
+    const savedNotifications = localStorage.getItem("notifications");
 
-    if (savedImage) setPreview(savedImage)
-    if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
-  }, [])
+    if (savedImage) setPreview(savedImage);
+    if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
+  }, []);
 
   const handleImageChange = (file) => {
-    if (!file) return
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("ارفع صورة فقط ❌")
-      return
+      toast.error("ارفع صورة فقط ❌");
+      return;
     }
 
-    const maxSize = 2 * 1024 * 1024
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast.error("حجم الصورة كبير ❌")
-      return
+      toast.error("حجم الصورة كبير ❌");
+      return;
     }
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onloadend = () => {
-      setPreview(reader.result)
-      localStorage.setItem("profileImage", reader.result)
-    }
+      setPreview(reader.result);
+      localStorage.setItem("profileImage", reader.result);
+    };
 
-    reader.readAsDataURL(file)
-  }
+    reader.readAsDataURL(file);
+  };
 
   const handleSaveSettings = () => {
-    localStorage.setItem("notifications", JSON.stringify(notifications))
-    toast.success("تم الحفظ ✅")
-  }
+    localStorage.setItem("notifications", JSON.stringify(notifications));
+    toast.success("تم الحفظ ✅");
+  };
 
   const handleChangePassword = async () => {
     if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-      toast.error("كمل البيانات ❌")
-      return
+      toast.error("كمل البيانات ❌");
+      return;
     }
 
     try {
-      await changePassword(passwordForm)
-      toast.success("تم تغيير كلمة المرور 🔒")
+      await changePassword(passwordForm);
+      toast.success("تم تغيير كلمة المرور 🔒");
 
-      localStorage.removeItem("token")
+      localStorage.removeItem("token");
 
       setTimeout(() => {
-        navigate("/login")
-      }, 1000)
+        navigate("/login");
+      }, 1000);
 
-      setPasswordForm({ currentPassword: "", newPassword: "" })
+      setPasswordForm({ currentPassword: "", newPassword: "" });
     } catch {
-      toast.error("فشل ❌")
+      toast.error("فشل ❌");
     }
-  }
+  };
 
   return (
     <div className="settings-page">
-
       <div className="card profile-card">
         <h3>الملف المهني</h3>
 
@@ -91,11 +90,7 @@ function AdminSettings() {
               onChange={(e) => handleImageChange(e.target.files[0])}
             />
 
-            {preview ? (
-              <img src={preview} alt="preview" />
-            ) : (
-              <span>📷</span>
-            )}
+            {preview ? <img src={preview} alt="preview" /> : <span>📷</span>}
 
             <div className="overlay">تغيير</div>
           </label>
@@ -116,7 +111,7 @@ function AdminSettings() {
             onClick={() =>
               setNotifications({
                 ...notifications,
-                appointments: !notifications.appointments
+                appointments: !notifications.appointments,
               })
             }
           />
@@ -129,7 +124,7 @@ function AdminSettings() {
             onClick={() =>
               setNotifications({
                 ...notifications,
-                messages: !notifications.messages
+                messages: !notifications.messages,
               })
             }
           />
@@ -145,7 +140,10 @@ function AdminSettings() {
             placeholder="كلمة المرور الحالية"
             value={passwordForm.currentPassword}
             onChange={(e) =>
-              setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+              setPasswordForm({
+                ...passwordForm,
+                currentPassword: e.target.value,
+              })
             }
           />
         </div>
@@ -165,9 +163,8 @@ function AdminSettings() {
           تغيير كلمة المرور
         </button>
       </div>
-
     </div>
-  )
+  );
 }
 
-export default AdminSettings
+export default AdminSettings;

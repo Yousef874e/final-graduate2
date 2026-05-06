@@ -8,9 +8,9 @@
   display: flex;
   flex-direction: row;
   min-height: 100vh;
-  background: #F0F4F8;
+  background: #f0f4f8;
   direction: rtl;
-  font-family: 'Cairo', sans-serif;
+  font-family: "Cairo", sans-serif;
 }
 
 .sidebar {

@@ -1,58 +1,53 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { forgotPassword } from "../../api/authService"
-import logo from "../../assets/images/logo.png"
-import "../../assets/login.css"
-import toast from "react-hot-toast"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { forgotPassword } from "../../api/authService";
+import logo from "../../assets/images/logo.png";
+import "../../assets/login.css";
+import toast from "react-hot-toast";
 
 function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [email, setEmail] = useState("")
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
-
-  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email)
+  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
   const handleSubmit = async () => {
-
     if (!email.trim()) {
-      toast.error("من فضلك أدخل البريد الإلكتروني ❌")
-      return
+      toast.error("من فضلك أدخل البريد الإلكتروني ❌");
+      return;
     }
 
     if (!isValidEmail(email)) {
-      toast.error("صيغة البريد الإلكتروني غير صحيحة ❌")
-      return
+      toast.error("صيغة البريد الإلكتروني غير صحيحة ❌");
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
-      await forgotPassword({ email })
+      await forgotPassword({ email });
 
-      toast.success("راجع بريدك الإلكتروني لإعادة تعيين كلمة السر 📧")
+      toast.success("راجع بريدك الإلكتروني لإعادة تعيين كلمة السر 📧");
 
-      navigate("/login")
-
+      navigate("/login");
     } catch (err) {
       const errorMsg =
         err?.response?.data?.title ||
         err?.response?.data?.errors?.[0] ||
-        "حدث خطأ ❌"
+        "حدث خطأ ❌";
 
-      toast.error(errorMsg)
+      toast.error(errorMsg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="login">
-
       <div className="login-right">
         <div className="form-box">
-
           <div className="signup-header">
             <div className="logo-container">
               <div className="logo-circle">
@@ -65,8 +60,12 @@ function ForgotPassword() {
             <p className="signup-subtitle">اكتب بريدك الإلكتروني</p>
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }}>
-
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
             <div className="input-box">
               <input
                 type="email"
@@ -77,29 +76,20 @@ function ForgotPassword() {
               />
             </div>
 
-            <button
-              type="submit"
-              className="login-btns"
-              disabled={loading}
-            >
+            <button type="submit" className="login-btns" disabled={loading}>
               {loading ? "جاري الإرسال..." : "إرسال"}
             </button>
-
           </form>
 
           <p className="register">
-            رجوع؟ 
-            <span onClick={() => navigate("/login")}>
-              تسجيل الدخول
-            </span>
+            رجوع؟
+            <span onClick={() => navigate("/login")}>تسجيل الدخول</span>
           </p>
-
         </div>
       </div>
 
       <div className="login-left">
         <div className="overlay">
-
           <h2>
             صحة طفلك
             <br />
@@ -107,8 +97,7 @@ function ForgotPassword() {
           </h2>
 
           <p>
-            انضم إلى مجتمع رفيق واستفد من أحدث التقنيات
-            في متابعة وعلاج الأطفال.
+            انضم إلى مجتمع رفيق واستفد من أحدث التقنيات في متابعة وعلاج الأطفال.
           </p>
 
           <div className="features">
@@ -116,12 +105,10 @@ function ForgotPassword() {
             <div className="feature">✔ تواصل مع الأخصائيين</div>
             <div className="feature">✔ تقارير دورية</div>
           </div>
-
         </div>
       </div>
-
     </div>
-  )
+  );
 }
 
-export default ForgotPassword
+export default ForgotPassword;

@@ -1,6 +1,4 @@
 import axiosClient from "./axiosClient"
-
-// 🔹 GENERATE Progress Report
 export const generateReport = async (data) => {
   const res = await axiosClient.post(
     "/ProgressReports/generate",
@@ -10,7 +8,6 @@ export const generateReport = async (data) => {
   return res.data
 }
 
-// 🔹 GET Progress Reports (بـ pagination)
 export const getProgressReports = async (childId, params = {}) => {
   const res = await axiosClient.get(
     `/ProgressReports/child/${childId}`,

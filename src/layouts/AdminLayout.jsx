@@ -1,33 +1,36 @@
-import "../assets/adminLayout.css"
-import logo from "../assets/images/logo.png"
+import "../assets/adminLayout.css";
+import logo from "../assets/images/logo.png";
 import {
-  FaHome, FaUsers, FaCalendar, FaFileAlt,
-  FaCog, FaBell, FaBook, FaSignOutAlt
-} from "react-icons/fa"
-import { Outlet, useNavigate, useLocation } from "react-router-dom"
-import { useState } from "react"
-import { clearAuth } from "../utils/auth"
+  FaHome,
+  FaUsers,
+  FaCalendar,
+  FaFileAlt,
+  FaCog,
+  FaBell,
+  FaBook,
+  FaSignOutAlt,
+} from "react-icons/fa";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { clearAuth } from "../utils/auth";
 
 function AdminLayout() {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const navigate = useNavigate()
-  const location = useLocation()
+  const isActive = (path) => location.pathname.startsWith(path);
 
-  const isActive = (path) => location.pathname.startsWith(path)
-
-  const [showNotif, setShowNotif] = useState(false)
-  const [issuesCount, setIssuesCount] = useState(0)
+  const [showNotif, setShowNotif] = useState(false);
+  const [issuesCount, setIssuesCount] = useState(0);
 
   const handleLogout = () => {
-    clearAuth()
-    navigate("/login", { replace: true })
-  }
+    clearAuth();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="layout">
-
       <div className="sidebar">
-
         <div className="logo-container">
           <div className="logo-circle">
             <img src={logo} alt="logo" />
@@ -38,9 +41,13 @@ function AdminLayout() {
         <br />
 
         <div className="menu">
-
           <div
-            className={isActive("/dashboard/admin") && location.pathname === "/dashboard/admin" ? "active" : ""}
+            className={
+              isActive("/dashboard/admin") &&
+              location.pathname === "/dashboard/admin"
+                ? "active"
+                : ""
+            }
             onClick={() => navigate("/dashboard/admin")}
           >
             <FaHome /> الرئيسية
@@ -54,7 +61,9 @@ function AdminLayout() {
           </div>
 
           <div
-            className={isActive("/dashboard/admin/appointments") ? "active" : ""}
+            className={
+              isActive("/dashboard/admin/appointments") ? "active" : ""
+            }
             onClick={() => navigate("/dashboard/admin/appointments")}
           >
             <FaCalendar /> جدول المواعيد
@@ -80,23 +89,18 @@ function AdminLayout() {
           >
             <FaCog /> الإعدادات
           </div>
-
         </div>
 
         <div className="logout" onClick={handleLogout}>
           <FaSignOutAlt /> تسجيل الخروج
         </div>
-
       </div>
 
       <div className="main">
-
         <div className="header">
-
           <h3>لوحة تحكم الأدمن</h3>
 
           <div className="header-row">
-
             <div style={{ position: "relative" }}>
               <FaBell
                 className="bell"
@@ -104,9 +108,7 @@ function AdminLayout() {
               />
 
               {issuesCount > 0 && (
-                <span className="notif-badge">
-                  {issuesCount}
-                </span>
+                <span className="notif-badge">{issuesCount}</span>
               )}
             </div>
 
@@ -117,19 +119,15 @@ function AdminLayout() {
                   : "لا يوجد مشاكل حالياً"}
               </div>
             )}
-
           </div>
-
         </div>
 
         <div className="content">
           <Outlet context={{ setIssuesCount }} />
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default AdminLayout
+export default AdminLayout;

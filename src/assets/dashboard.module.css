@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap");
 
 .dashboard {
   display: flex;
@@ -7,7 +7,6 @@
   font-family: "Cairo", sans-serif;
   background: #f6f8f9;
 }
-
 
 .logoBox {
   display: flex;
@@ -67,8 +66,6 @@
   background: #0bbba9;
   color: white;
 }
-
-
 
 .logout {
   margin-top: 20px;
@@ -190,7 +187,7 @@
   border-radius: 15px;
   cursor: pointer;
   font-size: 18px;
-   font-weight: bold;
+  font-weight: bold;
 }
 
 .heroLeft {
@@ -203,7 +200,7 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  border: 8px solid rgba(255,255,255,0.2);
+  border: 8px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,7 +211,7 @@
 .cards {
   margin-top: 25px;
   display: grid;
-  grid-template-columns: repeat(3,1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
@@ -222,7 +219,7 @@
   background: white;
   padding: 22px;
   border-radius: 18px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
 }
 
 .card h4 {
@@ -330,7 +327,7 @@
   }
 
   .cards {
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -397,7 +394,6 @@
   color: #333;
 }
 
-
 .topBar {
   display: flex;
   justify-content: space-between;
@@ -434,7 +430,6 @@
   border-radius: 50%;
   cursor: pointer;
 }
-
 
 .pageTitle {
   text-align: right;
@@ -529,7 +524,7 @@
   background: white;
   padding: 18px;
   border-radius: 18px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .cardHeader {
@@ -582,7 +577,8 @@
   align-items: center;
 }
 
-.book, .consult {
+.book,
+.consult {
   background: #0f7f81;
   color: white;
   border: none;
@@ -725,7 +721,7 @@
   padding: 10px;
   border-radius: 10px;
   width: 200px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
   z-index: 100;
 }
 
@@ -737,9 +733,9 @@
   display: flex;
   flex-direction: row;
   min-height: 100vh;
-  background: #F0F4F8;
+  background: #f0f4f8;
   direction: rtl;
-  font-family: 'Cairo', sans-serif;
+  font-family: "Cairo", sans-serif;
 }
 
 .sidebar {
@@ -900,4 +896,38 @@
 .avatarIcon {
   font-size: 18px;
   color: #666;
+}
+.notificationsBox {
+  position: absolute;
+  top: 55px;
+  left: 0;
+  width: 320px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  padding: 14px;
+  z-index: 999;
+  border: 1px solid #eef2f7;
+}
+
+.notificationItem {
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  margin-bottom: 10px;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.notificationItem:hover {
+  background: #f0fdfa;
+}
+
+.emptyNotification {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  padding: 10px 0;
 }

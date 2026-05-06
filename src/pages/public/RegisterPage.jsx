@@ -1,24 +1,24 @@
-import "../../assets/register.css"
-import logo from "../../assets/images/logo.png"
-import sideImg from "../../assets/images/ggg.png"
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { FaUser, FaPhone, FaEye, FaEyeSlash } from "react-icons/fa"
-import { MdEmail } from "react-icons/md"
-import { FcGoogle } from "react-icons/fc"
-import { IoArrowForward } from "react-icons/io5"
-import { registerParent, registerSpecialist } from "../../api/authService"
-import { setAuth } from "../../utils/auth"
-import { triggerGoogleLogin } from "../../utils/googleAuth"
-import toast from "react-hot-toast"
+import "../../assets/register.css";
+import logo from "../../assets/images/logo.png";
+import sideImg from "../../assets/images/ggg.png";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaUser, FaPhone, FaEye, FaEyeSlash } from "react-icons/fa";
+import { MdEmail } from "react-icons/md";
+import { FcGoogle } from "react-icons/fc";
+import { IoArrowForward } from "react-icons/io5";
+import { registerParent, registerSpecialist } from "../../api/authService";
+import { setAuth } from "../../utils/auth";
+import { triggerGoogleLogin } from "../../utils/googleAuth";
+import toast from "react-hot-toast";
 
 function RegisterPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const [role, setRole] = useState("parent")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [role, setRole] = useState("parent");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -28,81 +28,78 @@ function RegisterPage() {
     password: "",
     confirmPassword: "",
     specialization: "",
-    bio: ""
-  })
+    bio: "",
+  });
 
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
-  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email)
-  const isValidPhone = (phone) => /^[0-9]{10,15}$/.test(phone)
+  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+  const isValidPhone = (phone) => /^[0-9]{10,15}$/.test(phone);
   const isValidPassword = (password) =>
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[0-9]/.test(password)
-  const isValidText = (text) => text && text.trim().length >= 3
+    password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+  const isValidText = (text) => text && text.trim().length >= 3;
   const isValidBio = (text) => {
-    if (!text || text.trim().length < 5) return false
-    if (!/[a-zA-Z\u0600-\u06FF]/.test(text)) return false
-    if (text.trim().split(" ").length < 2) return false
-    if (/^(.)\1+$/.test(text)) return false
-    return true
-  }
+    if (!text || text.trim().length < 5) return false;
+    if (!/[a-zA-Z\u0600-\u06FF]/.test(text)) return false;
+    if (text.trim().split(" ").length < 2) return false;
+    if (/^(.)\1+$/.test(text)) return false;
+    return true;
+  };
 
   const handleRegister = async () => {
-
     if (!isValidText(form.fullName)) {
-      toast.error("اكتب اسم واضح")
-      return
+      toast.error("اكتب اسم واضح");
+      return;
     }
 
     if (!isValidEmail(form.email)) {
-      toast.error("اكتب بريد إلكتروني صحيح")
-      return
+      toast.error("اكتب بريد إلكتروني صحيح");
+      return;
     }
 
     if (role === "parent") {
       if (!isValidPhone(form.phone)) {
-        toast.error("اكتب رقم موبايل صحيح")
-        return
+        toast.error("اكتب رقم موبايل صحيح");
+        return;
       }
 
       if (!isValidText(form.address)) {
-        toast.error("اكتب عنوان واضح")
-        return
+        toast.error("اكتب عنوان واضح");
+        return;
       }
     }
 
     if (role === "specialist") {
       if (!isValidText(form.specialization)) {
-        toast.error("اكتب تخصص واضح")
-        return
+        toast.error("اكتب تخصص واضح");
+        return;
       }
 
       if (!isValidBio(form.bio)) {
-        toast.error("اكتب نبذة مفهومة")
-        return
+        toast.error("اكتب نبذة مفهومة");
+        return;
       }
     }
 
     if (!isValidPassword(form.password)) {
-      toast.error("كلمة المرور لازم تكون 8 حروف وتحتوي على رقم وحرف كبير")
-      return
+      toast.error("كلمة المرور لازم تكون 8 حروف وتحتوي على رقم وحرف كبير");
+      return;
     }
 
     if (form.password !== form.confirmPassword) {
-      toast.error("كلمة المرور مش متطابقة")
-      return
+      toast.error("كلمة المرور مش متطابقة");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      let res
+      let res;
 
       if (role === "parent") {
         res = await registerParent({
@@ -110,59 +107,57 @@ function RegisterPage() {
           email: form.email,
           password: form.password,
           phoneNumber: form.phone,
-          address: form.address
-        })
+          address: form.address,
+        });
       } else {
         res = await registerSpecialist({
           fullName: form.fullName,
           email: form.email,
           password: form.password,
           specialization: form.specialization,
-          bio: form.bio || "Specialist"
-        })
+          bio: form.bio || "Specialist",
+        });
       }
 
       if (res.requiresPasswordChange) {
-        navigate("/reset-password")
-        return
+        navigate("/reset-password");
+        return;
       }
 
-      localStorage.setItem(`userName_${form.email}`, form.fullName)
+      localStorage.setItem(`userName_${form.email}`, form.fullName);
 
-      setAuth(res)
+      setAuth(res);
 
-      const roleName = res?.roles?.[0]
+      const roleName = res?.roles?.[0];
 
       if (roleName === "Parent") {
-        navigate("/child-info-step1")
+        navigate("/child-info-step1");
       } else if (roleName === "Specialist") {
-        navigate("/dashboard/specialist")
+        navigate("/dashboard/specialist");
       } else {
-        toast.error("Role غير معروف")
+        toast.error("Role غير معروف");
       }
-
     } catch {
-      toast.error("فيه خطأ")
+      toast.error("فيه خطأ");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = () => {
-    triggerGoogleLogin()
-  }
+    triggerGoogleLogin();
+  };
 
   return (
     <div className="signup-container">
       <div className="signup-right">
         <div className="signup-box">
-
           <div className="signup-header">
             <div className="logo-container">
               <div className="logo-circle">
                 <img src={logo} alt="logo" />
               </div>
-              <span className="logo-text">Rafiq</span>
+              <span className="logo-text">رفيق</span>
             </div>
 
             <h2 className="signup-title">إنشاء حساب جديد</h2>
@@ -266,7 +261,10 @@ function RegisterPage() {
               value={form.password}
               onChange={handleChange}
             />
-            <span className="eye" onClick={() => setShowPassword(!showPassword)}>
+            <span
+              className="eye"
+              onClick={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
@@ -290,7 +288,9 @@ function RegisterPage() {
             disabled={loading}
             type="button"
           >
-            {loading ? "جاري الإنشاء..." : `إنشاء حساب ${role === "parent" ? "ولي أمر" : "أخصائي"}`}
+            {loading
+              ? "جاري الإنشاء..."
+              : `إنشاء حساب ${role === "parent" ? "ولي أمر" : "أخصائي"}`}
             <IoArrowForward />
           </button>
 
@@ -304,11 +304,8 @@ function RegisterPage() {
 
           <p className="login-redirect">
             لديك حساب؟
-            <span onClick={() => navigate("/login")}>
-              سجل الدخول
-            </span>
+            <span onClick={() => navigate("/login")}>سجل الدخول</span>
           </p>
-
         </div>
       </div>
 
@@ -318,7 +315,7 @@ function RegisterPage() {
         <p>انضم لأكثر من 5000 عائلة تشارك نفس الرحله والاهتمامات</p>
       </div>
     </div>
-  )
+  );
 }
 
-export default RegisterPage
+export default RegisterPage;

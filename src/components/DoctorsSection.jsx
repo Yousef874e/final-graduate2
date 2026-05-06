@@ -2,8 +2,11 @@ import "../assets/doctors.css";
 import www from "../assets/images/www.png";
 import sss from "../assets/images/sss.png";
 import { FaStar } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
 
 function DoctorsSection() {
+  const navigate = useNavigate();
   const doctors = [
     {
       name: "د. محمد علي",
@@ -32,7 +35,7 @@ function DoctorsSection() {
   ];
 
   return (
-    <section className="doctors">
+    <section className="doctors" id="doctors">
       <div className="doctors-top">
         <div className="doctors-text">
           <span className="section-tag">فريقنا الطبي</span>
@@ -42,7 +45,12 @@ function DoctorsSection() {
           </p>
         </div>
 
-        <button className="view-all">عرض جميع الأخصائيين →</button>
+       <button 
+  className="view-all"
+  onClick={() => navigate("/login")}
+>
+  عرض جميع الأخصائيين →
+</button>
       </div>
       <div className="doctors-grid">
         {doctors.map((doctor, index) => (
@@ -61,7 +69,7 @@ function DoctorsSection() {
               ))}
             </div>
 
-            <button className="book">حجز موعد</button>
+            <button className="book"  onClick={() => navigate("/login")}>حجز موعد</button>
           </div>
         ))}
       </div>

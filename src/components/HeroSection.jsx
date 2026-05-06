@@ -3,8 +3,10 @@ import hhh from "../assets/images/hhh.png"
 
 import { FaStar } from "react-icons/fa"
 import { FaUser } from "react-icons/fa"
+import { useNavigate } from "react-router-dom"
 
 function HeroSection() {
+  const navigate = useNavigate()
   return (
     <section className="hero">
 
@@ -27,17 +29,17 @@ function HeroSection() {
 
         <div className="hero-buttons">
 
-          <button className="start-btn">
-            إبدأ رحلة العلاج مجاناً
-          </button>
+        <button 
+  className="start-btn"
+  onClick={() => navigate("/login")}
+>
+  ابدأ رحلة الدعم مجاناً
+</button>
 
-          <button className="video-btn">
-            ▶ شاهد الفيديو التعريفي
-          </button>
+        
 
         </div>
 
-        {/* النجوم + المستخدمين */}
         <div className="hero-rating">
 
           <div className="users">

@@ -1,160 +1,242 @@
-import styles from "../../assets/exerciseDetails.module.css"
-import { useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
-import { getExerciseById } from "../../api/exerciseService"
-import { startSession, submitSessionVideo } from "../../api/sessionsService"
-import { uploadVideo } from "../../api/mediaService"
-import { getTreatmentPlans } from "../../api/treatmentPlansService"
-import { useApp } from "../../Context/AppContext"
-import toast from "react-hot-toast"
+import styles from "../../assets/exerciseDetails.module.css";
+
+import { useEffect, useState } from "react";
+
+import { useNavigate, useParams } from "react-router-dom";
+
+import { getExercises } from "../../api/exerciseService";
+
+import {
+  startSession,
+  submitSessionVideo,
+  getSessionsByChild,
+} from "../../api/sessionsService";
+
+import { uploadVideo } from "../../api/mediaService";
+
+import { getTreatmentPlans } from "../../api/treatmentPlansService";
+
+import { getChildren } from "../../api/childrenService";
+
+import { useApp } from "../../Context/AppContext";
+
+import toast from "react-hot-toast";
 
 function ExerciseDetails() {
+  const { id } = useParams();
 
-  const [searchParams] = useSearchParams()
-  const { loadData } = useApp()
+  const navigate = useNavigate();
 
-  const id = searchParams.get("id")
+  const { loadData } = useApp();
 
-  const [exercise, setExercise] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [sessionId, setSessionId] = useState(null)
-  const [uploaded, setUploaded] = useState(false)
-  const [uploading, setUploading] = useState(false)
+  const [exercise, setExercise] = useState(null);
 
-  const childId = localStorage.getItem("childId")
-  const baseUrl = import.meta.env.VITE_API_URL
+  const [loading, setLoading] = useState(true);
+
+  const [sessionId, setSessionId] = useState(null);
+
+  const [uploading, setUploading] = useState(false);
+
+  const [childId, setChildId] = useState(null);
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   const getFullUrl = (url) => {
-    if (!url) return ""
-    if (url.startsWith("http")) return url
-    return `${baseUrl}${url}`
-  }
+    if (!url) return null;
+
+    if (url.startsWith("http")) {
+      return url;
+    }
+
+    return `${baseUrl}${url}`;
+  };
 
   useEffect(() => {
-    if (id) init()
-  }, [id])
+    if (id) {
+      init();
+    }
+  }, [id]);
 
   const init = async () => {
     try {
+      setLoading(true);
 
-      if (!childId) {
-        toast.error("لا يوجد طفل ❌")
-        setLoading(false)
-        return
+      const childrenRes = await getChildren();
+
+      const child = childrenRes?.items?.[0];
+
+      if (!child) {
+        toast.error("لا يوجد طفل ❌");
+
+        return;
       }
 
-      const data = await getExerciseById(id)
-      setExercise(data)
+      const currentChildId = child.id;
 
-      const plansRes = await getTreatmentPlans(childId)
-      const plans = plansRes?.items || []
+      setChildId(currentChildId);
 
-      let exercisePlan = null
+      const sessionsRes = await getSessionsByChild(currentChildId);
+
+      const sessions = sessionsRes?.items || [];
+
+      const alreadyCompleted = sessions.find(
+        (s) => s.exerciseId == Number(id) && s.status === 5,
+      );
+
+      if (alreadyCompleted) {
+        toast.success("تم إنهاء التمرين بالفعل ✅");
+
+        navigate("/dashboard/library");
+
+        return;
+      }
+
+      const res = await getExercises({
+        PageNumber: 1,
+        PageSize: 100,
+      });
+
+      const exercises = res?.items || [];
+
+      const selected = exercises.find((e) => e.id == id);
+
+      if (!selected) {
+        toast.error("التمرين غير موجود ❌");
+
+        return;
+      }
+
+      setExercise(selected);
+
+      const plansRes = await getTreatmentPlans(currentChildId);
+
+      const plans = plansRes?.items || [];
+
+      let exercisePlan = null;
 
       for (const p of plans) {
-        const found = p.exercises?.find(e => e.exerciseId === data.id)
+        const found = p.exercises?.find((e) => e.exerciseId === selected.id);
+
         if (found) {
-          exercisePlan = found
-          break
+          exercisePlan = found;
+
+          break;
         }
       }
 
       if (!exercisePlan) {
-        toast.error("التمرين غير موجود في الخطة ❌")
-        setLoading(false)
-        return
+        toast.error("التمرين غير موجود في الخطة ❌");
+
+        navigate("/dashboard/library");
+
+        return;
       }
 
       const session = await startSession({
-        childId: Number(childId),
-        exerciseId: data.id,
-        treatmentPlanExerciseId: exercisePlan.id
-      })
+        childId: Number(currentChildId),
+
+        exerciseId: selected.id,
+
+        treatmentPlanExerciseId: exercisePlan.id,
+      });
 
       if (!session?.id) {
-        toast.error("فشل بدء الجلسة ❌")
-        setLoading(false)
-        return
+        toast.error("فشل بدء الجلسة ❌");
+
+        return;
       }
 
-      setSessionId(session.id)
+      setSessionId(session.id);
+    } catch (err) {
+      console.log(err);
 
-    } catch {
-      toast.error("فشل تحميل التمرين ❌")
+      toast.error("فشل تحميل التمرين ❌");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleUpload = async (e) => {
+    const file = e.target.files[0];
 
-    const file = e.target.files[0]
-    if (!file) return
+    if (!file) return;
 
     if (!file.type.startsWith("video/")) {
-      toast.error("مسموح فيديو فقط ❌")
-      return
+      toast.error("مسموح فيديو فقط ❌");
+
+      return;
     }
 
     if (!sessionId) {
-      toast.error("لم يتم بدء الجلسة ❌")
-      return
+      toast.error("لم يتم بدء الجلسة ❌");
+
+      return;
     }
 
     try {
-      setUploading(true)
+      setUploading(true);
 
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("category", 4)
-      formData.append("childId", childId)
+      const media = await uploadVideo(file, {
+        category: 4,
 
-      const media = await uploadVideo(formData)
+        childId: Number(childId),
+      });
 
       if (!media?.id) {
-        toast.error("فشل رفع الفيديو ❌")
-        return
+        toast.error("فشل رفع الفيديو ❌");
+
+        return;
       }
 
-      await submitSessionVideo(sessionId, media.id)
+      await submitSessionVideo(sessionId, media.id);
 
-      await loadData()
+      await loadData();
 
-      setUploaded(true)
-      toast.success("تم رفع الفيديو بنجاح ✅")
+      toast.success("تم رفع الفيديو بنجاح ✅");
 
-    } catch {
-      toast.error("فشل رفع الفيديو ❌")
+      navigate("/dashboard/library");
+    } catch (err) {
+      console.log(err);
+
+      toast.error("فشل رفع الفيديو ❌");
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   return (
     <div className={styles.container}>
-
       <h3 className={styles.header}>التمرين</h3>
+
       <p className={styles.sub}>شاهد التمرين الآن</p>
 
       <div className={styles.videoBox}>
         {loading ? (
-          <div className={styles.placeholder}></div>
-        ) : (
+          <div className={styles.placeholder} />
+        ) : exercise?.mediaUrl ? (
           <video
             controls
             width="100%"
-            poster={getFullUrl(exercise?.mediaThumbnailUrl)}
+            poster={getFullUrl(exercise.mediaThumbnailUrl) || undefined}
           >
-            <source
-              src={getFullUrl(exercise?.mediaUrl)}
-              type="video/mp4"
-            />
+            <source src={getFullUrl(exercise.mediaUrl)} type="video/mp4" />
           </video>
+        ) : (
+          <div className={styles.placeholder}>
+            <p
+              style={{
+                textAlign: "center",
+              }}
+            >
+              لا يوجد فيديو لهذا التمرين ❌
+            </p>
+          </div>
         )}
       </div>
 
       <div className={styles.card}>
         <h4>{exercise?.name || "تمرين"}</h4>
+
         <p>{exercise?.description || "لا يوجد وصف"}</p>
 
         <div className={styles.tags}>
@@ -164,29 +246,23 @@ function ExerciseDetails() {
 
       <div className={styles.card}>
         <h4>قبل البدء</h4>
-        <p>
-          {exercise?.instructions ||
-            "تأكد من وجود مساحة كافية حول الطفل"}
-        </p>
+
+        <p>{exercise?.instructions || "تأكد من وجود مساحة كافية حول الطفل"}</p>
       </div>
 
-      {uploaded ? (
-        <p className={styles.done}>✔️ تم رفع الفيديو</p>
-      ) : (
-        <label className={styles.uploadBtn}>
-          {uploading ? "جاري الرفع..." : "رفع الفيديو"}
-          <input
-            type="file"
-            accept="video/*"
-            hidden
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </label>
-      )}
+      <label className={styles.uploadBtn}>
+        {uploading ? "جاري الرفع..." : "رفع الفيديو"}
 
+        <input
+          type="file"
+          accept="video/*"
+          hidden
+          onChange={handleUpload}
+          disabled={uploading}
+        />
+      </label>
     </div>
-  )
+  );
 }
 
-export default ExerciseDetails
+export default ExerciseDetails;

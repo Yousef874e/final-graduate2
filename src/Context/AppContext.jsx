@@ -1,151 +1,210 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+
 import {
   getParentDashboard,
   getSpecialistDashboard,
-  getAdminDashboard
-} from "../api/dashboardService"
-import { getSessionsByChild } from "../api/sessionsService"
-import { getAppointmentsByChildId } from "../api/appointmentsService"
-import { getSpecialistProfileImage } from "../api/specialistProfileService"
-import { getParentProfileImage } from "../api/parentProfileService" // ✅ مهم
+  getAdminDashboard,
+} from "../api/dashboardService";
 
-const AppContext = createContext()
+import { getSessionsByChild } from "../api/sessionsService";
+
+import { getAppointmentsByChildId } from "../api/appointmentsService";
+
+import {
+  getSpecialistProfileImage,
+  getSpecialistProfile,
+} from "../api/specialistProfileService";
+
+import {
+  getParentProfileImage,
+  getParentProfile,
+} from "../api/parentProfileService";
+
+const AppContext = createContext();
 
 const getUserIdFromToken = () => {
   try {
-    const token = localStorage.getItem("accessToken")
-    if (!token) return null
+    const token = localStorage.getItem("accessToken");
 
-    const payload = JSON.parse(atob(token.split(".")[1]))
-    return payload.nameid || payload.sub
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    return payload.nameid || payload.sub;
   } catch {
-    return null
+    return null;
   }
-}
+};
 
 export const AppProvider = ({ children }) => {
+  const [data, setData] = useState({});
 
-  const [data, setData] = useState({})
-  const [profileImage, setProfileImage] = useState(null)
-  const [sessions, setSessions] = useState([])
-  const [appointments, setAppointments] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [userName, setUserName] = useState("")
-  const [email, setEmail] = useState("")
+  const [profileImage, setProfileImage] = useState(null);
 
-  const roles = JSON.parse(localStorage.getItem("roles") || "[]")
-  const role = roles[0]
+  const [sessions, setSessions] = useState([]);
 
-  const userId = getUserIdFromToken()
+  const [appointments, setAppointments] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [userName, setUserName] = useState("");
+
+  const [specialistName, setSpecialistName] = useState("");
+
+  const [parentName, setParentName] = useState("");
+
+  const roles = JSON.parse(localStorage.getItem("roles") || "[]");
+
+  const role = roles[0];
+
+  const userId = getUserIdFromToken();
 
   const loadData = useCallback(async () => {
     try {
-      setLoading(true)
+      setLoading(true);
 
-      let dashboardRes
+      let dashboardRes;
 
       if (role === "Admin") {
-        dashboardRes = await getAdminDashboard()
+        dashboardRes = await getAdminDashboard();
       } else if (role === "Specialist") {
-        dashboardRes = await getSpecialistDashboard()
+        dashboardRes = await getSpecialistDashboard();
       } else if (role === "Parent") {
-        dashboardRes = await getParentDashboard()
+        dashboardRes = await getParentDashboard();
       }
 
-      const dashboardData = dashboardRes || {}
-      setData(dashboardData)
+      const dashboardData = dashboardRes || {};
 
-      // ✅ الصورة (أهم تعديل)
+      setData(dashboardData);
+
+
       if (role === "Specialist") {
         try {
-          const img = await getSpecialistProfileImage()
-          setProfileImage(img?.url || null)
+          const img = await getSpecialistProfileImage();
+
+          setProfileImage(img?.url || null);
         } catch {
-          setProfileImage(null)
+          setProfileImage(null);
         }
-      } else if (role === "Parent") {
+
         try {
-          const img = await getParentProfileImage()
-          setProfileImage(img?.url || null)
+          const profile = await getSpecialistProfile();
+
+          setSpecialistName(profile?.fullName || "");
+
+          setUserName(profile?.fullName || "");
         } catch {
-          setProfileImage(null)
+          setSpecialistName("");
+        }
+
+
+
+        try {
+          const parentProfile = await getParentProfile();
+
+          setParentName(parentProfile?.fullName || "");
+        } catch {
+          setParentName("");
         }
       }
 
-      // ✅ باقي الداتا
+    
       if (role === "Parent") {
+        try {
+          const img = await getParentProfileImage();
 
-        const children = dashboardData?.children || []
+          setProfileImage(img?.url || null);
+        } catch {
+          setProfileImage(null);
+        }
+
+        try {
+          const profile = await getParentProfile();
+
+          setParentName(profile?.fullName || "");
+
+          setUserName(profile?.fullName || "");
+        } catch {
+          setParentName("");
+        }
+
+        const children = dashboardData?.children || [];
+
+        if (children.length > 0) {
+          setSpecialistName(children[0].specialistName || "");
+        }
 
         if (children.length === 0) {
-          setSessions([])
-          setAppointments([])
-        } else {
+          setSessions([]);
 
-          let allSessions = []
-          let allAppointments = []
+          setAppointments([]);
+        } else {
+          let allSessions = [];
+
+          let allAppointments = [];
 
           const promises = children.map(async (child) => {
             try {
               const [sessionsRes, appointmentsRes] = await Promise.all([
                 getSessionsByChild(child.childId),
-                getAppointmentsByChildId(child.childId)
-              ])
+
+                getAppointmentsByChildId(child.childId),
+              ]);
 
               return {
-                sessions: (sessionsRes?.items || []).map(s => ({
+                sessions: (sessionsRes?.items || []).map((s) => ({
                   ...s,
-                  childName: child.childName
+
+                  childName: child.childName,
                 })),
-                appointments: (appointmentsRes?.items || []).map(a => ({
+
+                appointments: (appointmentsRes?.items || []).map((a) => ({
                   ...a,
-                  childName: child.childName
-                }))
-              }
+
+                  childName: child.childName,
+
+                  specialistName: child.specialistName,
+                })),
+              };
             } catch {
-              return { sessions: [], appointments: [] }
+              return {
+                sessions: [],
+                appointments: [],
+              };
             }
-          })
+          });
 
-          const results = await Promise.all(promises)
+          const results = await Promise.all(promises);
 
-          results.forEach(r => {
-            allSessions.push(...r.sessions)
-            allAppointments.push(...r.appointments)
-          })
+          results.forEach((r) => {
+            allSessions.push(...r.sessions);
 
-          setSessions(allSessions)
-          setAppointments(allAppointments)
+            allAppointments.push(...r.appointments);
+          });
+
+          setSessions(allSessions);
+
+          setAppointments(allAppointments);
         }
       }
-
     } catch (err) {
-      console.error("Context Error:", err)
+      console.error("Context Error:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [role])
+  }, [role]);
 
   useEffect(() => {
-
-    const userEmail = localStorage.getItem("email") || ""
-
-    setEmail(userEmail)
-
-    const storedName = localStorage.getItem(`userName_${userEmail}`)
-
-    const finalName =
-      storedName ||
-      userEmail.split("@")[0] ||
-      "مستخدم"
-
-    setUserName(finalName)
-
     if (role) {
-      loadData()
+      loadData();
     }
-
-  }, [loadData, role])
+  }, [loadData, role]);
 
   return (
     <AppContext.Provider
@@ -155,16 +214,17 @@ export const AppProvider = ({ children }) => {
         sessions,
         appointments,
         loading,
-        loadData, // ✅ مهم عشان نعمل refresh
         role,
         userName,
-        email,
-        userId
+        specialistName,
+        parentName,
+        loadData,
+        userId,
       }}
     >
       {children}
     </AppContext.Provider>
-  )
-}
+  );
+};
 
-export const useApp = () => useContext(AppContext)
+export const useApp = () => useContext(AppContext);

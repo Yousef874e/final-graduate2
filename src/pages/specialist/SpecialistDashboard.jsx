@@ -1,47 +1,49 @@
-import styles from "../../assets/specialistDashboard.module.css"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { getSpecialistDashboard } from "../../api/dashboardService"
+import styles from "../../assets/specialistDashboard.module.css";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getSpecialistDashboard } from "../../api/dashboardService";
 import {
   FaCalendarAlt,
   FaUsers,
   FaChartLine,
   FaCheckCircle,
-  FaPlay
-} from "react-icons/fa"
-import toast from "react-hot-toast"
+  FaPlay,
+} from "react-icons/fa";
+import toast from "react-hot-toast";
 
 function SpecialistDashboard() {
-
-  const [data, setData] = useState({})
-  const navigate = useNavigate()
+  const [data, setData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const loadData = async () => {
     try {
-      const res = await getSpecialistDashboard()
-      setData(res || {})
+      setLoading(true);
+      const res = await getSpecialistDashboard();
+      setData(res || {});
     } catch {
-      toast.error("فشل تحميل البيانات")
+      toast.error("فشل تحميل البيانات");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  const overview = data?.overview || {}
-  const appointments = data?.upcomingAppointments || []
+  if (loading) return <p>Loading...</p>;
+
+  const overview = data?.overview || {};
+  const appointments = data?.upcomingAppointments || [];
 
   return (
     <div className={styles.container}>
-
       <div className={styles.header}>
-        <h2>👋 مرحباً دكتور</h2>
         <p>لديك {appointments.length} مواعيد اليوم</p>
       </div>
 
       <div className={styles.stats}>
-        
         <div className={styles.card}>
           <FaUsers />
           <span>عدد الأطفال</span>
@@ -62,16 +64,13 @@ function SpecialistDashboard() {
 
         <div className={styles.card}>
           <FaChartLine />
-          <span>التقيم العام</span>
+          <span>التقييم العام</span>
           <h3>{overview.averageChildAccuracy || 0}%</h3>
         </div>
-
       </div>
 
       <div className={styles.grid}>
-
         <div className={styles.left}>
-
           <div className={styles.smallCard}>
             <p>تذكير إداري</p>
             <br />
@@ -80,33 +79,32 @@ function SpecialistDashboard() {
               إرسال التقرير
             </button>
           </div>
-
         </div>
 
         <div className={styles.right}>
-
           <h4>مواعيد اليوم</h4>
 
           {appointments.length === 0 ? (
             <p>لا يوجد مواعيد</p>
           ) : (
             appointments.map((item) => {
-
-              const isCompleted = item.status === 4
+              const isCompleted = item.status === 4;
 
               return (
                 <div key={item.appointmentId} className={styles.appointment}>
-
                   <div className={styles.info}>
                     <h5>{item.childName}</h5>
                   </div>
 
                   <div className={styles.time}>
                     <span>
-                      {new Date(item.scheduledAtUtc).toLocaleTimeString("ar-EG", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
+                      {new Date(item.scheduledAtUtc).toLocaleTimeString(
+                        "ar-EG",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
                     </span>
                   </div>
 
@@ -117,7 +115,7 @@ function SpecialistDashboard() {
                       <button
                         onClick={() =>
                           navigate("/dashboard/specialist/appointments", {
-                            state: { appointmentId: item.appointmentId }
+                            state: { appointmentId: item.appointmentId },
                           })
                         }
                       >
@@ -125,9 +123,8 @@ function SpecialistDashboard() {
                       </button>
                     )}
                   </div>
-
                 </div>
-              )
+              );
             })
           )}
 
@@ -136,19 +133,14 @@ function SpecialistDashboard() {
             <br />
             <p>يرجى مراجعة تمارين المرضى خلال الأسبوع</p>
 
-            <button
-              onClick={() => navigate("/dashboard/specialist/exercises")}
-            >
+            <button onClick={() => navigate("/dashboard/specialist/exercises")}>
               مراجعة التمارين
             </button>
           </div>
-
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default SpecialistDashboard
+export default SpecialistDashboard;
