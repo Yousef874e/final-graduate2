@@ -49,32 +49,38 @@ function Profile() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (childId) {
-      fetchData();
-    }
+    fetchData();
   }, [childId]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
-      const [childRes, childImg, parentImg, parentRes] = await Promise.all([
-        getChildProfile(childId),
-
-        getChildImage(childId),
-
-        getParentProfileImage(),
-
-        getParentProfile(),
-      ]);
-
-      setChild(childRes || {});
+      const parentRes = await getParentProfile();
 
       setParent(parentRes || {});
 
-      setChildImageUrl(childImg?.url || null);
+      try {
+        const parentImg = await getParentProfileImage();
 
-      setParentImage(parentImg?.url || null);
+        setParentImage(parentImg?.url || null);
+      } catch {
+        setParentImage(null);
+      }
+
+      if (childId) {
+        const childRes = await getChildProfile(childId);
+
+        setChild(childRes || {});
+
+        try {
+          const childImg = await getChildImage(childId);
+
+          setChildImageUrl(childImg?.url || null);
+        } catch {
+          setChildImageUrl(null);
+        }
+      }
     } catch (err) {
       console.log(err);
 
@@ -87,6 +93,7 @@ function Profile() {
   const handleParentChange = (e) => {
     setParent((prev) => ({
       ...prev,
+
       [e.target.name]: e.target.value,
     }));
   };
@@ -102,6 +109,8 @@ function Profile() {
 
         address: parent.address,
       });
+
+      localStorage.setItem("userName", parent.fullName);
 
       toast.success("تم حفظ البيانات");
     } catch (err) {
@@ -180,8 +189,6 @@ function Profile() {
       </div>
 
       <div className={styles.container}>
-        {/* بيانات الأب */}
-
         <div className={styles.right}>
           <div className={styles.profileCard}>
             <img
@@ -189,7 +196,11 @@ function Profile() {
               className={styles.avatar}
             />
 
-            <h3>{parent.fullName || "ولي الأمر"}</h3>
+            <h3>
+              {parent.fullName ||
+                localStorage.getItem("userName") ||
+                "ولي الأمر"}
+            </h3>
 
             <div className={styles.parentInfo}>
               <div className={styles.parentField}>
@@ -244,8 +255,6 @@ function Profile() {
           </div>
         </div>
 
-        {/* بيانات الطفل */}
-
         <div className={styles.left}>
           <div className={styles.card}>
             <h3>بيانات الطفل</h3>
@@ -256,12 +265,14 @@ function Profile() {
                 className={styles.avatar}
               />
 
-              <span>{child.fullName}</span>
+              <span>{child.fullName || "لا يوجد طفل"}</span>
 
-              <label className={styles.uploadBtn}>
-                تغيير صورة الطفل
-                <input type="file" hidden onChange={handleChildImage} />
-              </label>
+              {childId && (
+                <label className={styles.uploadBtn}>
+                  تغيير صورة الطفل
+                  <input type="file" hidden onChange={handleChildImage} />
+                </label>
+              )}
             </div>
 
             <div className={styles.grid}>

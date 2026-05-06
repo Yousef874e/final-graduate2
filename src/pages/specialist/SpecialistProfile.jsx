@@ -24,6 +24,7 @@ function SpecialistProfile() {
 
   useEffect(() => {
     loadProfile();
+
     loadImage();
   }, []);
 
@@ -47,6 +48,7 @@ function SpecialistProfile() {
     } catch (err) {
       if (err?.response?.status === 404) {
         setImage(null);
+
         return;
       }
 
@@ -74,11 +76,19 @@ function SpecialistProfile() {
         category: 2,
       });
 
-      await setSpecialistProfileImage({
+      console.log("UPLOAD:", media);
+
+      const saveRes = await setSpecialistProfileImage({
         mediaId: media.id,
       });
 
-      setImage(media.url);
+      console.log("SAVE:", saveRes);
+
+      const img = await getSpecialistProfileImage();
+
+      console.log("GET IMAGE:", img);
+
+      setImage(img?.url || media.url);
 
       toast.success("تم تحديث الصورة");
     } catch (err) {

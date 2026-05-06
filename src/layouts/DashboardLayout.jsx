@@ -51,6 +51,8 @@ function DashboardLayout() {
 
   const prevCountRef = useRef(0);
 
+  const savedUserName = localStorage.getItem("userName") || "مستخدم";
+
   useEffect(() => {
     loadParentData();
   }, []);
@@ -218,8 +220,11 @@ function DashboardLayout() {
               }}
               style={{
                 cursor: "pointer",
+
                 display: "flex",
+
                 alignItems: "center",
+
                 gap: "8px",
               }}
             >
@@ -238,7 +243,8 @@ function DashboardLayout() {
             {isDashboard && (
               <p className={styles.welcome}>
                 مرحباً،
-                {parent?.fullName || "ولي الأمر"} 👋
+                {parent?.fullName || savedUserName}
+                👋
               </p>
             )}
           </div>
@@ -257,35 +263,13 @@ function DashboardLayout() {
               {notificationsCount > 0 && (
                 <span className={styles.badge}>{notificationsCount}</span>
               )}
-
-              {showNotifications && (
-                <div className={styles.notificationsBox}>
-                  {notificationsCount === 0 ? (
-                    <p className={styles.emptyNotification}>لا يوجد إشعارات</p>
-                  ) : (
-                    <>
-                      {alerts?.childrenWithoutUpcomingAppointments > 0 && (
-                        <div className={styles.notificationItem}>
-                          يوجد أطفال بدون مواعيد قادمة
-                        </div>
-                      )}
-
-                      {alerts?.childrenWithLowAccuracy > 0 && (
-                        <div className={styles.notificationItem}>
-                          يوجد أطفال بنسبة دقة منخفضة
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
             </div>
 
             <div
               className={styles.userBox}
               onClick={() => navigate("/dashboard/profile")}
             >
-              <span>{parent?.fullName || "ولي الأمر"}</span>
+              <span>{parent?.fullName || savedUserName}</span>
 
               <div className={styles.avatarWrapper}>
                 {profileImage ? (

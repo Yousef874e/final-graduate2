@@ -65,6 +65,8 @@ export const AppProvider = ({ children }) => {
 
   const userId = getUserIdFromToken();
 
+  const savedUserName = localStorage.getItem("userName") || "مستخدم";
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -83,7 +85,6 @@ export const AppProvider = ({ children }) => {
 
       setData(dashboardData);
 
-
       if (role === "Specialist") {
         try {
           const img = await getSpecialistProfileImage();
@@ -96,25 +97,20 @@ export const AppProvider = ({ children }) => {
         try {
           const profile = await getSpecialistProfile();
 
-          setSpecialistName(profile?.fullName || "");
+          const finalName = profile?.fullName || savedUserName;
 
-          setUserName(profile?.fullName || "");
+          setSpecialistName(finalName);
+
+          setUserName(finalName);
+
+          localStorage.setItem("userName", finalName);
         } catch {
-          setSpecialistName("");
-        }
+          setSpecialistName(savedUserName);
 
-
-
-        try {
-          const parentProfile = await getParentProfile();
-
-          setParentName(parentProfile?.fullName || "");
-        } catch {
-          setParentName("");
+          setUserName(savedUserName);
         }
       }
 
-    
       if (role === "Parent") {
         try {
           const img = await getParentProfileImage();
@@ -127,17 +123,23 @@ export const AppProvider = ({ children }) => {
         try {
           const profile = await getParentProfile();
 
-          setParentName(profile?.fullName || "");
+          const finalName = profile?.fullName || savedUserName;
 
-          setUserName(profile?.fullName || "");
+          setParentName(finalName);
+
+          setUserName(finalName);
+
+          localStorage.setItem("userName", finalName);
         } catch {
-          setParentName("");
+          setParentName(savedUserName);
+
+          setUserName(savedUserName);
         }
 
         const children = dashboardData?.children || [];
 
         if (children.length > 0) {
-          setSpecialistName(children[0].specialistName || "");
+          setSpecialistName(children[0]?.specialistName || "");
         }
 
         if (children.length === 0) {
@@ -175,6 +177,7 @@ export const AppProvider = ({ children }) => {
             } catch {
               return {
                 sessions: [],
+
                 appointments: [],
               };
             }
@@ -198,7 +201,7 @@ export const AppProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [role]);
+  }, [role, savedUserName]);
 
   useEffect(() => {
     if (role) {
@@ -210,15 +213,25 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider
       value={{
         data,
+
         profileImage,
+
         sessions,
+
         appointments,
+
         loading,
+
         role,
+
         userName,
+
         specialistName,
+
         parentName,
+
         loadData,
+
         userId,
       }}
     >
