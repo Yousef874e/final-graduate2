@@ -2,12 +2,21 @@ import styles from "../../assets/exercise.module.css";
 import { useEffect, useState } from "react";
 import { getExercises } from "../../api/exerciseService";
 import { getChildren } from "../../api/childrenService";
-import { createTreatmentPlan } from "../../api/treatmentPlansService";
+
+import {
+  createTreatmentPlan,
+  getTreatmentPlans,
+  getTreatmentPlanById,
+  updateTreatmentPlan,
+  deleteTreatmentPlan,
+} from "../../api/treatmentPlansService";
+
 import toast from "react-hot-toast";
 
 function SpecialistExercise() {
   const [exercises, setExercises] = useState([]);
   const [children, setChildren] = useState([]);
+  const [plans, setPlans] = useState([]);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -21,6 +30,7 @@ function SpecialistExercise() {
   const [endDate, setEndDate] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -36,11 +46,29 @@ function SpecialistExercise() {
         getChildren(),
       ]);
 
-      setExercises(exRes.items || []);
+      setExercises((exRes.items || []).filter((e) => e.isActive));
+
       setChildren(childRes?.items || []);
+
+      if (childRes?.items?.length > 0) {
+        const firstChildId = childRes.items[0].id;
+
+        const plansRes = await getTreatmentPlans(firstChildId);
+
+        setPlans(plansRes.items || []);
+      }
     } catch (err) {
       console.log(err);
       toast.error("فشل تحميل البيانات");
+    }
+  };
+
+  const loadPlans = async (id) => {
+    try {
+      const res = await getTreatmentPlans(id);
+      setPlans(res.items || []);
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -79,6 +107,16 @@ function SpecialistExercise() {
     );
   };
 
+  const resetForm = () => {
+    setEditingId(null);
+    setSelectedExercises([]);
+    setChildId("");
+    setTitle("");
+    setNotes("");
+    setStartDate("");
+    setEndDate("");
+  };
+
   const handleSubmit = async () => {
     if (!childId) {
       toast.error("اختار طفل");
@@ -103,28 +141,84 @@ function SpecialistExercise() {
     try {
       setLoading(true);
 
-      await createTreatmentPlan({
+      const payload = {
         childId: Number(childId),
         title,
         notes,
         startDate,
         endDate,
         exercises: selectedExercises,
-      });
+      };
 
-      toast.success("تم إنشاء الخطة ✅");
+      if (editingId) {
+        await updateTreatmentPlan(editingId, payload);
+        toast.success("تم تعديل الخطة ✅");
+      } else {
+        await createTreatmentPlan(payload);
+        toast.success("تم إنشاء الخطة ✅");
+      }
 
-      setSelectedExercises([]);
-      setChildId("");
-      setTitle("");
-      setNotes("");
-      setStartDate("");
-      setEndDate("");
+      await loadPlans(childId);
+
+      resetForm();
     } catch (err) {
       console.log(err);
-      toast.error("فشل إنشاء الخطة ❌");
+
+      toast.error(err?.response?.data?.errors?.[0] || "فشل حفظ الخطة ❌");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = async (plan) => {
+    try {
+      const fullPlan = await getTreatmentPlanById(plan.id);
+
+      setEditingId(fullPlan.id);
+
+      setChildId(fullPlan.childId);
+
+      setTitle(fullPlan.title || "");
+
+      setNotes(fullPlan.notes || "");
+
+      setStartDate(fullPlan.startDate?.split("T")[0] || "");
+
+      setEndDate(fullPlan.endDate?.split("T")[0] || "");
+
+      setSelectedExercises(
+        (fullPlan.exercises || []).map((ex) => ({
+          exerciseId: ex.exerciseId,
+          expectedReps: ex.expectedReps,
+          sets: ex.sets,
+          dailyFrequency: ex.dailyFrequency,
+        })),
+      );
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } catch (err) {
+      console.log(err);
+      toast.error("فشل تحميل الخطة");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const ok = window.confirm("هل تريد حذف الخطة ؟");
+
+    if (!ok) return;
+
+    try {
+      await deleteTreatmentPlan(id);
+
+      toast.success("تم حذف الخطة");
+
+      loadPlans(childId);
+    } catch (err) {
+      console.log(err);
+      toast.error("فشل حذف الخطة");
     }
   };
 
@@ -136,7 +230,8 @@ function SpecialistExercise() {
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
-          <h2>إنشاء خطة علاج</h2>
+          <h2>{editingId ? "تعديل خطة علاج" : "إنشاء خطة علاج"}</h2>
+
           <p>اختر التمارين المناسبة للطفل</p>
         </div>
       </div>
@@ -168,7 +263,13 @@ function SpecialistExercise() {
           />
         </div>
 
-        <select value={childId} onChange={(e) => setChildId(e.target.value)}>
+        <select
+          value={childId}
+          onChange={(e) => {
+            setChildId(e.target.value);
+            loadPlans(e.target.value);
+          }}
+        >
           <option value="">اختر الطفل</option>
 
           {children.map((child) => (
@@ -199,11 +300,14 @@ function SpecialistExercise() {
           <option value="Stretch">Stretch</option>
 
           <option value="Strength">Strength</option>
+
+          <option value="UpperBody">UpperBody</option>
         </select>
       </div>
 
       <div className={styles.sectionTitle}>
         <h3>التمارين المتاحة</h3>
+
         <p>اختر التمارين المناسبة للخطة العلاجية</p>
       </div>
 
@@ -219,11 +323,15 @@ function SpecialistExercise() {
 
           return (
             <div key={ex.id} className={styles.card}>
-              <img
-                src={ex.mediaThumbnailUrl || "/default.png"}
-                onError={(e) => (e.target.src = "/default.png")}
-                alt={ex.name}
-              />
+              {ex.mediaUrl ? (
+                <video src={ex.mediaUrl} controls className={styles.video} />
+              ) : (
+                <img
+                  src={ex.mediaThumbnailUrl || "/default.png"}
+                  onError={(e) => (e.target.src = "/default.png")}
+                  alt={ex.name}
+                />
+              )}
 
               <div className={styles.cardContent}>
                 <h4>{ex.name}</h4>
@@ -278,13 +386,60 @@ function SpecialistExercise() {
         })}
       </div>
 
-      <button
-        className={styles.saveBtn}
-        onClick={handleSubmit}
-        disabled={loading}
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          marginTop: "20px",
+        }}
       >
-        {loading ? "جاري الحفظ..." : "حفظ الخطة"}
-      </button>
+        <button
+          className={styles.saveBtn}
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "جاري الحفظ..." : editingId ? "تعديل الخطة" : "حفظ الخطة"}
+        </button>
+
+        {editingId && (
+          <button
+            className={styles.saveBtn}
+            style={{
+              background: "#777",
+            }}
+            onClick={resetForm}
+          >
+            إلغاء التعديل
+          </button>
+        )}
+      </div>
+
+      <div className={styles.plansSection}>
+        <div className={styles.sectionTitle}>
+          <h3>الخطط العلاجية</h3>
+        </div>
+
+        <div className={styles.plansGrid}>
+          {plans.map((plan) => (
+            <div key={plan.id} className={styles.planCard}>
+              <h4>{plan.title}</h4>
+
+              <p>{plan.notes}</p>
+
+              <p>
+                من {plan.startDate?.split("T")[0]} إلى{" "}
+                {plan.endDate?.split("T")[0]}
+              </p>
+
+              <div className={styles.planActions}>
+                <button onClick={() => handleEdit(plan)}>تعديل</button>
+
+                <button onClick={() => handleDelete(plan.id)}>حذف</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
