@@ -108,7 +108,7 @@ function SpecialistLayout() {
               to="/dashboard/specialist/exercises"
               className={({ isActive }) => (isActive ? styles.active : "")}
             >
-              <FaDumbbell /> التمارين
+              <FaDumbbell />الخطه العلاجيه
             </NavLink>
           </li>
 

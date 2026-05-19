@@ -1,15 +1,19 @@
-import { Navigate } from "react-router-dom"
-import { getAuth } from "../utils/auth"
+import { Navigate } from "react-router-dom";
 
 function ProtectedRoute({ children }) {
+  const token =
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("token");
 
-  const { token } = getAuth()
-
-  if (!token || token === "undefined") {
-    return <Navigate to="/login" replace />
+  if (
+    !token ||
+    token === "undefined" ||
+    token === "null"
+  ) {
+    return <Navigate to="/login" replace />;
   }
 
-  return children
+  return children;
 }
 
-export default ProtectedRoute
+export default ProtectedRoute;

@@ -52,7 +52,7 @@ function SpecialistProfile() {
         return;
       }
 
-      toast.error("فشل تحميل الصورة");
+      setImage(null);
     }
   };
 
@@ -76,24 +76,14 @@ function SpecialistProfile() {
         category: 2,
       });
 
-      console.log("UPLOAD:", media);
-
-      const saveRes = await setSpecialistProfileImage({
+      await setSpecialistProfileImage({
         mediaId: media.id,
       });
 
-      console.log("SAVE:", saveRes);
-
-      const img = await getSpecialistProfileImage();
-
-      console.log("GET IMAGE:", img);
-
-      setImage(img?.url || media.url);
+      setImage(media.url);
 
       toast.success("تم تحديث الصورة");
-    } catch (err) {
-      console.log(err);
-
+    } catch {
       toast.error("فشل رفع الصورة");
     } finally {
       setUploading(false);
@@ -122,7 +112,7 @@ function SpecialistProfile() {
             />
           </div>
 
-          <div>
+          <div className={styles.info}>
             <h2>{loading ? "Loading..." : profile?.fullName || "دكتور"}</h2>
 
             <p>{profile?.specialization || "لا يوجد تخصص"}</p>

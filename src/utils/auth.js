@@ -1,10 +1,22 @@
 export const setAuth = (data) => {
-  localStorage.setItem("accessToken", data.accessToken || "")
-  localStorage.setItem("refreshToken", data.refreshToken || "")
+  localStorage.setItem(
+    "accessToken",
+    data.accessToken || data.token || ""
+  )
 
-  const roles = data.roles?.length ? data.roles : [data.role]
+  localStorage.setItem(
+    "refreshToken",
+    data.refreshToken || ""
+  )
 
-  localStorage.setItem("roles", JSON.stringify(roles || []))
+  const roles = data.roles?.length
+    ? data.roles
+    : [data.role]
+
+  localStorage.setItem(
+    "roles",
+    JSON.stringify(roles || [])
+  )
 
   const email = data.email || ""
 
@@ -25,11 +37,24 @@ export const setAuth = (data) => {
 
 export const getAuth = () => {
   return {
-    token: localStorage.getItem("accessToken") || "",
-    refreshToken: localStorage.getItem("refreshToken") || "",
-    roles: JSON.parse(localStorage.getItem("roles") || "[]"),
-    userName: localStorage.getItem("userName") || "",
-    email: localStorage.getItem("email") || ""
+    token:
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("token") ||
+      "",
+
+    refreshToken:
+      localStorage.getItem("refreshToken") ||
+      "",
+
+    roles: JSON.parse(
+      localStorage.getItem("roles") || "[]"
+    ),
+
+    userName:
+      localStorage.getItem("userName") || "",
+
+    email:
+      localStorage.getItem("email") || "",
   }
 }
 

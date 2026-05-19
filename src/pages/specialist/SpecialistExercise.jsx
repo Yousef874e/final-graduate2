@@ -1,5 +1,8 @@
 import styles from "../../assets/exercise.module.css";
 import { useEffect, useState } from "react";
+
+import Select from "react-select";
+
 import { getExercises } from "../../api/exerciseService";
 import { getChildren } from "../../api/childrenService";
 
@@ -8,7 +11,7 @@ import {
   getTreatmentPlans,
   getTreatmentPlanById,
   updateTreatmentPlan,
-  deleteTreatmentPlan,
+  stopTreatmentPlan,
 } from "../../api/treatmentPlansService";
 
 import toast from "react-hot-toast";
@@ -19,8 +22,6 @@ function SpecialistExercise() {
   const [plans, setPlans] = useState([]);
 
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-
   const [childId, setChildId] = useState("");
   const [selectedExercises, setSelectedExercises] = useState([]);
 
@@ -31,6 +32,8 @@ function SpecialistExercise() {
 
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -46,12 +49,16 @@ function SpecialistExercise() {
         getChildren(),
       ]);
 
-      setExercises((exRes.items || []).filter((e) => e.isActive));
+      const activeExercises = (exRes.items || []).filter((e) => e.isActive);
+
+      setExercises(activeExercises);
 
       setChildren(childRes?.items || []);
 
       if (childRes?.items?.length > 0) {
         const firstChildId = childRes.items[0].id;
+
+        setChildId(firstChildId);
 
         const plansRes = await getTreatmentPlans(firstChildId);
 
@@ -59,6 +66,7 @@ function SpecialistExercise() {
       }
     } catch (err) {
       console.log(err);
+
       toast.error("فشل تحميل البيانات");
     }
   };
@@ -66,6 +74,7 @@ function SpecialistExercise() {
   const loadPlans = async (id) => {
     try {
       const res = await getTreatmentPlans(id);
+
       setPlans(res.items || []);
     } catch (err) {
       console.log(err);
@@ -76,20 +85,19 @@ function SpecialistExercise() {
     const exists = selectedExercises.find((e) => e.exerciseId === ex.id);
 
     if (exists) {
-      setSelectedExercises((prev) =>
-        prev.filter((e) => e.exerciseId !== ex.id),
-      );
-    } else {
-      setSelectedExercises((prev) => [
-        ...prev,
-        {
-          exerciseId: ex.id,
-          expectedReps: 10,
-          sets: 3,
-          dailyFrequency: 1,
-        },
-      ]);
+      toast.error("التمرين مضاف بالفعل");
+      return;
     }
+
+    setSelectedExercises((prev) => [
+      ...prev,
+      {
+        exerciseId: ex.id,
+        expectedReps: 10,
+        sets: 3,
+        dailyFrequency: 1,
+      },
+    ]);
   };
 
   const updateField = (id, field, value) => {
@@ -107,34 +115,46 @@ function SpecialistExercise() {
     );
   };
 
+  const removeExercise = (id) => {
+    setSelectedExercises((prev) => prev.filter((e) => e.exerciseId !== id));
+  };
+
   const resetForm = () => {
     setEditingId(null);
+
     setSelectedExercises([]);
-    setChildId("");
+
     setTitle("");
+
     setNotes("");
+
     setStartDate("");
+
     setEndDate("");
   };
 
   const handleSubmit = async () => {
     if (!childId) {
       toast.error("اختار طفل");
+
       return;
     }
 
-    if (!title) {
+    if (!title.trim()) {
       toast.error("اكتب عنوان الخطة");
+
       return;
     }
 
     if (!startDate || !endDate) {
       toast.error("حدد التواريخ");
+
       return;
     }
 
     if (selectedExercises.length === 0) {
       toast.error("اختار تمارين");
+
       return;
     }
 
@@ -152,19 +172,23 @@ function SpecialistExercise() {
 
       if (editingId) {
         await updateTreatmentPlan(editingId, payload);
-        toast.success("تم تعديل الخطة ✅");
+
+        toast.success("تم تعديل الخطة");
       } else {
         await createTreatmentPlan(payload);
-        toast.success("تم إنشاء الخطة ✅");
+
+        toast.success("تم إنشاء الخطة");
       }
 
       await loadPlans(childId);
 
       resetForm();
+
+      setShowModal(false);
     } catch (err) {
       console.log(err);
 
-      toast.error(err?.response?.data?.errors?.[0] || "فشل حفظ الخطة ❌");
+      toast.error("فشل حفظ الخطة");
     } finally {
       setLoading(false);
     }
@@ -195,230 +219,73 @@ function SpecialistExercise() {
         })),
       );
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      setShowModal(true);
     } catch (err) {
       console.log(err);
+
       toast.error("فشل تحميل الخطة");
     }
   };
 
-  const handleDelete = async (id) => {
-    const ok = window.confirm("هل تريد حذف الخطة ؟");
+  const handleStop = async (plan) => {
+    const ok = window.confirm("هل تريد إيقاف الخطة ؟");
 
     if (!ok) return;
 
     try {
-      await deleteTreatmentPlan(id);
+      await stopTreatmentPlan(plan.id, {
+        title: plan.title,
+        notes: plan.notes,
+        startDate: plan.startDate,
+        endDate: plan.endDate,
+        exercises: plan.exercises || [],
+      });
 
-      toast.success("تم حذف الخطة");
+      toast.success("تم إيقاف الخطة");
 
       loadPlans(childId);
     } catch (err) {
       console.log(err);
-      toast.error("فشل حذف الخطة");
+
+      toast.error("فشل إيقاف الخطة");
     }
   };
 
-  const filtered = exercises
-    .filter((ex) => ex.name?.toLowerCase().includes(search.toLowerCase()))
-    .filter((ex) => (filter === "all" ? true : ex.exerciseType === filter));
+  const filtered = exercises.filter((ex) =>
+    ex.name?.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
-          <h2>{editingId ? "تعديل خطة علاج" : "إنشاء خطة علاج"}</h2>
+          <h2>الخطط العلاجية</h2>
 
-          <p>اختر التمارين المناسبة للطفل</p>
-        </div>
-      </div>
-
-      <div className={styles.formBox}>
-        <input
-          placeholder="عنوان الخطة"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <textarea
-          placeholder="ملاحظات"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-
-        <div className={styles.dateRow}>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
+          <p>إدارة الخطط العلاجية للأطفال</p>
         </div>
 
-        <select
-          value={childId}
-          onChange={(e) => {
-            setChildId(e.target.value);
-            loadPlans(e.target.value);
-          }}
-        >
-          <option value="">اختر الطفل</option>
+        <div className={styles.headerActions}>
+          <input
+            className={styles.search}
+            placeholder="بحث عن تمرين..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-          {children.map((child) => (
-            <option key={child.id} value={child.id}>
-              {child.fullName}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className={styles.tools}>
-        <input
-          className={styles.search}
-          placeholder="بحث عن تمرين..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <select
-          className={styles.filter}
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option value="all">كل التمارين</option>
-
-          <option value="Balance">Balance</option>
-
-          <option value="Stretch">Stretch</option>
-
-          <option value="Strength">Strength</option>
-
-          <option value="UpperBody">UpperBody</option>
-        </select>
-      </div>
-
-      <div className={styles.sectionTitle}>
-        <h3>التمارين المتاحة</h3>
-
-        <p>اختر التمارين المناسبة للخطة العلاجية</p>
-      </div>
-
-      <div className={styles.grid}>
-        {filtered.length === 0 && (
-          <div className={styles.empty}>لا يوجد تمارين</div>
-        )}
-
-        {filtered.map((ex) => {
-          const selected = selectedExercises.find(
-            (e) => e.exerciseId === ex.id,
-          );
-
-          return (
-            <div key={ex.id} className={styles.card}>
-              {ex.mediaUrl ? (
-                <video src={ex.mediaUrl} controls className={styles.video} />
-              ) : (
-                <img
-                  src={ex.mediaThumbnailUrl || "/default.png"}
-                  onError={(e) => (e.target.src = "/default.png")}
-                  alt={ex.name}
-                />
-              )}
-
-              <div className={styles.cardContent}>
-                <h4>{ex.name}</h4>
-
-                <div className={styles.type}>{ex.exerciseType}</div>
-
-                <p>{ex.description}</p>
-
-                <button
-                  className={selected ? styles.selected : ""}
-                  onClick={() => toggleExercise(ex)}
-                >
-                  {selected ? "تم الاختيار" : "اختيار"}
-                </button>
-
-                {selected && (
-                  <div className={styles.inputs}>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="العدات"
-                      value={selected.expectedReps}
-                      onChange={(e) =>
-                        updateField(ex.id, "expectedReps", e.target.value)
-                      }
-                    />
-
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="الجولات"
-                      value={selected.sets}
-                      onChange={(e) =>
-                        updateField(ex.id, "sets", e.target.value)
-                      }
-                    />
-
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="يومياً"
-                      value={selected.dailyFrequency}
-                      onChange={(e) =>
-                        updateField(ex.id, "dailyFrequency", e.target.value)
-                      }
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginTop: "20px",
-        }}
-      >
-        <button
-          className={styles.saveBtn}
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? "جاري الحفظ..." : editingId ? "تعديل الخطة" : "حفظ الخطة"}
-        </button>
-
-        {editingId && (
           <button
             className={styles.saveBtn}
-            style={{
-              background: "#777",
+            onClick={() => {
+              resetForm();
+
+              setShowModal(true);
             }}
-            onClick={resetForm}
           >
-            إلغاء التعديل
+            إنشاء الخطة العلاجية
           </button>
-        )}
+        </div>
       </div>
 
       <div className={styles.plansSection}>
-        <div className={styles.sectionTitle}>
-          <h3>الخطط العلاجية</h3>
-        </div>
-
         <div className={styles.plansGrid}>
           {plans.map((plan) => (
             <div key={plan.id} className={styles.planCard}>
@@ -434,12 +301,166 @@ function SpecialistExercise() {
               <div className={styles.planActions}>
                 <button onClick={() => handleEdit(plan)}>تعديل</button>
 
-                <button onClick={() => handleDelete(plan.id)}>حذف</button>
+                <button onClick={() => handleStop(plan)}>إيقاف</button>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {showModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>{editingId ? "تعديل خطة علاجية" : "إنشاء خطة علاجية"}</h3>
+
+            <div className={styles.formBox}>
+              <input
+                placeholder="عنوان الخطة"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+
+              <textarea
+                placeholder="ملاحظات"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+
+              <div className={styles.dateRow}>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+
+              <select
+                value={childId}
+                onChange={(e) => setChildId(e.target.value)}
+              >
+                <option value="">اختر الطفل</option>
+
+                {children.map((child) => (
+                  <option key={child.id} value={child.id}>
+                    {child.fullName}
+                  </option>
+                ))}
+              </select>
+
+              <Select
+                placeholder="اختر تمرين"
+                options={filtered.map((ex) => ({
+                  value: ex.id,
+                  label: ex.name,
+                }))}
+                onChange={(selectedOption) => {
+                  if (!selectedOption) return;
+
+                  const exercise = exercises.find(
+                    (ex) => ex.id === selectedOption.value,
+                  );
+
+                  if (exercise) {
+                    toggleExercise(exercise);
+                  }
+                }}
+              />
+            </div>
+
+            <div className={styles.exerciseList}>
+              {selectedExercises.map((selected) => {
+                const exercise = exercises.find(
+                  (ex) => ex.id === selected.exerciseId,
+                );
+
+                return (
+                  <div
+                    key={selected.exerciseId}
+                    className={styles.exerciseItem}
+                  >
+                    <h4>{exercise?.name}</h4>
+
+                    <div className={styles.inputs}>
+                      <input
+                        type="number"
+                        placeholder="العدات"
+                        value={selected.expectedReps}
+                        onChange={(e) =>
+                          updateField(
+                            selected.exerciseId,
+                            "expectedReps",
+                            e.target.value,
+                          )
+                        }
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="الجولات"
+                        value={selected.sets}
+                        onChange={(e) =>
+                          updateField(
+                            selected.exerciseId,
+                            "sets",
+                            e.target.value,
+                          )
+                        }
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="يومياً"
+                        value={selected.dailyFrequency}
+                        onChange={(e) =>
+                          updateField(
+                            selected.exerciseId,
+                            "dailyFrequency",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+
+                    <button
+                      className={styles.removeBtn}
+                      onClick={() => removeExercise(selected.exerciseId)}
+                    >
+                      حذف التمرين
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.confirmBtn}
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? "جاري الحفظ..." : editingId ? "تعديل" : "حفظ"}
+              </button>
+
+              <button
+                className={styles.cancelBtn}
+                onClick={() => {
+                  setShowModal(false);
+
+                  resetForm();
+                }}
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

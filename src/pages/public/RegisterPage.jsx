@@ -1,23 +1,33 @@
 import "../../assets/register.css";
+
 import logo from "../../assets/images/logo.png";
 import sideImg from "../../assets/images/ggg.png";
+
 import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import { FaUser, FaPhone, FaEye, FaEyeSlash } from "react-icons/fa";
+
 import { MdEmail } from "react-icons/md";
-import { FcGoogle } from "react-icons/fc";
+
 import { IoArrowForward } from "react-icons/io5";
+
 import { registerParent, registerSpecialist } from "../../api/authService";
+
 import { setAuth } from "../../utils/auth";
-import { triggerGoogleLogin } from "../../utils/googleAuth";
+
 import toast from "react-hot-toast";
 
 function RegisterPage() {
   const navigate = useNavigate();
 
   const [role, setRole] = useState("parent");
+
   const [showPassword, setShowPassword] = useState(false);
+
   const [showConfirm, setShowConfirm] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -43,12 +53,9 @@ function RegisterPage() {
   const isValidPhone = (phone) => /^[0-9]{10,15}$/.test(phone);
 
   const isValidPassword = (password) =>
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[0-9]/.test(password);
+    password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
 
-  const isValidText = (text) =>
-    text && text.trim().length >= 3;
+  const isValidText = (text) => text && text.trim().length >= 3;
 
   const isValidBio = (text) => {
     if (!text || text.trim().length < 5) return false;
@@ -98,9 +105,7 @@ function RegisterPage() {
     }
 
     if (!isValidPassword(form.password)) {
-      toast.error(
-        "كلمة المرور لازم تكون 8 حروف وتحتوي على رقم وحرف كبير"
-      );
+      toast.error("كلمة المرور لازم تكون 8 حروف وتحتوي على رقم وحرف كبير");
       return;
     }
 
@@ -132,11 +137,6 @@ function RegisterPage() {
         });
       }
 
-      if (res.requiresPasswordChange) {
-        navigate("/reset-password");
-        return;
-      }
-
       setAuth({
         ...res,
         fullName: form.fullName,
@@ -145,22 +145,18 @@ function RegisterPage() {
 
       const roleName = res?.roles?.[0];
 
+      toast.success("تم إنشاء الحساب");
+
       if (roleName === "Parent") {
         navigate("/child-info-step1");
-      } else if (roleName === "Specialist") {
-        navigate("/dashboard/specialist");
       } else {
-        toast.error("Role غير معروف");
+        navigate("/dashboard/specialist");
       }
     } catch {
       toast.error("فيه خطأ");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleLogin = () => {
-    triggerGoogleLogin();
   };
 
   return (
@@ -176,20 +172,14 @@ function RegisterPage() {
               <span className="logo-text">رفيق</span>
             </div>
 
-            <h2 className="signup-title">
-              إنشاء حساب جديد
-            </h2>
+            <h2 className="signup-title">إنشاء حساب جديد</h2>
 
-            <p className="signup-subtitle">
-              ابدأ رحلتك مع رفيق اليوم
-            </p>
+            <p className="signup-subtitle">ابدأ رحلتك مع رفيق اليوم</p>
           </div>
 
           <div className="role-switch">
             <button
-              className={`role-btn ${
-                role === "parent" ? "active" : ""
-              }`}
+              className={`role-btn ${role === "parent" ? "active" : ""}`}
               onClick={() => setRole("parent")}
               type="button"
             >
@@ -198,9 +188,7 @@ function RegisterPage() {
             </button>
 
             <button
-              className={`role-btn ${
-                role === "specialist" ? "active" : ""
-              }`}
+              className={`role-btn ${role === "specialist" ? "active" : ""}`}
               onClick={() => setRole("specialist")}
               type="button"
             >
@@ -293,15 +281,9 @@ function RegisterPage() {
 
             <span
               className="eye"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
+              onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? (
-                <FaEyeSlash />
-              ) : (
-                <FaEye />
-              )}
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
 
@@ -314,17 +296,8 @@ function RegisterPage() {
               onChange={handleChange}
             />
 
-            <span
-              className="eye"
-              onClick={() =>
-                setShowConfirm(!showConfirm)
-              }
-            >
-              {showConfirm ? (
-                <FaEyeSlash />
-              ) : (
-                <FaEye />
-              )}
+            <span className="eye" onClick={() => setShowConfirm(!showConfirm)}>
+              {showConfirm ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
 
@@ -336,37 +309,14 @@ function RegisterPage() {
           >
             {loading
               ? "جاري الإنشاء..."
-              : `إنشاء حساب ${
-                  role === "parent"
-                    ? "ولي أمر"
-                    : "أخصائي"
-                }`}
+              : `إنشاء حساب ${role === "parent" ? "ولي أمر" : "أخصائي"}`}
 
             <IoArrowForward />
           </button>
 
-          <div className="split-line">
-            أو سجل عن طريق
-          </div>
-
-          <div className="social-box">
-            <button
-              onClick={handleGoogleLogin}
-              type="button"
-            >
-              <FcGoogle />
-              تسجيل بجوجل
-            </button>
-          </div>
-
           <p className="login-redirect">
             لديك حساب؟
-
-            <span
-              onClick={() => navigate("/login")}
-            >
-              سجل الدخول
-            </span>
+            <span onClick={() => navigate("/login")}>سجل الدخول</span>
           </p>
         </div>
       </div>
@@ -376,10 +326,7 @@ function RegisterPage() {
 
         <h3>مجتمع داعم ومتكامل</h3>
 
-        <p>
-          انضم لأكثر من 5000 عائلة تشارك نفس الرحله
-          والاهتمامات
-        </p>
+        <p>انضم لأكثر من 5000 عائلة تشارك نفس الرحله والاهتمامات</p>
       </div>
     </div>
   );

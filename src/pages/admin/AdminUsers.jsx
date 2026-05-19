@@ -217,12 +217,6 @@ function AdminUsers() {
       return;
     }
 
-    if (selectedUser.specialistProfileId) {
-      toast.error("الطفل مربوط بالفعل");
-
-      return;
-    }
-
     try {
       await assignSpecialistToChild(
         selectedUser.id,
@@ -399,6 +393,7 @@ function AdminUsers() {
               </div>
 
               <FaEllipsisV
+                className="menu-icon"
                 onClick={() =>
                   setShowMenu(showMenu === user.id ? null : user.id)
                 }
@@ -419,30 +414,147 @@ function AdminUsers() {
               <div
                 onClick={() => {
                   setSelectedUser(user);
-
                   setShowLink(true);
                 }}
               >
                 <FaLink />
-
                 <span>ربط</span>
               </div>
 
               <div onClick={() => openSessions(user)}>
                 <FaCalendarAlt />
-
                 <span>المواعيد</span>
               </div>
 
               <div onClick={() => openReports(user)}>
                 <FaFileAlt />
-
                 <span>التقارير</span>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {showLink && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>ربط أخصائي</h3>
+
+            <select
+              value={selectedSpecialist}
+              onChange={(e) => setSelectedSpecialist(e.target.value)}
+            >
+              <option value="">اختر أخصائي</option>
+
+              {specialists.map((s) => (
+                <option
+                  key={s.specialistProfileId || s.id}
+                  value={s.specialistProfileId || s.id}
+                >
+                  {s.fullName}
+                </option>
+              ))}
+            </select>
+
+            <div className="modal-actions">
+              <button onClick={handleLink}>ربط</button>
+
+              <button onClick={() => setShowLink(false)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSessions && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>المواعيد</h3>
+
+            {sessions.length > 0 ? (
+              sessions.map((s) => (
+                <div key={s.id} className="session-card">
+                  <p>
+                    التاريخ:
+                    {s.appointmentDate?.split("T")[0]}
+                  </p>
+
+                  <p>الحالة: {getStatus(s.status)}</p>
+                </div>
+              ))
+            ) : (
+              <p>لا توجد مواعيد</p>
+            )}
+
+            <div className="modal-actions">
+              <button onClick={() => setShowSessions(false)}>إغلاق</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReports && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>التقارير</h3>
+
+            {reports.length > 0 ? (
+              reports.map((r) => (
+                <div key={r.id} className="report-card">
+                  <p>
+                    النوع:
+                    {r.type === "medical" ? " تقرير طبي" : " تقرير متابعة"}
+                  </p>
+
+                  <p>{r.notes || r.description || "-"}</p>
+                </div>
+              ))
+            ) : (
+              <p>لا توجد تقارير</p>
+            )}
+
+            <div className="modal-actions">
+              <button onClick={() => setShowReports(false)}>إغلاق</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEdit && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>تعديل المستخدم</h3>
+
+            <input
+              type="text"
+              value={editForm.fullName}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  fullName: e.target.value,
+                })
+              }
+              placeholder="الاسم"
+            />
+
+            <input
+              type="date"
+              value={editForm.dateOfBirth}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  dateOfBirth: e.target.value,
+                })
+              }
+            />
+
+            <div className="modal-actions">
+              <button onClick={submitEdit}>حفظ</button>
+
+              <button onClick={() => setShowEdit(false)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

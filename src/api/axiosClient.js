@@ -1,9 +1,12 @@
 import axios from "axios";
+
 import { clearAuth } from "../utils/auth";
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL + "/api/v1",
+
   timeout: 15000,
+
   headers: {
     Accept: "application/json",
   },
@@ -11,11 +14,18 @@ const axiosClient = axios.create({
 
 const publicRoutes = [
   "/Auth/login",
+
   "/Auth/register/parent",
+
   "/Auth/register/specialist",
+
   "/Auth/forgot-password",
+
   "/Auth/reset-password",
+
   "/Auth/refresh-token",
+
+  "/Auth/external/google/link",
 ];
 
 const isPublicRoute = (url = "") =>
@@ -28,7 +38,6 @@ axiosClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-
   if (config.data instanceof FormData) {
     delete config.headers["Content-Type"];
   } else {
@@ -40,6 +49,7 @@ axiosClient.interceptors.request.use((config) => {
 
 const logout = () => {
   clearAuth();
+
   window.location.href = "/login";
 };
 
@@ -54,7 +64,6 @@ axiosClient.interceptors.response.use(
     }
 
     if (originalRequest._retry) {
-      logout();
       return Promise.reject(error);
     }
 
@@ -62,7 +71,6 @@ axiosClient.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
-        logout();
         return Promise.reject(error);
       }
 
@@ -71,13 +79,17 @@ axiosClient.interceptors.response.use(
       try {
         const refreshResponse = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/api/v1/Auth/refresh-token`,
-          { refreshToken },
+          {
+            refreshToken,
+          },
         );
 
         const newAccessToken = refreshResponse.data.accessToken;
+
         const newRefreshToken = refreshResponse.data.refreshToken;
 
         localStorage.setItem("accessToken", newAccessToken);
+
         localStorage.setItem("refreshToken", newRefreshToken);
 
         axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
@@ -87,6 +99,7 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (refreshError) {
         logout();
+
         return Promise.reject(refreshError);
       }
     }
