@@ -2,7 +2,7 @@ import styles from "../../assets/exerciseDetails.module.css";
 
 import { useEffect, useState } from "react";
 
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { getExercises } from "../../api/exerciseService";
 
@@ -14,8 +14,6 @@ import {
 
 import { uploadVideo } from "../../api/mediaService";
 
-import { getTreatmentPlans } from "../../api/treatmentPlansService";
-
 import { getChildren } from "../../api/childrenService";
 
 import { useApp } from "../../Context/AppContext";
@@ -24,6 +22,8 @@ import toast from "react-hot-toast";
 
 function ExerciseDetails() {
   const { id } = useParams();
+
+  const location = useLocation();
 
   const navigate = useNavigate();
 
@@ -38,6 +38,9 @@ function ExerciseDetails() {
   const [uploading, setUploading] = useState(false);
 
   const [childId, setChildId] = useState(null);
+
+  const treatmentPlanExerciseId =
+    location.state?.treatmentPlanExerciseId;
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -80,7 +83,9 @@ function ExerciseDetails() {
       const sessions = sessionsRes?.items || [];
 
       const alreadyCompleted = sessions.find(
-        (s) => s.exerciseId == Number(id) && s.status === 5,
+        (s) =>
+          s.treatmentPlanExerciseId === treatmentPlanExerciseId &&
+          s.status === 5,
       );
 
       if (alreadyCompleted) {
@@ -108,26 +113,14 @@ function ExerciseDetails() {
 
       setExercise(selected);
 
-      const plansRes = await getTreatmentPlans(currentChildId);
+      const existingSession = sessions.find(
+        (s) =>
+          s.treatmentPlanExerciseId === treatmentPlanExerciseId &&
+          s.status !== 5,
+      );
 
-      const plans = plansRes?.items || [];
-
-      let exercisePlan = null;
-
-      for (const p of plans) {
-        const found = p.exercises?.find((e) => e.exerciseId === selected.id);
-
-        if (found) {
-          exercisePlan = found;
-
-          break;
-        }
-      }
-
-      if (!exercisePlan) {
-        toast.error("التمرين غير موجود في الخطة ❌");
-
-        navigate("/dashboard/library");
+      if (existingSession) {
+        setSessionId(existingSession.id);
 
         return;
       }
@@ -137,7 +130,7 @@ function ExerciseDetails() {
 
         exerciseId: selected.id,
 
-        treatmentPlanExerciseId: exercisePlan.id,
+        treatmentPlanExerciseId,
       });
 
       if (!session?.id) {
@@ -189,6 +182,10 @@ function ExerciseDetails() {
       }
 
       await submitSessionVideo(sessionId, media.id);
+
+      const updatedSessions = await getSessionsByChild(childId);
+
+      console.log(updatedSessions.items);
 
       await loadData();
 

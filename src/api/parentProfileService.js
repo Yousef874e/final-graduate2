@@ -18,9 +18,11 @@ export const getParentProfileById = async (id) => {
 
     return res.data;
   } catch (err) {
-    console.error("Error getting parent profile by id:", err);
+    if (err?.response?.status !== 403) {
+      console.error("Error getting parent profile by id:", err);
+    }
 
-    throw err;
+    return null;
   }
 };
 

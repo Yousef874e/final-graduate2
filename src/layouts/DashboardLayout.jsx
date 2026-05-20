@@ -43,15 +43,33 @@ function DashboardLayout() {
 
   const [profileImage, setProfileImage] = useState(null);
 
-  const alerts = data?.alerts || {};
-
-  const notificationsCount =
-    (alerts?.childrenWithoutUpcomingAppointments || 0) +
-    (alerts?.childrenWithLowAccuracy || 0);
-
   const prevCountRef = useRef(0);
 
   const savedUserName = localStorage.getItem("userName") || "مستخدم";
+
+  const notifications = [];
+
+  if (data?.upcomingAppointments?.length > 0) {
+    notifications.push("لديك جلسات قادمة لطفلك");
+  }
+
+  if (
+    data?.children?.some(
+      (child) => child.exercisesCount > 0 || child.pendingExercisesCount > 0,
+    )
+  ) {
+    notifications.push("هناك تمارين تحتاج متابعة");
+  }
+
+  if (data?.treatmentPlans?.length > 0) {
+    notifications.push("تم إضافة أو تحديث خطة علاجية");
+  }
+
+  if (data?.children?.some((child) => child.reportsCount > 0)) {
+    notifications.push("يوجد تقارير جديدة متاحة");
+  }
+
+  const notificationsCount = notifications.length;
 
   useEffect(() => {
     loadParentData();
@@ -61,7 +79,6 @@ function DashboardLayout() {
     try {
       const [parentRes, imageRes] = await Promise.all([
         getParentProfile(),
-
         getParentProfileImage(),
       ]);
 
@@ -74,20 +91,18 @@ function DashboardLayout() {
   };
 
   useEffect(() => {
-    const count =
-      (alerts?.childrenWithoutUpcomingAppointments || 0) +
-      (alerts?.childrenWithLowAccuracy || 0);
-
-    if (count > prevCountRef.current) {
-      const diff = count - prevCountRef.current;
+    if (notificationsCount > prevCountRef.current) {
+      const diff = notificationsCount - prevCountRef.current;
 
       toast.success(`عندك ${diff} إشعار جديد 🔔`);
     }
 
-    prevCountRef.current = count;
-  }, [alerts]);
+    prevCountRef.current = notificationsCount;
+  }, [notificationsCount]);
 
   useEffect(() => {
+    loadData();
+
     const interval = setInterval(() => {
       loadData();
     }, 10000);
@@ -97,19 +112,12 @@ function DashboardLayout() {
 
   const titles = {
     "/dashboard/parent": "لوحة التحكم",
-
     "/dashboard/appointments": "الجدول الزمني",
-
     "/dashboard/library": "المكتبة",
-
     "/dashboard/reports": "التقارير",
-
     "/dashboard/chat": "الشات",
-
     "/dashboard/exercises": "التمارين",
-
     "/dashboard/settings": "الإعدادات",
-
     "/dashboard/profile": "الملف الشخصي",
   };
 
@@ -220,11 +228,8 @@ function DashboardLayout() {
               }}
               style={{
                 cursor: "pointer",
-
                 display: "flex",
-
                 alignItems: "center",
-
                 gap: "8px",
               }}
             >
@@ -262,6 +267,16 @@ function DashboardLayout() {
 
               {notificationsCount > 0 && (
                 <span className={styles.badge}>{notificationsCount}</span>
+              )}
+
+              {showNotifications && notificationsCount > 0 && (
+                <div className={styles.notificationsBox}>
+                  {notifications.map((item, index) => (
+                    <div key={index} className={styles.notificationItem}>
+                      🔔 {item}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 

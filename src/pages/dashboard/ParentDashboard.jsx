@@ -27,9 +27,13 @@ function ParentDashboard() {
 
   const overview = data?.overview || {};
 
-  const appointment = appointments.sort(
-    (a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc),
-  )[0];
+  const now = new Date();
+
+  const upcomingAppointments = appointments
+    .filter((a) => new Date(a.scheduledAtUtc) > now && a.status !== 3)
+    .sort((a, b) => new Date(a.scheduledAtUtc) - new Date(b.scheduledAtUtc));
+
+  const appointment = upcomingAppointments[0];
 
   const child = children[0];
 
@@ -54,6 +58,14 @@ function ParentDashboard() {
 
     isToday = date.toDateString() === new Date().toDateString();
   }
+
+  const hasAiResult =
+    child?.averageAccuracyScore !== null &&
+    child?.averageAccuracyScore !== undefined;
+
+  const score = hasAiResult
+    ? Math.min(100, Math.max(0, child.averageAccuracyScore))
+    : null;
 
   const getLevel = (score) => {
     if (score === null) return "جاري التحليل ⏳";
@@ -89,12 +101,25 @@ function ParentDashboard() {
     try {
       setStarting(true);
 
-      const plans = await getTreatmentPlans(child.childId);
+      const plansRes = await getTreatmentPlans(child.childId);
 
-      const plan = plans?.items?.[0];
+      const plans = plansRes?.items || [];
 
-      if (!plan) {
-        toast.error("لا توجد خطة علاج ❌");
+      if (plans.length === 0) {
+        toast.error("لا توجد خطط علاجية ❌");
+
+        return;
+      }
+
+      const allExercises = plans.flatMap((plan) =>
+        (plan.exercises || []).map((ex) => ({
+          ...ex,
+          planId: plan.id,
+        })),
+      );
+
+      if (allExercises.length === 0) {
+        toast.error("لا توجد تمارين ❌");
 
         return;
       }
@@ -105,10 +130,10 @@ function ParentDashboard() {
 
       const completedIds = sessions
         .filter((s) => s.status === 5)
-        .map((s) => s.exerciseId);
+        .map((s) => s.treatmentPlanExerciseId);
 
-      const remainingExercise = plan.exercises?.find(
-        (ex) => !completedIds.includes(ex.exerciseId),
+      const remainingExercise = allExercises.find(
+        (ex) => !completedIds.includes(ex.id),
       );
 
       if (!remainingExercise) {
@@ -133,14 +158,6 @@ function ParentDashboard() {
       setStarting(false);
     }
   };
-
-  const hasScore =
-    child?.averageAccuracyScore !== null &&
-    child?.averageAccuracyScore !== undefined;
-
-  const score = hasScore
-    ? Math.min(100, Math.max(0, child.averageAccuracyScore))
-    : null;
 
   return (
     <>
@@ -199,6 +216,20 @@ function ParentDashboard() {
           >
             {score === null ? "..." : `${score}%`}
           </div>
+
+          {score === null && (
+            <p
+              style={{
+                marginTop: "10px",
+                color: "#94a3b8",
+                fontWeight: "700",
+                fontSize: "14px",
+                textAlign: "center",
+              }}
+            >
+              جاري التحليل ⏳
+            </p>
+          )}
         </div>
       </div>
 
@@ -237,16 +268,31 @@ function ParentDashboard() {
                 </div>
               </div>
 
-              <button
-                className={styles.confirmBtn}
-                onClick={() =>
-                  navigate(
-                    `/dashboard/appointments?appointmentId=${appointment.appointmentId}`,
-                  )
-                }
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  marginTop: "10px",
+                }}
               >
-                عرض الجلسة
-              </button>
+                <button
+                  className={styles.confirmBtn}
+                  onClick={() =>
+                    navigate(
+                      `/dashboard/appointments?appointmentId=${appointment.appointmentId}`,
+                    )
+                  }
+                >
+                  عرض الجلسة
+                </button>
+
+                <button
+                  className={styles.startBtn}
+                  onClick={() => toast.success("تم تأكيد حضور الجلسة ✅")}
+                >
+                  تأكيد الحضور
+                </button>
+              </div>
             </>
           ) : (
             <p>لا يوجد موعد</p>
@@ -269,7 +315,6 @@ function ParentDashboard() {
                   className={styles.progressFill}
                   style={{
                     width: score === null ? "0%" : `${score}%`,
-
                     backgroundColor: getColor(score),
                   }}
                 />

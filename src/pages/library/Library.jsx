@@ -6,16 +6,20 @@ import { getSessionsByChild, startSession } from "../../api/sessionsService";
 import { getChildren } from "../../api/childrenService";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+
 function Library() {
   const [plans, setPlans] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
   const navigate = useNavigate();
+
   useEffect(() => {
     loadData();
   }, []);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -70,25 +74,21 @@ function Library() {
   }, [search, plans]);
 
   const completedExercises = new Set(
-    sessions.filter((s) => s.status === 5).map((s) => s.exerciseId),
+    sessions
+      .filter((s) => s.status === 5)
+      .map((s) => s.treatmentPlanExerciseId),
   );
 
-  const isCompleted = (exerciseId) => {
-    return completedExercises.has(exerciseId);
+  const isCompleted = (id) => {
+    return completedExercises.has(id);
   };
 
-  const allExercises = plans.flatMap((p) => p.exercises || []);
-
-  const uniqueExercises = [
-    ...new Map(allExercises.map((ex) => [ex.exerciseId, ex])).values(),
-  ];
-
-  const completedCount = uniqueExercises.filter((ex) =>
-    completedExercises.has(ex.exerciseId),
+  const completedCount = filtered.filter((ex) =>
+    completedExercises.has(ex.id),
   ).length;
 
-  const progress = uniqueExercises.length
-    ? Math.round((completedCount / uniqueExercises.length) * 100)
+  const progress = filtered.length
+    ? Math.round((completedCount / filtered.length) * 100)
     : 0;
 
   const startExercise = async (item) => {
@@ -105,16 +105,13 @@ function Library() {
 
       const session = await startSession({
         childId: child.id,
-
         exerciseId: item.exerciseId,
-
         treatmentPlanExerciseId: item.id,
       });
 
       navigate(`/dashboard/exercises/${item.exerciseId}`, {
         state: {
           sessionId: session.id,
-
           treatmentPlanExerciseId: item.id,
         },
       });
@@ -165,10 +162,10 @@ function Library() {
       ) : (
         <div className={libraryStyles.grid}>
           {filtered.map((item) => {
-            const completed = isCompleted(item.exerciseId);
+            const completed = isCompleted(item.id);
 
             return (
-              <div key={item.exerciseId} className={libraryStyles.card}>
+              <div key={item.id} className={libraryStyles.card}>
                 <div className={libraryStyles.imageBox}>
                   <img
                     src={item.mediaThumbnailUrl || "/default.png"}

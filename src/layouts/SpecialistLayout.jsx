@@ -13,14 +13,20 @@ import {
 } from "react-icons/fa";
 
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+
 import styles from "../assets/dashboard.module.css";
+
 import logo from "../assets/images/logo.png";
-import { useState } from "react";
+
+import { useMemo, useState } from "react";
+
 import { useApp } from "../Context/AppContext";
+
 import { clearAuth } from "../utils/auth";
 
 function SpecialistLayout() {
   const navigate = useNavigate();
+
   const location = useLocation();
 
   const { data, profileImage, specialistName } = useApp();
@@ -29,22 +35,62 @@ function SpecialistLayout() {
 
   const alerts = data?.alerts || {};
 
-  const notificationsCount =
-    (alerts?.childrenWithoutUpcomingAppointments || 0) +
-    (alerts?.childrenWithLowAccuracy || 0);
+  const notifications = useMemo(() => {
+    const list = [];
+
+    if (alerts?.childrenWithoutUpcomingAppointments > 0) {
+      list.push(
+        `يوجد ${alerts.childrenWithoutUpcomingAppointments} أطفال بدون مواعيد قادمة`,
+      );
+    }
+
+    if (alerts?.childrenWithLowAccuracy > 0) {
+      list.push(`يوجد ${alerts.childrenWithLowAccuracy} أطفال يحتاجون متابعة`);
+    }
+
+    if (alerts?.pendingReports > 0) {
+      list.push(`يوجد ${alerts.pendingReports} تقارير تحتاج مراجعة`);
+    }
+
+    return list;
+  }, [alerts]);
+
+  const notificationsCount = notifications.length;
 
   const getTitle = () => {
-    if (location.pathname.includes("patients")) return "ملفات المرضى";
-    if (location.pathname.includes("appointments")) return "جدول المواعيد";
-    if (location.pathname.includes("reports")) return "التقارير الطبية";
-    if (location.pathname.includes("chat")) return "الرسائل";
-    if (location.pathname.includes("exercises")) return "التمارين";
-    if (location.pathname.includes("settings")) return "الإعدادات";
-    if (location.pathname.includes("profile")) return "الملف الشخصي";
+    if (location.pathname.includes("patients")) {
+      return "ملفات المرضى";
+    }
+
+    if (location.pathname.includes("appointments")) {
+      return "جدول المواعيد";
+    }
+
+    if (location.pathname.includes("reports")) {
+      return "التقارير الطبية";
+    }
+
+    if (location.pathname.includes("chat")) {
+      return "الرسائل";
+    }
+
+    if (location.pathname.includes("exercises")) {
+      return "الخطط العلاجية";
+    }
+
+    if (location.pathname.includes("settings")) {
+      return "الإعدادات";
+    }
+
+    if (location.pathname.includes("profile")) {
+      return "الملف الشخصي";
+    }
+
     return "لوحة التحكم";
   };
 
   const currentTitle = getTitle();
+
   const isDashboard = location.pathname === "/dashboard/specialist";
 
   return (
@@ -52,6 +98,7 @@ function SpecialistLayout() {
       <div className={styles.sidebar}>
         <div className="logo-container">
           <span className="logo-text">رفيق</span>
+
           <div className="logo-circle">
             <img src={logo} alt="logo" />
           </div>
@@ -108,7 +155,7 @@ function SpecialistLayout() {
               to="/dashboard/specialist/exercises"
               className={({ isActive }) => (isActive ? styles.active : "")}
             >
-              <FaDumbbell />الخطه العلاجيه
+              <FaDumbbell /> الخطط العلاجية
             </NavLink>
           </li>
 
@@ -134,7 +181,10 @@ function SpecialistLayout() {
             <div
               onClick={() => {
                 clearAuth();
-                navigate("/login", { replace: true });
+
+                navigate("/login", {
+                  replace: true,
+                });
               }}
               style={{
                 cursor: "pointer",
@@ -161,7 +211,7 @@ function SpecialistLayout() {
           </div>
 
           <div className={styles.headerLeft}>
-            <div style={{ position: "relative" }}>
+            <div className={styles.notificationWrapper}>
               <FaBell
                 className={styles.iconCircle}
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -172,16 +222,14 @@ function SpecialistLayout() {
               )}
 
               {showNotifications && (
-                <div className={styles.dropdown}>
-                  {alerts?.childrenWithoutUpcomingAppointments > 0 && (
-                    <p>⚠️ في أطفال بدون مواعيد</p>
+                <div className={styles.specialistDropdown}>
+                  {notifications.length > 0 ? (
+                    notifications.map((item, index) => (
+                      <p key={index}>{item}</p>
+                    ))
+                  ) : (
+                    <p>لا يوجد إشعارات حالياً</p>
                   )}
-
-                  {alerts?.childrenWithLowAccuracy > 0 && (
-                    <p>📉 في أطفال محتاجين متابعة</p>
-                  )}
-
-                  {notificationsCount === 0 && <p>لا يوجد إشعارات</p>}
                 </div>
               )}
             </div>
@@ -191,6 +239,7 @@ function SpecialistLayout() {
               onClick={() => navigate("/dashboard/specialist/profile")}
             >
               <span>{specialistName || "..."}</span>
+
               <div className={styles.avatarWrapper}>
                 {profileImage ? (
                   <img

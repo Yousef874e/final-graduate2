@@ -55,36 +55,32 @@ function Chat() {
 
     connectionRef.current = conn;
 
-    conn.on(
-      "ReceiveMessage",
+    conn.on("ReceiveMessage", async (message) => {
+      if (message.childId !== activeChatRef.current?.childId) return;
 
-      async (message) => {
-        if (message.childId !== activeChatRef.current?.childId) return;
+      setMessages((prev) => {
+        if (prev.find((m) => m.id === message.id)) return prev;
 
-        setMessages((prev) => {
-          if (prev.find((m) => m.id === message.id)) return prev;
+        return [...prev, message];
+      });
 
-          return [...prev, message];
-        });
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.childId === message.childId
+            ? {
+                ...c,
+                lastMessage: message.content,
+              }
+            : c,
+        ),
+      );
 
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.childId === message.childId
-              ? {
-                  ...c,
-                  lastMessage: message.content,
-                }
-              : c,
-          ),
-        );
+      if (Number(message.receiverUserId) === myId) {
+        await markMessageRead(message.id);
+      }
 
-        if (Number(message.receiverUserId) === myId) {
-          await markMessageRead(message.id);
-        }
-
-        scrollDown();
-      },
-    );
+      scrollDown();
+    });
   };
 
   const loadConversations = async () => {
@@ -99,12 +95,22 @@ function Chat() {
             try {
               const child = await getChildProfile(chat.childId);
 
-              const parent = await getParentProfileById(child.parentProfileId);
+              let parentName = "ولي الأمر";
+
+              if (child?.parentProfileId) {
+                const parent = await getParentProfileById(
+                  child.parentProfileId,
+                );
+
+                if (parent?.fullName) {
+                  parentName = parent.fullName;
+                }
+              }
 
               return {
                 ...chat,
 
-                parentName: parent.fullName,
+                parentName,
               };
             } catch {
               return {
@@ -149,9 +155,7 @@ function Chat() {
 
       await Promise.all(
         msgs
-
           .filter((m) => !m.isRead && Number(m.receiverUserId) === myId)
-
           .map((m) => markMessageRead(m.id)),
       );
 
@@ -224,7 +228,6 @@ function Chat() {
             key={c.conversationId}
             className={`
               ${styles.chatItem}
-
               ${
                 activeChat?.conversationId === c.conversationId
                   ? styles.active

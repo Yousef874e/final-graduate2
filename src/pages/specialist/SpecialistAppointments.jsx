@@ -29,7 +29,9 @@ function SpecialistAppointments() {
   const loadAppointments = async () => {
     try {
       const res = await getChildren();
+
       const childrenList = res?.items || [];
+
       setChildren(childrenList);
 
       let allAppointments = [];
@@ -37,6 +39,7 @@ function SpecialistAppointments() {
       const promises = childrenList.map(async (child) => {
         try {
           const res = await getAppointmentsByChildId(child.id);
+
           const items = res?.items || [];
 
           return items.map((a) => ({
@@ -65,71 +68,84 @@ function SpecialistAppointments() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!childId) return toast.error("اختار طفل");
-    if (!date || !time) return toast.error("حدد التاريخ والوقت");
+    if (!childId) {
+      return toast.error("اختار طفل");
+    }
 
-    const [hours, minutes] = time.split(":").map(Number);
+    if (!date || !time) {
+      return toast.error("حدد التاريخ والوقت");
+    }
 
-    const localDate = new Date(date);
-    localDate.setHours(hours, minutes, 0, 0);
+    const localDate = new Date(`${date}T${time}:00`);
 
-    if (localDate <= new Date()) return toast.error("لازم وقت في المستقبل");
+    const scheduledAtUtc = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    );
 
-    const scheduledAtUtc = localDate.toISOString();
+    if (localDate <= new Date()) {
+      return toast.error("لازم وقت في المستقبل");
+    }
 
     try {
       if (editId) {
         await updateAppointment(editId, {
-          scheduledAtUtc,
+          scheduledAtUtc: scheduledAtUtc.toISOString(),
           durationMinutes: Number(duration),
           notes,
         });
+
         toast.success("تم التعديل");
       } else {
         await createAppointment({
           childId: Number(childId),
-          scheduledAtUtc,
+          scheduledAtUtc: scheduledAtUtc.toISOString(),
           durationMinutes: Number(duration),
           notes,
         });
+
         toast.success("تم الإضافة");
       }
 
       handleCancel();
+
       loadAppointments();
     } catch (err) {
       console.log(err);
+
       toast.error("فشل العملية");
     }
   };
 
   const handleEdit = (a) => {
     setEditId(a.id);
+
     setShowForm(true);
 
     const d = new Date(a.scheduledAtUtc);
 
-    setDate(d.toLocaleDateString("en-CA"));
-    setTime(
-      d.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-    );
+    const offsetDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+
+    setDate(offsetDate.toISOString().split("T")[0]);
+
+    setTime(offsetDate.toTimeString().slice(0, 5));
 
     setDuration(a.durationMinutes);
+
     setNotes(a.notes || "");
+
     setChildId(a.childId);
   };
 
   const handleCancelAppointment = async (id) => {
     try {
       await cancelAppointment(id);
+
       setAppointments((prev) => prev.filter((a) => a.id !== id));
+
       toast.success("تم الإلغاء");
     } catch (err) {
       console.log(err);
+
       toast.error("لا يمكن إلغاء هذا الموعد");
     }
   };
@@ -137,53 +153,74 @@ function SpecialistAppointments() {
   const handleCompleteAppointment = async (id) => {
     try {
       await completeAppointment(id);
+
       toast.success("تم الإنهاء");
+
       loadAppointments();
     } catch (err) {
       console.log(err);
+
       toast.error("لا يمكن إنهاء هذا الموعد");
     }
   };
 
   const handleCancel = () => {
     setShowForm(false);
+
     setEditId(null);
+
     setDate("");
+
     setTime("");
+
     setDuration(30);
+
     setNotes("");
+
     setChildId("");
   };
 
   const nextMonth = () => {
     const d = new Date(currentDate);
+
     d.setMonth(d.getMonth() + 1);
+
     setCurrentDate(d);
   };
 
   const prevMonth = () => {
     const d = new Date(currentDate);
+
     d.setMonth(d.getMonth() - 1);
+
     setCurrentDate(d);
   };
 
   const getMonthDays = () => {
     const year = currentDate.getFullYear();
+
     const month = currentDate.getMonth();
 
     const firstDay = new Date(year, month, 1).getDay();
+
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     const days = [];
 
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
 
     return days;
   };
 
   const hasAppointment = (day) => {
     if (!day) return false;
+
     return appointments.some(
       (a) => new Date(a.scheduledAtUtc).toDateString() === day.toDateString(),
     );
@@ -203,12 +240,14 @@ function SpecialistAppointments() {
       <div className={styles.calendar}>
         <div className={styles.calendarTop}>
           <button onClick={prevMonth}>‹</button>
+
           <h3>
             {currentDate.toLocaleString("ar-EG", {
               month: "long",
               year: "numeric",
             })}
           </h3>
+
           <button onClick={nextMonth}>›</button>
         </div>
 
@@ -223,7 +262,11 @@ function SpecialistAppointments() {
             <div
               key={i}
               className={`${styles.day}
-              ${d && selectedDate.toDateString() === d.toDateString() ? styles.active : ""}
+              ${
+                d && selectedDate.toDateString() === d.toDateString()
+                  ? styles.active
+                  : ""
+              }
               ${hasAppointment(d) ? styles.hasEvent : ""}`}
               onClick={() => d && setSelectedDate(d)}
             >
@@ -241,6 +284,7 @@ function SpecialistAppointments() {
               onChange={(e) => setChildId(Number(e.target.value))}
             >
               <option value="">اختر الطفل</option>
+
               {children.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.fullName}
@@ -253,6 +297,7 @@ function SpecialistAppointments() {
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
+
             <input
               type="time"
               value={time}
@@ -269,6 +314,7 @@ function SpecialistAppointments() {
 
             <div className={styles.actions}>
               <button onClick={handleSubmit}>حفظ</button>
+
               <button className={styles.cancel} onClick={handleCancel}>
                 إلغاء
               </button>
@@ -282,6 +328,7 @@ function SpecialistAppointments() {
           <div key={a.id} className={styles.card}>
             <div>
               <h4>{a.notes || "جلسة"}</h4>
+
               <p>{a.childName}</p>
 
               <p>{new Date(a.scheduledAtUtc).toLocaleDateString("ar-EG")}</p>
@@ -299,9 +346,11 @@ function SpecialistAppointments() {
               {a.status === 1 && (
                 <>
                   <button onClick={() => handleEdit(a)}>تعديل</button>
+
                   <button onClick={() => handleCancelAppointment(a.id)}>
                     إلغاء
                   </button>
+
                   <button onClick={() => handleCompleteAppointment(a.id)}>
                     إنهاء
                   </button>

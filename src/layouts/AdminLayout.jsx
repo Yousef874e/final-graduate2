@@ -1,5 +1,7 @@
 import "../assets/adminLayout.css";
+
 import logo from "../assets/images/logo.png";
+
 import {
   FaHome,
   FaUsers,
@@ -10,22 +12,32 @@ import {
   FaBook,
   FaSignOutAlt,
 } from "react-icons/fa";
+
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+
 import { useState } from "react";
+
 import { clearAuth } from "../utils/auth";
 
 function AdminLayout() {
   const navigate = useNavigate();
+
   const location = useLocation();
 
   const isActive = (path) => location.pathname.startsWith(path);
 
   const [showNotif, setShowNotif] = useState(false);
-  const [issuesCount, setIssuesCount] = useState(0);
+
+  const [notifications, setNotifications] = useState([]);
+
+  const issuesCount = notifications.length;
 
   const handleLogout = () => {
     clearAuth();
-    navigate("/login", { replace: true });
+
+    navigate("/login", {
+      replace: true,
+    });
   };
 
   return (
@@ -35,6 +47,7 @@ function AdminLayout() {
           <div className="logo-circle">
             <img src={logo} alt="logo" />
           </div>
+
           <span className="logo-text">رفيق</span>
         </div>
 
@@ -101,7 +114,11 @@ function AdminLayout() {
           <h3>لوحة تحكم الأدمن</h3>
 
           <div className="header-row">
-            <div style={{ position: "relative" }}>
+            <div
+              style={{
+                position: "relative",
+              }}
+            >
               <FaBell
                 className="bell"
                 onClick={() => setShowNotif(!showNotif)}
@@ -110,20 +127,28 @@ function AdminLayout() {
               {issuesCount > 0 && (
                 <span className="notif-badge">{issuesCount}</span>
               )}
-            </div>
 
-            {showNotif && (
-              <div className="notif-box">
-                {issuesCount > 0
-                  ? `يوجد ${issuesCount} مشاكل تحتاج متابعة`
-                  : "لا يوجد مشاكل حالياً"}
-              </div>
-            )}
+              {showNotif && (
+                <div className="notif-box">
+                  {notifications.length > 0 ? (
+                    notifications.map((item, index) => (
+                      <p key={index}>{item}</p>
+                    ))
+                  ) : (
+                    <p>لا يوجد مشاكل حالياً</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="content">
-          <Outlet context={{ setIssuesCount }} />
+          <Outlet
+            context={{
+              setNotifications,
+            }}
+          />
         </div>
       </div>
     </div>
