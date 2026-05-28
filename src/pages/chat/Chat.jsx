@@ -56,6 +56,8 @@ function Chat() {
     connectionRef.current = conn;
 
     conn.on("ReceiveMessage", async (message) => {
+      console.log("New Message => ", message);
+
       if (message.childId !== activeChatRef.current?.childId) return;
 
       setMessages((prev) => {
@@ -87,32 +89,46 @@ function Chat() {
     try {
       const res = await getConversations();
 
+      console.log("Conversations => ", res);
+
       let list = res || [];
 
       if (role === "Specialist") {
         list = await Promise.all(
           list.map(async (chat) => {
+            console.log("Chat Object => ", chat);
+
             try {
               const child = await getChildProfile(chat.childId);
 
-              let parentName = "ولي الأمر";
+              console.log("Child Object => ", child);
 
-              if (child?.parentProfileId) {
+              console.log("Parent ID => ", child.parentProfileId);
+
+              try {
                 const parent = await getParentProfileById(
                   child.parentProfileId,
                 );
 
-                if (parent?.fullName) {
-                  parentName = parent.fullName;
-                }
+                console.log("Parent Response => ", parent);
+
+                return {
+                  ...chat,
+
+                  parentName: parent?.fullName || "ولي الأمر",
+                };
+              } catch (err) {
+                console.log("Parent Error => ", err);
+
+                return {
+                  ...chat,
+
+                  parentName: "ولي الأمر",
+                };
               }
+            } catch (err) {
+              console.log("Child Error => ", err);
 
-              return {
-                ...chat,
-
-                parentName,
-              };
-            } catch {
               return {
                 ...chat,
 
@@ -122,6 +138,8 @@ function Chat() {
           }),
         );
       }
+
+      console.log("Final List => ", list);
 
       setConversations(list);
 
@@ -134,7 +152,9 @@ function Chat() {
 
         loadMessages(firstChat.childId);
       }
-    } catch {
+    } catch (err) {
+      console.log("Conversation Error => ", err);
+
       toast.error("فشل تحميل المحادثات");
     }
   };
@@ -146,6 +166,8 @@ function Chat() {
 
     try {
       const res = await getChildMessages(childId);
+
+      console.log("Messages => ", res);
 
       const msgs = (res.items || []).sort(
         (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc),
@@ -160,7 +182,9 @@ function Chat() {
       );
 
       scrollDown();
-    } catch {
+    } catch (err) {
+      console.log("Messages Error => ", err);
+
       toast.error("فشل تحميل الرسائل");
     } finally {
       setLoading(false);
@@ -187,6 +211,8 @@ function Chat() {
         content: text,
       });
 
+      console.log("Sent Message => ", newMsg);
+
       setMessages((prev) => {
         if (prev.find((m) => m.id === newMsg.id)) return prev;
 
@@ -207,7 +233,9 @@ function Chat() {
       setText("");
 
       scrollDown();
-    } catch {
+    } catch (err) {
+      console.log("Send Error => ", err);
+
       toast.error("فشل الإرسال ❌");
     }
   };

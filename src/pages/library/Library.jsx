@@ -1,17 +1,27 @@
 import styles from "../../assets/dashboard.module.css";
 import libraryStyles from "../../assets/library.module.css";
+
 import { useEffect, useState } from "react";
+
 import { getTreatmentPlans } from "../../api/treatmentPlansService";
+
 import { getSessionsByChild, startSession } from "../../api/sessionsService";
+
 import { getChildren } from "../../api/childrenService";
+
 import { useNavigate } from "react-router-dom";
+
 import toast from "react-hot-toast";
 
 function Library() {
   const [plans, setPlans] = useState([]);
+
   const [sessions, setSessions] = useState([]);
+
   const [filtered, setFiltered] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
@@ -30,7 +40,9 @@ function Library() {
 
       if (!child) {
         setPlans([]);
+
         setSessions([]);
+
         setFiltered([]);
 
         return;
@@ -40,6 +52,7 @@ function Library() {
 
       const [planRes, sessionRes] = await Promise.all([
         getTreatmentPlans(childId),
+
         getSessionsByChild(childId),
       ]);
 
@@ -49,7 +62,17 @@ function Library() {
 
       setSessions(sessionRes?.items || []);
 
-      const exercises = plansData.flatMap((p) => p.exercises || []);
+      const exercises = plansData.flatMap((p) =>
+        (p.exercises || []).map((ex) => ({
+          ...ex,
+
+          planTitle: p.title,
+
+          startDate: p.startDate,
+
+          endDate: p.endDate,
+        })),
+      );
 
       setFiltered(exercises);
     } catch (err) {
@@ -62,7 +85,17 @@ function Library() {
   };
 
   useEffect(() => {
-    let exercises = plans.flatMap((p) => p.exercises || []);
+    let exercises = plans.flatMap((p) =>
+      (p.exercises || []).map((ex) => ({
+        ...ex,
+
+        planTitle: p.title,
+
+        startDate: p.startDate,
+
+        endDate: p.endDate,
+      })),
+    );
 
     if (search) {
       exercises = exercises.filter((item) =>
@@ -105,13 +138,16 @@ function Library() {
 
       const session = await startSession({
         childId: child.id,
+
         exerciseId: item.exerciseId,
+
         treatmentPlanExerciseId: item.id,
       });
 
       navigate(`/dashboard/exercises/${item.exerciseId}`, {
         state: {
           sessionId: session.id,
+
           treatmentPlanExerciseId: item.id,
         },
       });
@@ -182,6 +218,11 @@ function Library() {
                 <h4>{item.exerciseName}</h4>
 
                 <p className={libraryStyles.desc}>تمرين علاجي مخصص للطفل</p>
+
+                <p className={libraryStyles.date}>
+                  من {item.startDate?.split("T")[0]} إلى{" "}
+                  {item.endDate?.split("T")[0]}
+                </p>
 
                 <div className={libraryStyles.infoBox}>
                   <div className={libraryStyles.infoItem}>

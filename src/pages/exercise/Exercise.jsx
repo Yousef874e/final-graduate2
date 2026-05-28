@@ -39,8 +39,7 @@ function ExerciseDetails() {
 
   const [childId, setChildId] = useState(null);
 
-  const treatmentPlanExerciseId =
-    location.state?.treatmentPlanExerciseId;
+  const treatmentPlanExerciseId = location.state?.treatmentPlanExerciseId;
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -55,6 +54,14 @@ function ExerciseDetails() {
   };
 
   useEffect(() => {
+    if (!treatmentPlanExerciseId) {
+      toast.error("لم يتم العثور على بيانات التمرين ❌");
+
+      navigate("/dashboard/library");
+
+      return;
+    }
+
     if (id) {
       init();
     }
@@ -84,8 +91,8 @@ function ExerciseDetails() {
 
       const alreadyCompleted = sessions.find(
         (s) =>
-          s.treatmentPlanExerciseId === treatmentPlanExerciseId &&
-          s.status === 5,
+          Number(s.treatmentPlanExerciseId) ===
+            Number(treatmentPlanExerciseId) && s.status === 4,
       );
 
       if (alreadyCompleted) {
@@ -115,7 +122,9 @@ function ExerciseDetails() {
 
       const existingSession = sessions.find(
         (s) =>
-          s.treatmentPlanExerciseId === treatmentPlanExerciseId &&
+          Number(s.treatmentPlanExerciseId) ===
+            Number(treatmentPlanExerciseId) &&
+          s.status !== 4 &&
           s.status !== 5,
       );
 
@@ -130,7 +139,7 @@ function ExerciseDetails() {
 
         exerciseId: selected.id,
 
-        treatmentPlanExerciseId,
+        treatmentPlanExerciseId: Number(treatmentPlanExerciseId),
       });
 
       if (!session?.id) {
@@ -181,11 +190,9 @@ function ExerciseDetails() {
         return;
       }
 
-      await submitSessionVideo(sessionId, media.id);
+      const submitRes = await submitSessionVideo(sessionId, media.id);
 
-      const updatedSessions = await getSessionsByChild(childId);
-
-      console.log(updatedSessions.items);
+      console.log("submitSessionVideo response:", submitRes);
 
       await loadData();
 

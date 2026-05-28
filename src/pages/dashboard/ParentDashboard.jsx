@@ -94,7 +94,6 @@ function ParentDashboard() {
   const handleStartSession = async () => {
     if (!child?.childId) {
       toast.error("لا يوجد طفل ❌");
-
       return;
     }
 
@@ -107,20 +106,19 @@ function ParentDashboard() {
 
       if (plans.length === 0) {
         toast.error("لا توجد خطط علاجية ❌");
-
         return;
       }
 
       const allExercises = plans.flatMap((plan) =>
         (plan.exercises || []).map((ex) => ({
           ...ex,
+          treatmentPlanExerciseId: ex.id,
           planId: plan.id,
         })),
       );
 
       if (allExercises.length === 0) {
         toast.error("لا توجد تمارين ❌");
-
         return;
       }
 
@@ -129,25 +127,26 @@ function ParentDashboard() {
       const sessions = sessionsRes?.items || [];
 
       const completedIds = sessions
-        .filter((s) => s.status === 5)
-        .map((s) => s.treatmentPlanExerciseId);
+        .filter((s) => [2, 3, 4].includes(Number(s.status)))
+        .map((s) => Number(s.treatmentPlanExerciseId));
 
       const remainingExercise = allExercises.find(
-        (ex) => !completedIds.includes(ex.id),
+        (ex) => !completedIds.includes(Number(ex.treatmentPlanExerciseId)),
       );
 
       if (!remainingExercise) {
         toast.success("تم إنهاء جميع التمارين ✅");
-
         return;
       }
 
       navigate(`/dashboard/exercises/${remainingExercise.exerciseId}`, {
         state: {
-          treatmentPlanExerciseId: remainingExercise.id,
+          treatmentPlanExerciseId: remainingExercise.treatmentPlanExerciseId,
         },
       });
     } catch (err) {
+      console.log(err);
+
       const errorMsg =
         err?.response?.data?.errors?.[0] ||
         err?.response?.data?.title ||
