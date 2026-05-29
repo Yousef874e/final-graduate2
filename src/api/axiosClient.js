@@ -1,12 +1,9 @@
 import axios from "axios";
-
 import { clearAuth } from "../utils/auth";
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL + "/api/v1",
-
   timeout: 15000,
-
   headers: {
     Accept: "application/json",
   },
@@ -14,17 +11,11 @@ const axiosClient = axios.create({
 
 const publicRoutes = [
   "/Auth/login",
-
   "/Auth/register/parent",
-
   "/Auth/register/specialist",
-
   "/Auth/forgot-password",
-
   "/Auth/reset-password",
-
   "/Auth/refresh-token",
-
   "/Auth/external/google/link",
 ];
 
@@ -49,7 +40,6 @@ axiosClient.interceptors.request.use((config) => {
 
 const logout = () => {
   clearAuth();
-
   window.location.href = "/login";
 };
 
@@ -70,13 +60,20 @@ axiosClient.interceptors.response.use(
     if (error.response?.status === 401) {
       const refreshToken = localStorage.getItem("refreshToken");
 
+      console.log("401 Unauthorized");
+      console.log("Refresh Token:", refreshToken);
+
       if (!refreshToken) {
+        console.log("No Refresh Token Found");
+        logout();
         return Promise.reject(error);
       }
 
       originalRequest._retry = true;
 
       try {
+        console.log("Refreshing token...");
+
         const refreshResponse = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/api/v1/Auth/refresh-token`,
           {
@@ -84,20 +81,40 @@ axiosClient.interceptors.response.use(
           },
         );
 
-        const newAccessToken = refreshResponse.data.accessToken;
+        console.log(
+          "Refresh Response:",
+          refreshResponse.data,
+        );
 
-        const newRefreshToken = refreshResponse.data.refreshToken;
+        const newAccessToken =
+          refreshResponse.data.accessToken;
 
-        localStorage.setItem("accessToken", newAccessToken);
+        const newRefreshToken =
+          refreshResponse.data.refreshToken;
 
-        localStorage.setItem("refreshToken", newRefreshToken);
+        localStorage.setItem(
+          "accessToken",
+          newAccessToken,
+        );
 
-        axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
+        localStorage.setItem(
+          "refreshToken",
+          newRefreshToken,
+        );
 
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        axiosClient.defaults.headers.common.Authorization =
+          `Bearer ${newAccessToken}`;
+
+        originalRequest.headers.Authorization =
+          `Bearer ${newAccessToken}`;
 
         return axiosClient(originalRequest);
       } catch (refreshError) {
+        console.log(
+          "Refresh Error:",
+          refreshError?.response?.data,
+        );
+
         logout();
 
         return Promise.reject(refreshError);

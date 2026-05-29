@@ -52,16 +52,16 @@ function Library() {
 
       const [planRes, sessionRes] = await Promise.all([
         getTreatmentPlans(childId),
-
         getSessionsByChild(childId),
       ]);
 
       const plansData = planRes?.items || [];
+      const sessionsData = sessionRes?.items || [];
+
+      console.log("sessions", sessionsData);
 
       setPlans(plansData);
-
-      setSessions(sessionRes?.items || []);
-
+      setSessions(sessionsData);
       const exercises = plansData.flatMap((p) =>
         (p.exercises || []).map((ex) => ({
           ...ex,
@@ -108,18 +108,17 @@ function Library() {
 
   const completedExercises = new Set(
     sessions
-      .filter((s) => s.status === 5)
-      .map((s) => s.treatmentPlanExerciseId),
+      .filter((s) => [2, 3, 4, 5].includes(Number(s.status)))
+      .map((s) => Number(s.treatmentPlanExerciseId)),
   );
-
+  console.log("completedExercises", [...completedExercises]);
+  console.log("filtered", filtered);
   const isCompleted = (id) => {
-    return completedExercises.has(id);
+    return completedExercises.has(Number(id));
   };
-
   const completedCount = filtered.filter((ex) =>
-    completedExercises.has(ex.id),
+    completedExercises.has(Number(ex.id)),
   ).length;
-
   const progress = filtered.length
     ? Math.round((completedCount / filtered.length) * 100)
     : 0;

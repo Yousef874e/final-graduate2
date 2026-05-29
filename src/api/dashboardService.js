@@ -7,6 +7,7 @@ export const getAdminDashboard = async () => {
 
 export const getParentDashboard = async () => {
   const res = await axiosClient.get("/parent/dashboard")
+ 
   return res.data
 }
 

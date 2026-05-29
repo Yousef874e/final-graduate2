@@ -197,7 +197,7 @@ export const AppProvider = ({ children }) => {
         }
       }
     } catch (err) {
-      console.error("Context Error:", err);
+      
     } finally {
       setLoading(false);
     }

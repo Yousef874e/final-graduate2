@@ -89,11 +89,15 @@ function ExerciseDetails() {
 
       const sessions = sessionsRes?.items || [];
 
+      console.log("All Sessions:", sessions);
+
       const alreadyCompleted = sessions.find(
         (s) =>
           Number(s.treatmentPlanExerciseId) ===
             Number(treatmentPlanExerciseId) && s.status === 4,
       );
+
+      console.log("alreadyCompleted:", alreadyCompleted);
 
       if (alreadyCompleted) {
         toast.success("تم إنهاء التمرين بالفعل ✅");
@@ -128,6 +132,8 @@ function ExerciseDetails() {
           s.status !== 5,
       );
 
+      console.log("existingSession:", existingSession);
+
       if (existingSession) {
         setSessionId(existingSession.id);
 
@@ -141,6 +147,8 @@ function ExerciseDetails() {
 
         treatmentPlanExerciseId: Number(treatmentPlanExerciseId),
       });
+
+      console.log("startSession response:", session);
 
       if (!session?.id) {
         toast.error("فشل بدء الجلسة ❌");
@@ -184,16 +192,15 @@ function ExerciseDetails() {
         childId: Number(childId),
       });
 
+      console.log("uploadVideo response:", media);
+
       if (!media?.id) {
         toast.error("فشل رفع الفيديو ❌");
 
         return;
       }
 
-      const submitRes = await submitSessionVideo(sessionId, media.id);
-
-      console.log("submitSessionVideo response:", submitRes);
-
+      await submitSessionVideo(sessionId, media.id);
       await loadData();
 
       toast.success("تم رفع الفيديو بنجاح ✅");

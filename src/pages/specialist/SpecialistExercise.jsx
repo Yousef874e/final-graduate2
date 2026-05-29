@@ -342,7 +342,23 @@ function SpecialistExercise() {
 
               <select
                 value={childId}
-                onChange={(e) => setChildId(e.target.value)}
+                onChange={async (e) => {
+                  const id = e.target.value;
+
+                  setChildId(id);
+
+                  try {
+                    const plansRes = await getTreatmentPlans(id);
+
+                    setPlans(plansRes?.items || []);
+                  } catch (err) {
+                    console.log(err);
+
+                    setPlans([]);
+
+                    toast.error("فشل تحميل الخطط");
+                  }
+                }}
               >
                 <option value="">اختر الطفل</option>
 

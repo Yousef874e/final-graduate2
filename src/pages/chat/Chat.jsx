@@ -1,5 +1,4 @@
 import styles from "../../assets/chat.module.css";
-
 import { useEffect, useState, useRef } from "react";
 
 import { useApp } from "../../Context/AppContext";
@@ -9,6 +8,7 @@ import {
   sendMessage,
   markMessageRead,
   getConversations,
+  deleteMessage,
 } from "../../api/messagesService";
 
 import { getChildProfile } from "../../api/childrenService";
@@ -25,14 +25,11 @@ function Chat() {
   const myId = Number(userId);
 
   const [conversations, setConversations] = useState([]);
-
   const [activeChat, setActiveChat] = useState(null);
-
   const [messages, setMessages] = useState([]);
-
   const [text, setText] = useState("");
-
   const [loading, setLoading] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
   const bottomRef = useRef();
 
@@ -56,8 +53,6 @@ function Chat() {
     connectionRef.current = conn;
 
     conn.on("ReceiveMessage", async (message) => {
-      console.log("New Message => ", message);
-
       if (message.childId !== activeChatRef.current?.childId) return;
 
       setMessages((prev) => {
@@ -89,46 +84,32 @@ function Chat() {
     try {
       const res = await getConversations();
 
-      console.log("Conversations => ", res);
-
       let list = res || [];
 
       if (role === "Specialist") {
         list = await Promise.all(
           list.map(async (chat) => {
-            console.log("Chat Object => ", chat);
-
             try {
               const child = await getChildProfile(chat.childId);
-
-              console.log("Child Object => ", child);
-
-              console.log("Parent ID => ", child.parentProfileId);
 
               try {
                 const parent = await getParentProfileById(
                   child.parentProfileId,
                 );
 
-                console.log("Parent Response => ", parent);
-
                 return {
                   ...chat,
 
                   parentName: parent?.fullName || "ولي الأمر",
                 };
-              } catch (err) {
-                console.log("Parent Error => ", err);
-
+              } catch {
                 return {
                   ...chat,
 
                   parentName: "ولي الأمر",
                 };
               }
-            } catch (err) {
-              console.log("Child Error => ", err);
-
+            } catch {
               return {
                 ...chat,
 
@@ -138,8 +119,6 @@ function Chat() {
           }),
         );
       }
-
-      console.log("Final List => ", list);
 
       setConversations(list);
 
@@ -152,9 +131,7 @@ function Chat() {
 
         loadMessages(firstChat.childId);
       }
-    } catch (err) {
-      console.log("Conversation Error => ", err);
-
+    } catch {
       toast.error("فشل تحميل المحادثات");
     }
   };
@@ -166,8 +143,6 @@ function Chat() {
 
     try {
       const res = await getChildMessages(childId);
-
-      console.log("Messages => ", res);
 
       const msgs = (res.items || []).sort(
         (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc),
@@ -182,9 +157,7 @@ function Chat() {
       );
 
       scrollDown();
-    } catch (err) {
-      console.log("Messages Error => ", err);
-
+    } catch {
       toast.error("فشل تحميل الرسائل");
     } finally {
       setLoading(false);
@@ -211,8 +184,6 @@ function Chat() {
         content: text,
       });
 
-      console.log("Sent Message => ", newMsg);
-
       setMessages((prev) => {
         if (prev.find((m) => m.id === newMsg.id)) return prev;
 
@@ -233,10 +204,22 @@ function Chat() {
       setText("");
 
       scrollDown();
-    } catch (err) {
-      console.log("Send Error => ", err);
-
+    } catch {
       toast.error("فشل الإرسال ❌");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteMessage(id);
+
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+
+      setSelectedMessage(null);
+
+      toast.success("تم حذف الرسالة");
+    } catch {
+      toast.error("فشل حذف الرسالة");
     }
   };
 
@@ -309,6 +292,11 @@ function Chat() {
                 <div
                   key={msg.id}
                   className={isMine ? styles.myMsg : styles.otherMsg}
+                  onClick={() => {
+                    if (!isMine) return;
+
+                    setSelectedMessage(msg);
+                  }}
                 >
                   <p>{msg.content}</p>
 
@@ -335,6 +323,26 @@ function Chat() {
           <button onClick={handleSend}>➤</button>
         </div>
       </div>
+
+      {selectedMessage && (
+        <div className={styles.popupOverlay}>
+          <div className={styles.popup}>
+            <button
+              className={styles.deleteBtn}
+              onClick={() => handleDelete(selectedMessage.id)}
+            >
+              حذف الرسالة
+            </button>
+
+            <button
+              className={styles.cancelBtn}
+              onClick={() => setSelectedMessage(null)}
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
