@@ -35,6 +35,21 @@ function SpecialistExercise() {
 
   const [showModal, setShowModal] = useState(false);
 
+  const toEgyptTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const egyptTime = new Date(date.getTime() + (2 * 60 * 60 * 1000));
+    return egyptTime.toISOString().split("T")[0];
+  };
+
+  const toUTCForAPI = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    const egyptDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+    const utcDate = new Date(egyptDate.getTime() - (2 * 60 * 60 * 1000));
+    return utcDate.toISOString();
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -62,7 +77,13 @@ function SpecialistExercise() {
 
         const plansRes = await getTreatmentPlans(firstChildId);
 
-        setPlans(plansRes.items || []);
+        const plansWithEgyptTime = (plansRes.items || []).map(plan => ({
+          ...plan,
+          startDate: toEgyptTime(plan.startDate),
+          endDate: toEgyptTime(plan.endDate),
+        }));
+
+        setPlans(plansWithEgyptTime);
       }
     } catch (err) {
       console.log(err);
@@ -74,8 +95,14 @@ function SpecialistExercise() {
   const loadPlans = async (id) => {
     try {
       const res = await getTreatmentPlans(id);
+      
+      const plansWithEgyptTime = (res.items || []).map(plan => ({
+        ...plan,
+        startDate: toEgyptTime(plan.startDate),
+        endDate: toEgyptTime(plan.endDate),
+      }));
 
-      setPlans(res.items || []);
+      setPlans(plansWithEgyptTime);
     } catch (err) {
       console.log(err);
     }
@@ -121,40 +148,31 @@ function SpecialistExercise() {
 
   const resetForm = () => {
     setEditingId(null);
-
     setSelectedExercises([]);
-
     setTitle("");
-
     setNotes("");
-
     setStartDate("");
-
     setEndDate("");
   };
 
   const handleSubmit = async () => {
     if (!childId) {
       toast.error("اختار طفل");
-
       return;
     }
 
     if (!title.trim()) {
       toast.error("اكتب عنوان الخطة");
-
       return;
     }
 
     if (!startDate || !endDate) {
       toast.error("حدد التواريخ");
-
       return;
     }
 
     if (selectedExercises.length === 0) {
       toast.error("اختار تمارين");
-
       return;
     }
 
@@ -165,29 +183,24 @@ function SpecialistExercise() {
         childId: Number(childId),
         title,
         notes,
-        startDate,
-        endDate,
+        startDate: toUTCForAPI(startDate),
+        endDate: toUTCForAPI(endDate),
         exercises: selectedExercises,
       };
 
       if (editingId) {
         await updateTreatmentPlan(editingId, payload);
-
         toast.success("تم تعديل الخطة");
       } else {
         await createTreatmentPlan(payload);
-
         toast.success("تم إنشاء الخطة");
       }
 
       await loadPlans(childId);
-
       resetForm();
-
       setShowModal(false);
     } catch (err) {
       console.log(err);
-
       toast.error("فشل حفظ الخطة");
     } finally {
       setLoading(false);
@@ -199,16 +212,11 @@ function SpecialistExercise() {
       const fullPlan = await getTreatmentPlanById(plan.id);
 
       setEditingId(fullPlan.id);
-
       setChildId(fullPlan.childId);
-
       setTitle(fullPlan.title || "");
-
       setNotes(fullPlan.notes || "");
-
-      setStartDate(fullPlan.startDate?.split("T")[0] || "");
-
-      setEndDate(fullPlan.endDate?.split("T")[0] || "");
+      setStartDate(toEgyptTime(fullPlan.startDate));
+      setEndDate(toEgyptTime(fullPlan.endDate));
 
       setSelectedExercises(
         (fullPlan.exercises || []).map((ex) => ({
@@ -222,7 +230,6 @@ function SpecialistExercise() {
       setShowModal(true);
     } catch (err) {
       console.log(err);
-
       toast.error("فشل تحميل الخطة");
     }
   };
@@ -236,17 +243,15 @@ function SpecialistExercise() {
       await stopTreatmentPlan(plan.id, {
         title: plan.title,
         notes: plan.notes,
-        startDate: plan.startDate,
-        endDate: plan.endDate,
+        startDate: toUTCForAPI(plan.startDate),
+        endDate: toUTCForAPI(plan.endDate),
         exercises: plan.exercises || [],
       });
 
       toast.success("تم إيقاف الخطة");
-
       loadPlans(childId);
     } catch (err) {
       console.log(err);
-
       toast.error("فشل إيقاف الخطة");
     }
   };
@@ -260,7 +265,6 @@ function SpecialistExercise() {
       <div className={styles.header}>
         <div>
           <h2>الخطط العلاجية</h2>
-
           <p>إدارة الخطط العلاجية للأطفال</p>
         </div>
 
@@ -276,7 +280,6 @@ function SpecialistExercise() {
             className={styles.saveBtn}
             onClick={() => {
               resetForm();
-
               setShowModal(true);
             }}
           >
@@ -290,17 +293,13 @@ function SpecialistExercise() {
           {plans.map((plan) => (
             <div key={plan.id} className={styles.planCard}>
               <h4>{plan.title}</h4>
-
               <p>{plan.notes}</p>
-
               <p>
-                من {plan.startDate?.split("T")[0]} إلى{" "}
-                {plan.endDate?.split("T")[0]}
+                من {plan.startDate?.split("T")[0] || plan.startDate} إلى{" "}
+                {plan.endDate?.split("T")[0] || plan.endDate}
               </p>
-
               <div className={styles.planActions}>
                 <button onClick={() => handleEdit(plan)}>تعديل</button>
-
                 <button onClick={() => handleStop(plan)}>إيقاف</button>
               </div>
             </div>
@@ -344,24 +343,24 @@ function SpecialistExercise() {
                 value={childId}
                 onChange={async (e) => {
                   const id = e.target.value;
-
                   setChildId(id);
 
                   try {
                     const plansRes = await getTreatmentPlans(id);
-
-                    setPlans(plansRes?.items || []);
+                    const plansWithEgyptTime = (plansRes?.items || []).map(plan => ({
+                      ...plan,
+                      startDate: toEgyptTime(plan.startDate),
+                      endDate: toEgyptTime(plan.endDate),
+                    }));
+                    setPlans(plansWithEgyptTime);
                   } catch (err) {
                     console.log(err);
-
                     setPlans([]);
-
                     toast.error("فشل تحميل الخطط");
                   }
                 }}
               >
                 <option value="">اختر الطفل</option>
-
                 {children.map((child) => (
                   <option key={child.id} value={child.id}>
                     {child.fullName}
@@ -377,11 +376,9 @@ function SpecialistExercise() {
                 }))}
                 onChange={(selectedOption) => {
                   if (!selectedOption) return;
-
                   const exercise = exercises.find(
                     (ex) => ex.id === selectedOption.value,
                   );
-
                   if (exercise) {
                     toggleExercise(exercise);
                   }
@@ -467,7 +464,6 @@ function SpecialistExercise() {
                 className={styles.cancelBtn}
                 onClick={() => {
                   setShowModal(false);
-
                   resetForm();
                 }}
               >

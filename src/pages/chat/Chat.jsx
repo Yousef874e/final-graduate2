@@ -32,14 +32,11 @@ function Chat() {
   const [selectedMessage, setSelectedMessage] = useState(null);
 
   const bottomRef = useRef();
-
   const connectionRef = useRef(null);
-
   const activeChatRef = useRef(null);
 
   useEffect(() => {
     loadConversations();
-
     initSignalR();
 
     return () => {
@@ -49,7 +46,6 @@ function Chat() {
 
   const initSignalR = async () => {
     const conn = await startConnection();
-
     connectionRef.current = conn;
 
     conn.on("ReceiveMessage", async (message) => {
@@ -57,19 +53,15 @@ function Chat() {
 
       setMessages((prev) => {
         if (prev.find((m) => m.id === message.id)) return prev;
-
         return [...prev, message];
       });
 
       setConversations((prev) =>
         prev.map((c) =>
           c.childId === message.childId
-            ? {
-                ...c,
-                lastMessage: message.content,
-              }
-            : c,
-        ),
+            ? { ...c, lastMessage: message.content }
+            : c
+        )
       );
 
       if (Number(message.receiverUserId) === myId) {
@@ -83,52 +75,37 @@ function Chat() {
   const loadConversations = async () => {
     try {
       const res = await getConversations();
-
       let list = res || [];
 
       if (role === "Specialist") {
-        list = await Promise.all(
-          list.map(async (chat) => {
-            try {
-              const child = await getChildProfile(chat.childId);
-
-              try {
-                const parent = await getParentProfileById(
-                  child.parentProfileId,
-                );
-
-                return {
-                  ...chat,
-
-                  parentName: parent?.fullName || "ولي الأمر",
-                };
-              } catch {
-                return {
-                  ...chat,
-
-                  parentName: "ولي الأمر",
-                };
+        for (let i = 0; i < list.length; i++) {
+          const chat = list[i];
+          let parentName = "ولي الأمر";
+          
+          try {
+            const child = await getChildProfile(chat.childId);
+            
+            if (child && child.parentProfileId) {
+              const parent = await getParentProfileById(child.parentProfileId);
+              
+              if (parent && parent.fullName) {
+                parentName = parent.fullName;
               }
-            } catch {
-              return {
-                ...chat,
-
-                parentName: "ولي الأمر",
-              };
             }
-          }),
-        );
+          } catch (error) {
+            console.error("Error:", error);
+          }
+          
+          list[i] = { ...chat, parentName };
+        }
       }
 
       setConversations(list);
 
       if (list.length) {
         const firstChat = list[0];
-
         setActiveChat(firstChat);
-
         activeChatRef.current = firstChat;
-
         loadMessages(firstChat.childId);
       }
     } catch {
@@ -138,14 +115,12 @@ function Chat() {
 
   const loadMessages = async (childId) => {
     if (!childId) return;
-
     setLoading(true);
 
     try {
       const res = await getChildMessages(childId);
-
       const msgs = (res.items || []).sort(
-        (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc),
+        (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc)
       );
 
       setMessages(msgs);
@@ -153,7 +128,7 @@ function Chat() {
       await Promise.all(
         msgs
           .filter((m) => !m.isRead && Number(m.receiverUserId) === myId)
-          .map((m) => markMessageRead(m.id)),
+          .map((m) => markMessageRead(m.id))
       );
 
       scrollDown();
@@ -171,38 +146,30 @@ function Chat() {
 
     if (!receiverId) {
       toast.error("لا يوجد مستقبل ❌");
-
       return;
     }
 
     try {
       const newMsg = await sendMessage({
         childId: activeChat.childId,
-
         receiverUserId: Number(receiverId),
-
         content: text,
       });
 
       setMessages((prev) => {
         if (prev.find((m) => m.id === newMsg.id)) return prev;
-
         return [...prev, newMsg];
       });
 
       setConversations((prev) =>
         prev.map((c) =>
           c.childId === activeChat.childId
-            ? {
-                ...c,
-                lastMessage: newMsg.content,
-              }
-            : c,
-        ),
+            ? { ...c, lastMessage: newMsg.content }
+            : c
+        )
       );
 
       setText("");
-
       scrollDown();
     } catch {
       toast.error("فشل الإرسال ❌");
@@ -212,11 +179,8 @@ function Chat() {
   const handleDelete = async (id) => {
     try {
       await deleteMessage(id);
-
       setMessages((prev) => prev.filter((m) => m.id !== id));
-
       setSelectedMessage(null);
-
       toast.success("تم حذف الرسالة");
     } catch {
       toast.error("فشل حذف الرسالة");
@@ -225,9 +189,7 @@ function Chat() {
 
   const scrollDown = () => {
     setTimeout(() => {
-      bottomRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   };
 
@@ -237,19 +199,12 @@ function Chat() {
         {conversations.map((c) => (
           <div
             key={c.conversationId}
-            className={`
-              ${styles.chatItem}
-              ${
-                activeChat?.conversationId === c.conversationId
-                  ? styles.active
-                  : ""
-              }
-            `}
+            className={`${styles.chatItem} ${
+              activeChat?.conversationId === c.conversationId ? styles.active : ""
+            }`}
             onClick={() => {
               setActiveChat(c);
-
               activeChatRef.current = c;
-
               loadMessages(c.childId);
             }}
           >
@@ -258,9 +213,7 @@ function Chat() {
                 ? specialistName || "الأخصائي"
                 : c.parentName || "ولي الأمر"}
             </h4>
-
             <small>الطفل: {c.childName}</small>
-
             <p>{c.lastMessage}</p>
           </div>
         ))}
@@ -272,34 +225,29 @@ function Chat() {
             {role === "Parent"
               ? specialistName || "الأخصائي"
               : activeChat?.parentName || "ولي الأمر"}
-
             {" • "}
-
             {activeChat?.childName}
           </h3>
         </div>
 
         <div className={styles.messages}>
           {loading ? (
-            <p>Loading...</p>
+            <p>جاري التحميل...</p>
           ) : messages.length === 0 ? (
             <p>لا توجد رسائل</p>
           ) : (
             messages.map((msg) => {
               const isMine = Number(msg.senderUserId) === myId;
-
               return (
                 <div
                   key={msg.id}
                   className={isMine ? styles.myMsg : styles.otherMsg}
                   onClick={() => {
                     if (!isMine) return;
-
                     setSelectedMessage(msg);
                   }}
                 >
                   <p>{msg.content}</p>
-
                   {isMine && (
                     <span className={styles.readMark}>
                       {msg.isRead ? "✔✔" : "✔"}
@@ -309,7 +257,6 @@ function Chat() {
               );
             })
           )}
-
           <div ref={bottomRef} />
         </div>
 
@@ -318,8 +265,8 @@ function Chat() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="اكتب رسالة..."
+            onKeyPress={(e) => e.key === "Enter" && handleSend()}
           />
-
           <button onClick={handleSend}>➤</button>
         </div>
       </div>
@@ -333,7 +280,6 @@ function Chat() {
             >
               حذف الرسالة
             </button>
-
             <button
               className={styles.cancelBtn}
               onClick={() => setSelectedMessage(null)}

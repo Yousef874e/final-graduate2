@@ -8,6 +8,7 @@ import {
   FaFileAlt,
   FaCalendarAlt,
   FaComment,
+  FaChartLine,
 } from "react-icons/fa";
 import axiosClient from "../../api/axiosClient";
 
@@ -35,14 +36,20 @@ function SpecialistPatients() {
     const loadPatients = async () => {
       const result = await Promise.all(
         children.map(async (p) => {
-          const res = await axiosClient.get(
-            `/Children/${p.childId}/profile-image`,
-          );
-
-          return {
-            ...p,
-            image: res.data?.url,
-          };
+          try {
+            const res = await axiosClient.get(
+              `/Children/${p.childId}/profile-image`,
+            );
+            return {
+              ...p,
+              image: res.data?.url,
+            };
+          } catch {
+            return {
+              ...p,
+              image: null,
+            };
+          }
         }),
       );
 
@@ -76,11 +83,10 @@ function SpecialistPatients() {
               <FaEllipsisV />
 
               <div className={styles.user}>
-                <img src={p.image} alt="" />
-
+                <img src={p.image || "/default-avatar.png"} alt="" />
                 <div>
                   <h4>{p.childName}</h4>
-                  <p>جلسات: {p.analyzedSessionsCount}</p>
+                  <p>جلسات: {p.analyzedSessionsCount || 0}</p>
                 </div>
               </div>
 
@@ -116,7 +122,18 @@ function SpecialistPatients() {
 
               <div
                 onClick={() =>
-                  navigate("/dashboard/profile", {
+                  navigate("/dashboard/specialist/child-analytics", {
+                    state: { childId: p.childId, childName: p.childName },
+                  })
+                }
+              >
+                <FaChartLine />
+                <span>تحليلات</span>
+              </div>
+
+              <div
+                onClick={() =>
+                  navigate("/dashboard/specialist/profile", {
                     state: { childId: p.childId },
                   })
                 }

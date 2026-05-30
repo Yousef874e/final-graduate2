@@ -134,9 +134,7 @@ function Profile() {
         category: 2,
       });
 
-      await setChildImage(childId, {
-        mediaId: res.id,
-      });
+      await setChildImage(childId, res.id);
 
       setChildImageUrl(res.url);
 

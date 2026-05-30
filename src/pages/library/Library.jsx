@@ -55,13 +55,13 @@ function Library() {
         getSessionsByChild(childId),
       ]);
 
-      const plansData = planRes?.items || [];
+      let plansData = planRes?.items || [];
+      plansData = plansData.filter(plan => plan.isActive === true);
+
       const sessionsData = sessionRes?.items || [];
-
-      console.log("sessions", sessionsData);
-
       setPlans(plansData);
       setSessions(sessionsData);
+
       const exercises = plansData.flatMap((p) =>
         (p.exercises || []).map((ex) => ({
           ...ex,
@@ -108,11 +108,10 @@ function Library() {
 
   const completedExercises = new Set(
     sessions
-      .filter((s) => [2, 3, 4, 5].includes(Number(s.status)))
+      .filter((s) => Number(s.status) === 4)
       .map((s) => Number(s.treatmentPlanExerciseId)),
   );
-  console.log("completedExercises", [...completedExercises]);
-  console.log("filtered", filtered);
+
   const isCompleted = (id) => {
     return completedExercises.has(Number(id));
   };

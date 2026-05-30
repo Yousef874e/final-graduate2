@@ -20,6 +20,7 @@ import AdminLayout from "./layouts/AdminLayout.jsx";
 import ParentDashboard from "./pages/dashboard/ParentDashboard";
 
 import Reports from "./pages/reports/Reports";
+import Analytics from "./pages/dashboard/Analytics";
 
 import Appointments from "./pages/sessions/Appointments.jsx";
 
@@ -48,6 +49,7 @@ import SpecialistChat from "./pages/specialist/SpecialistChat.jsx";
 import SpecialistExercise from "./pages/specialist/SpecialistExercise.jsx";
 import SpecialistSettings from "./pages/specialist/SpecialistSettings.jsx";
 import SpecialistProfile from "./pages/specialist/SpecialistProfile.jsx";
+import SpecialistChildAnalytics from "./pages/specialist/SpecialistChildAnalytics";
 
 function App() {
   return (
@@ -103,6 +105,8 @@ function App() {
             <Route path="appointments" element={<Appointments />} />
 
             <Route path="reports" element={<Reports />} />
+
+            <Route path="analytics" element={<Analytics />} />
 
             <Route path="profile" element={<Profile />} />
 
@@ -163,6 +167,8 @@ function App() {
             <Route path="settings" element={<SpecialistSettings />} />
 
             <Route path="profile" element={<SpecialistProfile />} />
+
+            <Route path="child-analytics" element={<SpecialistChildAnalytics />} />
           </Route>
         </Routes>
       </BrowserRouter>

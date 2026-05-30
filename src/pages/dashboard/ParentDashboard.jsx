@@ -11,7 +11,7 @@ function ParentDashboard() {
   const navigate = useNavigate();
   const { data } = useApp();
   const [starting, setStarting] = useState(false);
-  const [latestPlanScore, setLatestPlanScore] = useState(null);
+  const [latestPlanScore, setLatestPlanScore] = useState(0);
 
   const children = data?.children || [];
   const appointments = data?.upcomingAppointments || [];
@@ -54,7 +54,7 @@ function ParentDashboard() {
         const activePlan = plans.find((p) => p.isActive) || plans[0];
 
         if (!activePlan) {
-          setLatestPlanScore(null);
+          setLatestPlanScore(0);
           return;
         }
 
@@ -94,7 +94,7 @@ function ParentDashboard() {
   const score = latestPlanScore;
 
   const getLevel = (score) => {
-    if (score === null) return "جاري التحليل ⏳";
+    if (score === 0) return "لم يبدأ بعد";
     if (score >= 90) return "ممتاز 🔥";
     if (score >= 80) return "جيد جدًا 👌";
     if (score >= 70) return "جيد 🙂";
@@ -103,7 +103,7 @@ function ParentDashboard() {
   };
 
   const getColor = (score) => {
-    if (score === null) return "#94a3b8";
+    if (score === 0) return "#94a3b8";
     if (score >= 80) return "#22c55e";
     if (score >= 60) return "#eab308";
     return "#ef4444";
@@ -171,6 +171,10 @@ function ParentDashboard() {
     }
   };
 
+  const handleConfirmAttendance = () => {
+    toast.success("تم تأكيد حضور الجلسة ✅");
+  };
+
   return (
     <>
       <div className={styles.hero}>
@@ -226,22 +230,8 @@ function ParentDashboard() {
               color: getColor(score),
             }}
           >
-            {score === null ? "..." : `${Math.round(score)}%`}
+            {Math.round(score)}%
           </div>
-
-          {score === null && (
-            <p
-              style={{
-                marginTop: "10px",
-                color: "#94a3b8",
-                fontWeight: "700",
-                fontSize: "14px",
-                textAlign: "center",
-              }}
-            >
-              جاري التحليل ⏳
-            </p>
-          )}
         </div>
       </div>
 
@@ -255,7 +245,7 @@ function ParentDashboard() {
 
           <span
             className={styles.viewAll}
-            onClick={() => navigate("/dashboard/reports")}
+            onClick={() => navigate("/dashboard/analytics")}
           >
             عرض كل الإنجازات
           </span>
@@ -278,31 +268,13 @@ function ParentDashboard() {
                 </div>
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  marginTop: "10px",
-                }}
+              <button
+                className={styles.confirmBtn}
+                onClick={handleConfirmAttendance}
+                style={{ width: "100%", marginTop: "12px" }}
               >
-                <button
-                  className={styles.confirmBtn}
-                  onClick={() =>
-                    navigate(
-                      `/dashboard/appointments?appointmentId=${appointment.appointmentId}`,
-                    )
-                  }
-                >
-                  عرض الجلسة
-                </button>
-
-                <button
-                  className={styles.startBtn}
-                  onClick={() => toast.success("تم تأكيد حضور الجلسة ✅")}
-                >
-                  تأكيد الحضور
-                </button>
-              </div>
+                تأكيد الحضور
+              </button>
             </>
           ) : (
             <p>لا يوجد موعد</p>
@@ -323,8 +295,8 @@ function ParentDashboard() {
                 <div
                   className={styles.progressFill}
                   style={{
-                    width: score === null ? "0%" : `${Math.round(score)}%`,
-                    backgroundColor: getColor(score),
+                    width: `${Math.round(score ?? 0)}%`,
+                    backgroundColor: getColor(score ?? 0),
                   }}
                 />
               </div>
