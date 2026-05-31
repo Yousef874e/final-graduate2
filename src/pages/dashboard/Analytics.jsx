@@ -28,18 +28,15 @@ function Analytics() {
   const [hasData, setHasData] = useState(false);
   const [selectedPlanStats, setSelectedPlanStats] = useState(null);
 
- const appContext = useApp();
+  const appContext = useApp();
+  const { data } = appContext;
+  const userRole = appContext?.role || "parent";
+  const isSpecialist = userRole === "Specialist";
 
-const { data } = appContext;
-
-const userRole = appContext?.role || "parent";
-const isSpecialist = userRole === "Specialist";
-
-const children = isSpecialist
-  ? data?.childrenSnapshot || []
-  : data?.children || [];
+  const children = isSpecialist
+    ? data?.childrenSnapshot || []
+    : data?.children || [];
   const childIdFromState = location.state?.childId;
-  const childNameFromState = location.state?.childName;
 
   let selectedChildId = null;
 
@@ -52,14 +49,9 @@ const children = isSpecialist
   } else if (children.length > 0 && !selectedChildId) {
     selectedChildId = children[0]?.childId;
   }
-console.log("children", children);
-console.log("selectedChildId", selectedChildId);
+
   const currentChild =
     children.find((child) => child.childId === selectedChildId) || null;
-    console.log(
-  "currentChild",
-  children.find((child) => child.childId === selectedChildId)
-);
 
   useEffect(() => {
     if (selectedChildId) {
@@ -85,13 +77,15 @@ console.log("selectedChildId", selectedChildId);
 
   const calculatePlanStats = (plan) => {
     const planExerciseIds = (plan.exercises || []).map((e) => Number(e.id));
-    const planSessions = sessions.filter(
-      (s) =>
-        planExerciseIds.includes(Number(s.treatmentPlanExerciseId)) &&
-        s.result?.accuracyScore != null,
-    );
+    
+    const planSessions = sessions.filter((s) => {
+      if (!s.treatmentPlanExerciseId) return false;
+      return planExerciseIds.includes(Number(s.treatmentPlanExerciseId));
+    });
+    
+    const validSessions = planSessions.filter((s) => s.result?.accuracyScore != null);
 
-    if (!planSessions.length)
+    if (!validSessions.length)
       return {
         avgScore: null,
         totalMistakes: 0,
@@ -99,23 +93,24 @@ console.log("selectedChildId", selectedChildId);
         avgMistakesPerSession: 0,
         avgRepetitionsPerSession: 0,
         sessionsCount: 0,
+        allSessionsCount: planSessions.length,
       };
 
     const avg =
-      planSessions.reduce(
+      validSessions.reduce(
         (sum, s) => sum + Number(s.result.accuracyScore),
         0,
-      ) / planSessions.length;
-    const totalMistakes = planSessions.reduce(
+      ) / validSessions.length;
+    const totalMistakes = validSessions.reduce(
       (sum, s) => sum + (s.result?.mistakeCount || 0),
       0,
     );
-    const totalRepetitions = planSessions.reduce(
+    const totalRepetitions = validSessions.reduce(
       (sum, s) => sum + (s.result?.repetitionCount || 0),
       0,
     );
-    const avgMistakesPerSession = totalMistakes / planSessions.length;
-    const avgRepetitionsPerSession = totalRepetitions / planSessions.length;
+    const avgMistakesPerSession = totalMistakes / validSessions.length;
+    const avgRepetitionsPerSession = totalRepetitions / validSessions.length;
 
     return {
       avgScore: Math.round(avg),
@@ -123,18 +118,43 @@ console.log("selectedChildId", selectedChildId);
       totalRepetitions,
       avgMistakesPerSession,
       avgRepetitionsPerSession,
-      sessionsCount: planSessions.length,
+      sessionsCount: validSessions.length,
+      allSessionsCount: planSessions.length,
+    };
+  };
+
+  const calculateImprovementRate = (plan) => {
+    const planExerciseIds = (plan.exercises || []).map((e) => Number(e.id));
+    const planSessions = sessions
+      .filter((s) => {
+        if (!s.treatmentPlanExerciseId) return false;
+        return planExerciseIds.includes(Number(s.treatmentPlanExerciseId));
+      })
+      .filter((s) => s.result?.accuracyScore != null)
+      .sort((a, b) => new Date(a.sessionDate || a.createdAtUtc) - new Date(b.sessionDate || b.createdAtUtc));
+
+    if (planSessions.length < 2) return null;
+
+    const firstSession = planSessions[0];
+    const lastSession = planSessions[planSessions.length - 1];
+
+    const firstScore = firstSession.result?.accuracyScore || 0;
+    const lastScore = lastSession.result?.accuracyScore || 0;
+
+    if (firstScore === 0) return null;
+
+    const improvement = ((lastScore - firstScore) / firstScore) * 100;
+    return {
+      percentage: Math.round(improvement),
+      direction: improvement >= 0 ? "up" : "down",
+      firstScore,
+      lastScore,
     };
   };
 
   const fetchDataByDate = async () => {
     if (!selectedChildId) {
       toast.error("لا يوجد طفل مرتبط بالحساب");
-      return;
-    }
-
-    if (!fromDate && !toDate) {
-      toast.error("يرجى تحديد التاريخ");
       return;
     }
 
@@ -152,57 +172,31 @@ console.log("selectedChildId", selectedChildId);
       const sessionsData = sessionsRes?.items || [];
       let allReportsData = reportsRes?.items || [];
 
-      let filteredPlans = [...allPlansData];
-      let filteredReports = [...allReportsData];
-
-      if (fromDate) {
-        const from = new Date(fromDate);
-        from.setHours(0, 0, 0, 0);
-
-        filteredPlans = filteredPlans.filter(
-          (plan) => new Date(plan.startDate) >= from,
-        );
-        filteredReports = filteredReports.filter(
-          (report) => new Date(report.createdAtUtc || report.createdAt) >= from,
-        );
-      }
-
-      if (toDate) {
-        const to = new Date(toDate);
-        to.setHours(23, 59, 59, 999);
-
-        filteredPlans = filteredPlans.filter(
-          (plan) => new Date(plan.endDate) <= to,
-        );
-        filteredReports = filteredReports.filter(
-          (report) => new Date(report.createdAtUtc || report.createdAt) <= to,
-        );
-      }
-
       setAllPlans(allPlansData);
       setAllReports(allReportsData);
-      setPlans(filteredPlans);
-      setReports(filteredReports);
+      setPlans(allPlansData);
       setSessions(sessionsData);
+      setReports(allReportsData);
 
-      if (filteredPlans.length > 0 || filteredReports.length > 0) {
-        setHasData(true);
-        if (filteredPlans.length > 0) {
-          setSelectedPlan(filteredPlans[0]);
-          calculateGlobalAverage(filteredPlans, sessionsData);
-          const stats = calculatePlanStats(filteredPlans[0]);
-          setSelectedPlanStats(stats);
-        } else {
-          setSelectedPlan(null);
-          setGlobalAverage(null);
-          setSelectedPlanStats(null);
-        }
+      const hasAnyData =
+        allPlansData.length > 0 ||
+        allReportsData.length > 0 ||
+        sessionsData.length > 0;
+      setHasData(hasAnyData);
+
+      if (allPlansData.length > 0) {
+        setSelectedPlan(allPlansData[0]);
+        const allScores = calculateGlobalAverageFromData(allPlansData, sessionsData);
+        setGlobalAverage(allScores);
+        const stats = calculatePlanStats(allPlansData[0]);
+        setSelectedPlanStats(stats);
       } else {
-        setHasData(false);
         setSelectedPlan(null);
         setGlobalAverage(null);
         setSelectedPlanStats(null);
-        toast("لا توجد بيانات في الفترة المحددة", { icon: "📭" });
+        if (!hasAnyData) {
+          toast("لا توجد بيانات", { icon: "📭" });
+        }
       }
 
       setShowDateModal(false);
@@ -214,35 +208,35 @@ console.log("selectedChildId", selectedChildId);
     }
   };
 
-  const calculateGlobalAverage = (plansList, sessionsList) => {
+  const calculateGlobalAverageFromData = (plansList, sessionsList) => {
     let allScores = [];
     plansList.forEach((plan) => {
       const planExerciseIds = (plan.exercises || []).map((e) => Number(e.id));
-      const planSessions = sessionsList.filter(
-        (s) =>
-          planExerciseIds.includes(Number(s.treatmentPlanExerciseId)) &&
-          s.result?.accuracyScore != null,
-      );
+      const planSessions = sessionsList.filter((s) => {
+        if (!s.treatmentPlanExerciseId) return false;
+        return planExerciseIds.includes(Number(s.treatmentPlanExerciseId));
+      });
       planSessions.forEach((session) => {
-        allScores.push(Number(session.result.accuracyScore));
+        if (session.result?.accuracyScore != null) {
+          allScores.push(Number(session.result.accuracyScore));
+        }
       });
     });
     if (allScores.length === 0) {
-      setGlobalAverage(null);
-      return;
+      return null;
     }
-    const avg =
-      allScores.reduce((sum, score) => sum + score, 0) / allScores.length;
-    setGlobalAverage(Math.round(avg));
+    const avg = allScores.reduce((sum, score) => sum + score, 0) / allScores.length;
+    return Math.round(avg);
   };
 
   const calculateCompletedExercises = (plan) => {
     const planExerciseIds = (plan.exercises || []).map((e) => Number(e.id));
-    const completedIds = sessions
-      .filter((s) => [2, 3, 4].includes(Number(s.status)))
+    const completedSessions = sessions.filter((s) => [2, 3, 4].includes(Number(s.status)));
+    const completedIds = completedSessions
+      .filter((s) => s.treatmentPlanExerciseId)
       .map((s) => Number(s.treatmentPlanExerciseId));
     const completed = planExerciseIds.filter((id) =>
-      completedIds.includes(id),
+      completedIds.includes(id)
     ).length;
     const total = planExerciseIds.length;
     return {
@@ -255,6 +249,7 @@ console.log("selectedChildId", selectedChildId);
   const formatDate = (dateString) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "—";
     return date.toLocaleDateString("ar-EG", {
       year: "numeric",
       month: "long",
@@ -305,11 +300,10 @@ console.log("selectedChildId", selectedChildId);
       <div className={analyticsStyles.loading}>جاري تحميل البيانات...</div>
     );
   }
-console.log("userRole =", userRole);
-console.log("isSpecialist =", isSpecialist);
+
   if (!currentChild && selectedChildId && !isSpecialist) {
-  return (
-    <div className={analyticsStyles.emptyState}>
+    return (
+      <div className={analyticsStyles.emptyState}>
         <div className={analyticsStyles.emptyIcon}>👶</div>
         <h3>الطفل غير موجود</h3>
         <p>عذراً، لم نتمكن من العثور على بيانات هذا الطفل</p>
@@ -362,6 +356,9 @@ console.log("isSpecialist =", isSpecialist);
                 <span className={analyticsStyles.childStat}>
                   📋 {plans.length} خطة
                 </span>
+                <span className={analyticsStyles.childStat}>
+                  🎯 {sessions.length} جلسة
+                </span>
               </div>
             )}
           </div>
@@ -372,19 +369,18 @@ console.log("isSpecialist =", isSpecialist);
         <div className={analyticsStyles.emptyState}>
           <div className={analyticsStyles.emptyIcon}>📅</div>
           <h3>لا توجد بيانات معروضة</h3>
-          <p>يرجى تحديد الفترة الزمنية لعرض التقارير والخطط</p>
+          <p>لا توجد خطط علاجية أو جلسات أو تقارير لهذا الطفل</p>
           <button
             className={analyticsStyles.primaryBtn}
             onClick={() => setShowDateModal(true)}
           >
-            تحديد الفترة الآن
+            تحديث البيانات
           </button>
         </div>
       ) : (
         <>
           <div className={analyticsStyles.filterBadge}>
-            📅 {fromDate && formatDate(fromDate)} —{" "}
-            {toDate && formatDate(toDate)}
+            📅 عرض جميع البيانات المتاحة
           </div>
 
           <div className={analyticsStyles.globalAverage}>
@@ -427,22 +423,30 @@ console.log("isSpecialist =", isSpecialist);
             >
               {getScoreLevel(globalAverage)}
             </div>
+            {globalAverage !== null && (
+              <div className={analyticsStyles.averageDetails}>
+                <span>✅ أنجزت: {globalAverage}%</span>
+                <span>⏳ باقي للهدف: {100 - globalAverage}%</span>
+              </div>
+            )}
           </div>
 
           {plans.length > 0 && (
             <div className={analyticsStyles.plansSection}>
               <h3>📋 الخطط العلاجية</h3>
+              <p className={analyticsStyles.plansCount}>عدد الخطط: {plans.length}</p>
 
               <div className={analyticsStyles.plansTabs}>
-                {plans.map((plan) => {
+                {plans.map((plan, idx) => {
                   const stats = calculatePlanStats(plan);
                   const avgScore = stats?.avgScore || null;
                   const { completed, total, percentage } =
                     calculateCompletedExercises(plan);
+                  const planName = plan.title || plan.name || `خطة ${idx + 1}`;
 
                   return (
                     <div
-                      key={plan.id}
+                      key={plan.id || idx}
                       className={`${analyticsStyles.planTab} ${selectedPlan?.id === plan.id ? analyticsStyles.active : ""}`}
                       onClick={() => {
                         setSelectedPlan(plan);
@@ -450,7 +454,7 @@ console.log("isSpecialist =", isSpecialist);
                       }}
                     >
                       <div className={analyticsStyles.planTabHeader}>
-                        <h4>{plan.title}</h4>
+                        <h4>{planName}</h4>
                         <span
                           className={analyticsStyles.planScore}
                           style={{ color: getScoreColor(avgScore) }}
@@ -459,8 +463,7 @@ console.log("isSpecialist =", isSpecialist);
                         </span>
                       </div>
                       <p className={analyticsStyles.planDate}>
-                        {formatDate(plan.startDate)} →{" "}
-                        {formatDate(plan.endDate)}
+                        {formatDate(plan.startDate)} → {formatDate(plan.endDate)}
                       </p>
                       <div className={analyticsStyles.planProgress}>
                         <div className={analyticsStyles.progressBar}>
@@ -477,6 +480,13 @@ console.log("isSpecialist =", isSpecialist);
                           {getRemainingText(completed, total)}
                         </span>
                       </div>
+                      {stats && stats.sessionsCount > 0 && (
+                        <div className={analyticsStyles.planStats}>
+                          <span>📊 {stats.sessionsCount} جلسة</span>
+                          <span>❌ {stats.totalMistakes} خطأ</span>
+                          <span>🔄 {stats.totalRepetitions} تكرار</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -485,10 +495,9 @@ console.log("isSpecialist =", isSpecialist);
               {selectedPlan && selectedPlanStats && (
                 <div className={analyticsStyles.planDetails}>
                   <div className={analyticsStyles.planDetailsHeader}>
-                    <h3>{selectedPlan.title}</h3>
+                    <h3>{selectedPlan.title || selectedPlan.name || "الخطة العلاجية"}</h3>
                     <p className={analyticsStyles.planPeriod}>
-                      📅 {formatDate(selectedPlan.startDate)} -{" "}
-                      {formatDate(selectedPlan.endDate)}
+                      📅 {formatDate(selectedPlan.startDate)} - {formatDate(selectedPlan.endDate)}
                     </p>
                   </div>
 
@@ -511,6 +520,12 @@ console.log("isSpecialist =", isSpecialist);
                       <div className={analyticsStyles.statSub}>
                         {getScoreLevel(selectedPlanStats.avgScore)}
                       </div>
+                      {selectedPlanStats.avgScore !== null && (
+                        <div className={analyticsStyles.statExtra}>
+                          <div>✅ أنجزت: {selectedPlanStats.avgScore}%</div>
+                          <div>⏳ باقي: {100 - selectedPlanStats.avgScore}%</div>
+                        </div>
+                      )}
                     </div>
 
                     <div className={analyticsStyles.statCard}>
@@ -581,6 +596,68 @@ console.log("isSpecialist =", isSpecialist);
                     </div>
                   </div>
 
+                  {selectedPlanStats.sessionsCount >= 2 && (
+                    <div className={analyticsStyles.improvementSection}>
+                      <div className={analyticsStyles.improvementHeader}>
+                        <span className={analyticsStyles.improvementIcon}>📈</span>
+                        <h4>نسبة التحسن في الخطة</h4>
+                      </div>
+                      {(() => {
+                        const improvement = calculateImprovementRate(selectedPlan);
+                        if (!improvement) {
+                          return (
+                            <p className={analyticsStyles.noData}>
+                              لا توجد بيانات كافية لحساب التحسن
+                            </p>
+                          );
+                        }
+                        const isPositive = improvement.percentage >= 0;
+                        const completed = improvement.lastScore;
+                        const remaining = 100 - completed;
+                        return (
+                          <div>
+                            <div
+                              className={`${analyticsStyles.improvementCard} ${isPositive ? analyticsStyles.positive : analyticsStyles.negative}`}
+                            >
+                              <div className={analyticsStyles.improvementValue}>
+                                {isPositive ? "📈" : "📉"} {Math.abs(improvement.percentage)}%
+                              </div>
+                              <div className={analyticsStyles.improvementDetails}>
+                                من {improvement.firstScore}% إلى {improvement.lastScore}%
+                              </div>
+                            </div>
+                            <div className={analyticsStyles.completionBox}>
+                              <div className={analyticsStyles.completionRow}>
+                                <span className={analyticsStyles.completionLabel}>✅ أنجزت:</span>
+                                <span className={analyticsStyles.completionValue}>{completed}%</span>
+                              </div>
+                              <div className={analyticsStyles.completionRow}>
+                                <span className={analyticsStyles.completionLabel}>⏳ باقي للهدف:</span>
+                                <span className={analyticsStyles.completionValue}>{remaining}%</span>
+                              </div>
+                              <div className={analyticsStyles.progressBar}>
+                                <div
+                                  className={analyticsStyles.progressFill}
+                                  style={{
+                                    width: `${completed}%`,
+                                    backgroundColor: "#10b981",
+                                  }}
+                                />
+                              </div>
+                              <div className={analyticsStyles.completionMessage}>
+                                {remaining <= 0 ? "🎉 تهانينا! لقد حققت الهدف بنجاح" :
+                                 remaining <= 10 ? "💪 أنت على بعد خطوات قليلة من الهدف" :
+                                 remaining <= 20 ? "👍 تقدم ممتاز، استمر" :
+                                 remaining <= 50 ? "📈 في منتصف الطريق، واصل بنفس المستوى" :
+                                 "🌟 بداية جيدة، استمر في التدريب"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
                   {selectedPlanStats.totalRepetitions > 0 && (
                     <div className={analyticsStyles.errorsRepetitionsChart}>
                       <h4>📊 تحليل الأخطاء والتكرارات</h4>
@@ -643,11 +720,11 @@ console.log("isSpecialist =", isSpecialist);
                             );
                           return (
                             <div
-                              key={ex.id}
+                              key={ex.id || index}
                               className={`${analyticsStyles.exerciseItem} ${isCompleted ? analyticsStyles.completed : ""}`}
                             >
                               <div className={analyticsStyles.exerciseName}>
-                                {index + 1}. {ex.exerciseName}
+                                {index + 1}. {ex.exerciseName || ex.name || `تمرين ${index + 1}`}
                                 {isCompleted && (
                                   <span
                                     className={analyticsStyles.completedBadge}
@@ -657,9 +734,9 @@ console.log("isSpecialist =", isSpecialist);
                                 )}
                               </div>
                               <div className={analyticsStyles.exerciseDetails}>
-                                <span>🔄 {ex.sets} جولات</span>
-                                <span>🔁 {ex.expectedReps} عدات</span>
-                                <span>📅 {ex.dailyFrequency} يومياً</span>
+                                <span>🔄 {ex.sets || 0} جولات</span>
+                                <span>🔁 {ex.expectedReps || ex.reps || 0} عدات</span>
+                                <span>📅 {ex.dailyFrequency || 0} يومياً</span>
                               </div>
                             </div>
                           );
@@ -677,11 +754,11 @@ console.log("isSpecialist =", isSpecialist);
 
             {reports.length === 0 ? (
               <div className={analyticsStyles.emptyReports}>
-                <p>لا توجد تقارير في الفترة المحددة</p>
+                <p>لا توجد تقارير طبية لهذا الطفل</p>
               </div>
             ) : (
               <div className={analyticsStyles.reportsGrid}>
-                {reports.map((report) => {
+                {reports.map((report, idx) => {
                   const improvement = report.improvementPercentage || 0;
                   const isPositive = improvement >= 0;
                   const completedExercises =
@@ -691,7 +768,7 @@ console.log("isSpecialist =", isSpecialist);
                     totalExercises - completedExercises;
 
                   return (
-                    <div key={report.id} className={analyticsStyles.reportCard}>
+                    <div key={report.id || idx} className={analyticsStyles.reportCard}>
                       <div className={analyticsStyles.reportPeriod}>
                         <span>
                           📅{" "}
@@ -807,7 +884,7 @@ console.log("isSpecialist =", isSpecialist);
             onClick={(e) => e.stopPropagation()}
           >
             <div className={analyticsStyles.modalHeader}>
-              <h3>📅 تحديد الفترة الزمنية</h3>
+              <h3>📅 تحديث البيانات</h3>
               <button
                 className={analyticsStyles.closeBtn}
                 onClick={() => setShowDateModal(false)}
@@ -817,37 +894,15 @@ console.log("isSpecialist =", isSpecialist);
             </div>
 
             <div className={analyticsStyles.modalBody}>
-              <div className={analyticsStyles.inputGroup}>
-                <label>من تاريخ:</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-
-              <div className={analyticsStyles.inputGroup}>
-                <label>إلى تاريخ:</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
+              <p>سيتم تحديث جميع البيانات المتاحة لهذا الطفل</p>
             </div>
 
             <div className={analyticsStyles.modalFooter}>
               <button
-                className={analyticsStyles.cancelBtn}
-                onClick={() => setShowDateModal(false)}
-              >
-                إلغاء
-              </button>
-              <button
                 className={analyticsStyles.applyBtn}
                 onClick={fetchDataByDate}
               >
-                تطبيق
+                تحديث البيانات
               </button>
             </div>
           </div>

@@ -65,6 +65,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .avatarImg {
@@ -90,6 +91,7 @@
 .childStats {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .childStat {
@@ -155,6 +157,23 @@
   font-weight: 500;
 }
 
+.averageDetails {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.averageDetails span {
+  background: #f1f5f9;
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 13px;
+  color: #475569;
+}
+
 .globalStats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -190,12 +209,33 @@
   margin-bottom: 20px;
 }
 
+.plansCount {
+  color: #64748b;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
 .plansTabs {
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding-bottom: 12px;
   margin-bottom: 24px;
+  scrollbar-width: thin;
+}
+
+.plansTabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.plansTabs::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.plansTabs::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 10px;
 }
 
 .planTab {
@@ -262,6 +302,16 @@
 }
 
 .progressText {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.planStats {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
   font-size: 11px;
   color: #64748b;
 }
@@ -333,6 +383,18 @@
   color: #94a3b8;
 }
 
+.statExtra {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.statExtra div {
+  font-size: 12px;
+  color: #475569;
+  margin: 4px 0;
+}
+
 .improvementSection {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border-radius: 20px;
@@ -378,6 +440,47 @@
   color: #475569;
 }
 
+.improvementText {
+  font-size: 13px;
+  color: #475569;
+  margin-top: 8px;
+}
+
+.completionBox {
+  margin-top: 20px;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+}
+
+.completionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.completionLabel {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.completionValue {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.completionMessage {
+  text-align: center;
+  margin-top: 16px;
+  padding: 10px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #475569;
+}
+
 .noData {
   text-align: center;
   color: #64748b;
@@ -407,6 +510,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .barLabel {
@@ -422,6 +526,7 @@
   background: #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
+  min-width: 120px;
 }
 
 .barFill {
@@ -481,10 +586,30 @@
   transform: translateX(-4px);
 }
 
+.exerciseItem.completed {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
 .exerciseName {
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.completedBadge {
+  background: #10b981;
+  color: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
 }
 
 .exerciseDetails {
@@ -492,6 +617,7 @@
   gap: 16px;
   font-size: 12px;
   color: #64748b;
+  flex-wrap: wrap;
 }
 
 .exerciseDetails span {
@@ -574,7 +700,35 @@
   color: #1e293b;
 }
 
+.exercisesProgress {
+  margin: 16px 0;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.remainingInfo {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
 .reportSummary {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.reportDescription {
   background: #f8fafc;
   border-radius: 12px;
   padding: 12px;
@@ -642,12 +796,13 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
 }
 
 .modal {
   background: white;
   border-radius: 28px;
-  width: 90%;
+  width: 100%;
   max-width: 450px;
   overflow: hidden;
   animation: slideIn 0.2s ease;
@@ -724,7 +879,7 @@
 .inputGroup input:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px #667eea20;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
 }
 
 .modalFooter {
@@ -772,21 +927,118 @@
   color: #64748b;
 }
 
-@media (max-width: 768px) {
+/* ============================================ */
+/* RESPONSIVE MEDIA QUERIES */
+/* ============================================ */
+
+/* Tablet (768px - 1023px) */
+@media (max-width: 1023px) {
+  .container {
+    padding: 20px;
+  }
+
+  .header h2 {
+    font-size: 24px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .reportsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .planTab {
+    min-width: 260px;
+  }
+
+  .globalAverage {
+    padding: 24px;
+  }
+
+  .averageCircle {
+    width: 140px;
+    height: 140px;
+  }
+
+  .averageValue {
+    font-size: 32px;
+  }
+}
+
+/* Mobile Large (576px - 767px) */
+@media (max-width: 767px) {
   .container {
     padding: 16px;
   }
 
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header h2 {
+    font-size: 22px;
+  }
+
+  .filterBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .childInfo {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px 20px;
+  }
+
+  .childAvatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .avatarPlaceholder {
+    font-size: 32px;
+  }
+
+  .childDetails h3 {
+    font-size: 18px;
+  }
+
+  .childStats {
+    justify-content: center;
+  }
+
   .statsGrid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .reportsGrid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .planTab {
     min-width: 240px;
+    padding: 12px 16px;
+  }
+
+  .planTabHeader h4 {
+    font-size: 16px;
+  }
+
+  .planScore {
+    font-size: 18px;
+  }
+
+  .planDetails {
+    padding: 20px;
+  }
+
+  .planDetailsHeader h3 {
+    font-size: 20px;
   }
 
   .globalAverage {
@@ -802,6 +1054,52 @@
     font-size: 28px;
   }
 
+  .averageLevel {
+    font-size: 16px;
+  }
+
+  .averageDetails {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .globalStats {
+    grid-template-columns: 1fr;
+  }
+
+  .statCard {
+    padding: 16px;
+  }
+
+  .statValue {
+    font-size: 28px;
+  }
+
+  .improvementValue {
+    font-size: 36px;
+  }
+
+  .chartBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .barLabel {
+    width: auto;
+  }
+
+  .barWrapper {
+    width: 100%;
+  }
+
+  .barValue {
+    width: auto;
+  }
+
+  .exercisesGrid {
+    grid-template-columns: 1fr;
+  }
+
   .emptyState {
     padding: 40px 20px;
   }
@@ -810,12 +1108,247 @@
     font-size: 48px;
   }
 
-  .childInfo {
-    flex-direction: column;
-    text-align: center;
+  .emptyState h3 {
+    font-size: 18px;
   }
 
-  .childStats {
-    justify-content: center;
+  .emptyState p {
+    font-size: 14px;
+  }
+
+  .reportCard {
+    padding: 16px;
+  }
+
+  .reportStats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .reportStat {
+    min-width: auto;
+  }
+
+  .modal {
+    max-width: 95%;
+    margin: 16px;
+  }
+
+  .modalHeader h3 {
+    font-size: 18px;
+  }
+
+  .modalFooter {
+    flex-direction: column;
+  }
+
+  .cancelBtn, .applyBtn {
+    width: 100%;
+  }
+
+  .loading {
+    padding: 40px;
+    font-size: 16px;
+  }
+}
+
+/* Mobile Small (up to 575px) */
+@media (max-width: 575px) {
+  .container {
+    padding: 12px;
+  }
+
+  .header h2 {
+    font-size: 20px;
+  }
+
+  .filterBadge {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .childInfo {
+    padding: 12px 16px;
+  }
+
+  .childAvatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .avatarPlaceholder {
+    font-size: 28px;
+  }
+
+  .childDetails h3 {
+    font-size: 16px;
+  }
+
+  .childStat {
+    font-size: 10px;
+  }
+
+  .globalAverage h3 {
+    font-size: 14px;
+  }
+
+  .averageCircle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .averageValue {
+    font-size: 24px;
+  }
+
+  .planTabHeader h4 {
+    font-size: 14px;
+  }
+
+  .planScore {
+    font-size: 16px;
+  }
+
+  .planDate {
+    font-size: 10px;
+  }
+
+  .progressText {
+    font-size: 10px;
+  }
+
+  .planDetailsHeader h3 {
+    font-size: 18px;
+  }
+
+  .planPeriod {
+    font-size: 12px;
+  }
+
+  .statIcon {
+    font-size: 24px;
+  }
+
+  .statLabel {
+    font-size: 11px;
+  }
+
+  .statValue {
+    font-size: 24px;
+  }
+
+  .statSub {
+    font-size: 10px;
+  }
+
+  .improvementValue {
+    font-size: 28px;
+  }
+
+  .improvementDetails {
+    font-size: 12px;
+  }
+
+  .completionRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .completionLabel {
+    font-size: 12px;
+  }
+
+  .completionValue {
+    font-size: 16px;
+  }
+
+  .completionMessage {
+    font-size: 11px;
+  }
+
+  .reportPeriod {
+    font-size: 11px;
+  }
+
+  .reportStat strong {
+    font-size: 14px;
+  }
+
+  .reportSummary, .reportDescription {
+    font-size: 12px;
+  }
+
+  .emptyIcon {
+    font-size: 40px;
+  }
+
+  .primaryBtn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Landscape orientation for mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .container {
+    padding: 12px;
+  }
+
+  .childInfo {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .plansTabs {
+    overflow-x: auto;
+  }
+
+  .modal {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* High-resolution screens */
+@media (min-width: 1440px) {
+  .container {
+    padding: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .reportsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Print styles */
+@media print {
+  .container {
+    background: white;
+    padding: 0;
+  }
+
+  .filterBtn, .modalOverlay, .primaryBtn {
+    display: none;
+  }
+
+  .planTab {
+    break-inside: avoid;
+  }
+
+  .reportCard {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
   }
 }

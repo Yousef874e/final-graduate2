@@ -5,7 +5,6 @@
   min-height: 100vh;
 }
 
-
 .headerCard {
   background: white;
   border-radius: 20px;
@@ -15,7 +14,6 @@
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-
 .cover {
   height: 160px;
   background: linear-gradient(135deg, #00bfa6, #008e7a);
@@ -24,88 +22,137 @@
 .profileInfo {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 20px;
-
-  margin-top: -60px;
+  gap: 25px;
+  padding: 0 25px 25px 25px;
+  margin-top: -50px;
   position: relative;
   z-index: 2;
 }
 
 .avatarWrapper {
   position: relative;
+  cursor: pointer;
 }
 
 .avatar {
-  width: 110px;
-  height: 110px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   border: 5px solid white;
   object-fit: cover;
   background: #eee;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: opacity 0.2s;
 }
+
+.avatar:hover {
+  opacity: 0.85;
+}
+
 .fileInput {
   position: absolute;
-  inset: 0;
+  bottom: 5px;
+  right: 5px;
+  width: 32px;
+  height: 32px;
   opacity: 0;
   cursor: pointer;
 }
-.profileInfo h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: bold;
+
+.avatarWrapper::after {
+  content: "📷";
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: white;
+  border-radius: 50%;
+  padding: 6px;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  pointer-events: none;
 }
 
-.profileInfo p {
-  margin: 5px 0 0;
-  color: #777;
-  font-size: 14px;
+.info {
+  flex: 1;
 }
+
+.info h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a2c3e;
+}
+
+.info p {
+  margin: 0;
+  color: #00bfa6;
+  font-size: 16px;
+  font-weight: 500;
+  background: #e6f7f4;
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 30px;
+}
+
 .grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr;
   gap: 20px;
 }
 
 .card {
   background: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 15px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.05);
 }
 
 .card h3 {
-  margin-bottom: 10px;
-  font-size: 18px;
+  margin: 0 0 15px 0;
+  font-size: 20px;
+  color: #008e7a;
+  border-right: 4px solid #00bfa6;
+  padding-right: 12px;
 }
 
 .card p {
-  color: #666;
-  line-height: 1.6;
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 992px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
+  color: #555;
+  line-height: 1.7;
+  margin: 0;
+  font-size: 15px;
 }
 
 @media (max-width: 768px) {
-
   .profileInfo {
     flex-direction: column;
-    align-items: center;
     text-align: center;
+    gap: 15px;
+    margin-top: -40px;
+    padding: 0 20px 20px 20px;
   }
 
   .avatar {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
   }
 
   .cover {
     height: 130px;
   }
 
+  .info p {
+    display: inline-block;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .card h3 {
+    display: inline-block;
+    border-right: none;
+    border-bottom: 3px solid #00bfa6;
+    padding-right: 0;
+    padding-bottom: 8px;
+  }
 }

@@ -13,25 +13,19 @@ import toast from "react-hot-toast";
 
 function SpecialistProfile() {
   const [profile, setProfile] = useState(null);
-
   const [image, setImage] = useState(null);
-
   const [preview, setPreview] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadProfile();
-
     loadImage();
   }, []);
 
   const loadProfile = async () => {
     try {
       const res = await getSpecialistProfile();
-
       setProfile(res || null);
     } catch {
       toast.error("فشل تحميل البروفايل");
@@ -43,27 +37,22 @@ function SpecialistProfile() {
   const loadImage = async () => {
     try {
       const res = await getSpecialistProfileImage();
-
       setImage(res?.url || null);
     } catch (err) {
       if (err?.response?.status === 404) {
         setImage(null);
-
         return;
       }
-
       setImage(null);
     }
   };
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
-
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       toast.error("مسموح صور فقط");
-
       return;
     }
 
@@ -71,17 +60,13 @@ function SpecialistProfile() {
 
     try {
       setUploading(true);
-
       const media = await uploadImage(file, {
         category: 2,
       });
-
       await setSpecialistProfileImage({
         mediaId: media.id,
       });
-
       setImage(media.url);
-
       toast.success("تم تحديث الصورة");
     } catch {
       toast.error("فشل رفع الصورة");
@@ -94,7 +79,6 @@ function SpecialistProfile() {
     <div className={styles.container}>
       <div className={styles.headerCard}>
         <div className={styles.cover}></div>
-
         <div className={styles.profileInfo}>
           <div className={styles.avatarWrapper}>
             <img
@@ -102,7 +86,6 @@ function SpecialistProfile() {
               className={styles.avatar}
               alt=""
             />
-
             <input
               type="file"
               accept="image/*"
@@ -111,19 +94,15 @@ function SpecialistProfile() {
               disabled={uploading}
             />
           </div>
-
           <div className={styles.info}>
-            <h2>{loading ? "Loading..." : profile?.fullName || "دكتور"}</h2>
-
+            <h2>{loading ? "جاري التحميل..." : profile?.fullName || "دكتور"}</h2>
             <p>{profile?.specialization || "لا يوجد تخصص"}</p>
           </div>
         </div>
       </div>
-
       <div className={styles.grid}>
         <div className={styles.card}>
           <h3>نبذة عني</h3>
-
           <p>{profile?.bio || "لا يوجد وصف"}</p>
         </div>
       </div>

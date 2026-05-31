@@ -7,7 +7,7 @@ import {
   FaUsers,
   FaChartLine,
   FaCheckCircle,
-  FaPlay,
+  FaEye,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 
@@ -32,7 +32,7 @@ function SpecialistDashboard() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>جاري التحميل...</p>;
 
   const overview = data?.overview || {};
   const appointments = data?.upcomingAppointments || [];
@@ -94,6 +94,9 @@ function SpecialistDashboard() {
                 <div key={item.appointmentId} className={styles.appointment}>
                   <div className={styles.info}>
                     <h5>{item.childName}</h5>
+                    <p className={styles.childInfo}>
+                      {item.parentName ? `مع {item.parentName}` : ""}
+                    </p>
                   </div>
 
                   <div className={styles.time}>
@@ -108,20 +111,25 @@ function SpecialistDashboard() {
                     </span>
                   </div>
 
-                  <div className={styles.actions}>
+                  <div className={styles.status}>
                     {isCompleted ? (
-                      <span className={styles.done}>مكتمل</span>
+                      <span className={styles.done}>✓ مكتمل</span>
                     ) : (
-                      <button
-                        onClick={() =>
-                          navigate("/dashboard/specialist/appointments", {
-                            state: { appointmentId: item.appointmentId },
-                          })
-                        }
-                      >
-                        <FaPlay /> بدء الجلسة الآن
-                      </button>
+                      <span className={styles.pending}>⏳ في الانتظار</span>
                     )}
+                  </div>
+
+                  <div className={styles.actions}>
+                    <button
+                      className={styles.viewBtn}
+                      onClick={() =>
+                        navigate("/dashboard/specialist/appointments", {
+                          state: { appointmentId: item.appointmentId },
+                        })
+                      }
+                    >
+                      <FaEye /> عرض التفاصيل
+                    </button>
                   </div>
                 </div>
               );
