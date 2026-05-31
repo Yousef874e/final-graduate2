@@ -32,25 +32,19 @@ import {
 
 function DashboardLayout() {
   const navigate = useNavigate();
-
   const location = useLocation();
-
   const { data, loadData } = useApp();
-
   const [showNotifications, setShowNotifications] = useState(false);
-
   const [parent, setParent] = useState({});
-
   const [profileImage, setProfileImage] = useState(null);
-
   const prevCountRef = useRef(0);
-
+  const audioRef = useRef(null);
   const savedUserName = localStorage.getItem("userName") || "مستخدم";
 
   const notifications = [];
 
   if (data?.upcomingAppointments?.length > 0) {
-    notifications.push("لديك جلسات قادمة لطفلك");
+    notifications.push("📅 لديك جلسات قادمة لطفلك");
   }
 
   if (
@@ -58,18 +52,65 @@ function DashboardLayout() {
       (child) => child.exercisesCount > 0 || child.pendingExercisesCount > 0,
     )
   ) {
-    notifications.push("هناك تمارين تحتاج متابعة");
+    notifications.push("🏋️ هناك تمارين تحتاج متابعة");
   }
 
   if (data?.treatmentPlans?.length > 0) {
-    notifications.push("تم إضافة أو تحديث خطة علاجية");
+    notifications.push("📋 تم إضافة أو تحديث خطة علاجية");
   }
 
   if (data?.children?.some((child) => child.reportsCount > 0)) {
-    notifications.push("يوجد تقارير جديدة متاحة");
+    notifications.push("📊 يوجد تقارير جديدة متاحة");
   }
 
   const notificationsCount = notifications.length;
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio(
+        "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
+      );
+      audio.volume = 0.5;
+      audio.play().catch((err) => console.log("صوت الإشعارات معطل:", err));
+    } catch (err) {
+      console.log("تعذر تشغيل الصوت");
+    }
+  };
+
+  const vibrateDevice = () => {
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(200);
+    }
+  };
+
+  const showBrowserNotification = (title, body) => {
+    if (Notification && Notification.permission === "granted") {
+      new Notification(title, {
+        body: body,
+        icon: logo,
+        silent: false,
+      });
+    } else if (Notification && Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(title, {
+            body: body,
+            icon: logo,
+          });
+        }
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (
+      Notification &&
+      Notification.permission !== "granted" &&
+      Notification.permission !== "denied"
+    ) {
+      Notification.requestPermission();
+    }
+  }, []);
 
   useEffect(() => {
     loadParentData();
@@ -83,7 +124,6 @@ function DashboardLayout() {
       ]);
 
       setParent(parentRes || {});
-
       setProfileImage(imageRes?.url || null);
     } catch {
       console.log("failed loading parent data");
@@ -94,7 +134,22 @@ function DashboardLayout() {
     if (notificationsCount > prevCountRef.current) {
       const diff = notificationsCount - prevCountRef.current;
 
-      toast.success(`عندك ${diff} إشعار جديد 🔔`);
+      playNotificationSound();
+      vibrateDevice();
+
+      if (diff === 1) {
+        toast.success(`🔔 عندك إشعار جديد`);
+        showBrowserNotification(
+          "إشعار جديد",
+          notifications[notifications.length - 1],
+        );
+      } else {
+        toast.success(`🔔 عندك ${diff} إشعارات جديدة`);
+        showBrowserNotification(
+          `${diff} إشعارات جديدة`,
+          `لديك ${diff} من الإشعارات الجديدة`,
+        );
+      }
     }
 
     prevCountRef.current = notificationsCount;
@@ -122,7 +177,6 @@ function DashboardLayout() {
   };
 
   const currentTitle = titles[location.pathname] || "لوحة التحكم";
-
   const isDashboard = location.pathname === "/dashboard/parent";
 
   return (
@@ -130,7 +184,6 @@ function DashboardLayout() {
       <div className={styles.sidebar}>
         <div className="logo-container">
           <span className="logo-text">رفيق</span>
-
           <div className="logo-circle">
             <img src={logo} alt="logo" />
           </div>
@@ -221,7 +274,6 @@ function DashboardLayout() {
             <div
               onClick={() => {
                 clearAuth();
-
                 navigate("/login", {
                   replace: true,
                 });
@@ -247,9 +299,7 @@ function DashboardLayout() {
 
             {isDashboard && (
               <p className={styles.welcome}>
-                مرحباً،
-                {parent?.fullName || savedUserName}
-                👋
+                مرحباً، {parent?.fullName || savedUserName} 👋
               </p>
             )}
           </div>
@@ -261,21 +311,26 @@ function DashboardLayout() {
               }}
             >
               <FaBell
-                className={styles.iconCircle}
+                className={`${styles.iconCircle} ${notificationsCount > 0 ? styles.hasNotifications : ""}`}
                 onClick={() => setShowNotifications(!showNotifications)}
               />
-
               {notificationsCount > 0 && (
                 <span className={styles.badge}>{notificationsCount}</span>
               )}
-
-              {showNotifications && notificationsCount > 0 && (
+              {showNotifications && notifications.length > 0 && (
                 <div className={styles.notificationsBox}>
                   {notifications.map((item, index) => (
                     <div key={index} className={styles.notificationItem}>
-                      🔔 {item}
+                      {item}
                     </div>
                   ))}
+                </div>
+              )}
+              {showNotifications && notifications.length === 0 && (
+                <div className={styles.notificationsBox}>
+                  <div className={styles.noNotifications}>
+                    📭 لا توجد إشعارات جديدة
+                  </div>
                 </div>
               )}
             </div>

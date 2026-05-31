@@ -53,12 +53,14 @@ export const updateTreatmentPlan = async (id, data) => {
     startDate: data.startDate,
     endDate: data.endDate,
     isActive: data.isActive !== undefined ? data.isActive : true,
+   
 
     exercises: data.exercises.map((ex) => ({
       exerciseId: Number(ex.exerciseId),
       expectedReps: Number(ex.expectedReps),
       sets: Number(ex.sets),
       dailyFrequency: Number(ex.dailyFrequency),
+      
     })),
   };
 
@@ -75,7 +77,7 @@ export const stopTreatmentPlan = async (id, data) => {
     endDate: data.endDate,
     isActive: false,
 
-    exercises: data.exercises.map((ex) => ({
+    exercises: (data.exercises || []).map((ex) => ({
       exerciseId: Number(ex.exerciseId),
       expectedReps: Number(ex.expectedReps),
       sets: Number(ex.sets),
@@ -83,7 +85,10 @@ export const stopTreatmentPlan = async (id, data) => {
     })),
   };
 
+ 
+
   const res = await axiosClient.put(`/TreatmentPlans/${id}`, payload);
 
   return res.data;
 };
+

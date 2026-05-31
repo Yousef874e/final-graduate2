@@ -37,17 +37,12 @@ function SpecialistExercise() {
 
   const toEgyptTime = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    const egyptTime = new Date(date.getTime() + (2 * 60 * 60 * 1000));
-    return egyptTime.toISOString().split("T")[0];
+    return dateString.split("T")[0];
   };
 
   const toUTCForAPI = (dateString) => {
     if (!dateString) return "";
-    const [year, month, day] = dateString.split("-");
-    const egyptDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
-    const utcDate = new Date(egyptDate.getTime() - (2 * 60 * 60 * 1000));
-    return utcDate.toISOString();
+    return dateString;
   };
 
   useEffect(() => {
@@ -171,6 +166,14 @@ function SpecialistExercise() {
       return;
     }
 
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end < start) {
+      toast.error("تاريخ النهاية يجب أن يكون بعد تاريخ البداية");
+      return;
+    }
+
     if (selectedExercises.length === 0) {
       toast.error("اختار تمارين");
       return;
@@ -233,28 +236,23 @@ function SpecialistExercise() {
       toast.error("فشل تحميل الخطة");
     }
   };
+const handleStop = async (plan) => {
+  const ok = window.confirm("هل تريد إيقاف الخطة ؟");
 
-  const handleStop = async (plan) => {
-    const ok = window.confirm("هل تريد إيقاف الخطة ؟");
+  if (!ok) return;
 
-    if (!ok) return;
+  try {
+    const fullPlan = await getTreatmentPlanById(plan.id);
 
-    try {
-      await stopTreatmentPlan(plan.id, {
-        title: plan.title,
-        notes: plan.notes,
-        startDate: toUTCForAPI(plan.startDate),
-        endDate: toUTCForAPI(plan.endDate),
-        exercises: plan.exercises || [],
-      });
+    await stopTreatmentPlan(plan.id, fullPlan);
 
-      toast.success("تم إيقاف الخطة");
-      loadPlans(childId);
-    } catch (err) {
-      console.log(err);
-      toast.error("فشل إيقاف الخطة");
-    }
-  };
+    toast.success("تم إيقاف الخطة");
+    loadPlans(childId);
+  } catch (err) {
+  
+    toast.error("فشل إيقاف الخطة");
+  }
+};
 
   const filtered = exercises.filter((ex) =>
     ex.name?.toLowerCase().includes(search.toLowerCase()),

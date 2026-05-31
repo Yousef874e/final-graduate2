@@ -160,7 +160,7 @@
 .planActions button:first-child {
   background: #4f46e5;
   color: white;
-    font-size: 18px;
+  font-size: 18px;
 }
 
 .planActions button:last-child {
@@ -205,7 +205,6 @@
     opacity: 0;
     transform: translateY(15px) scale(0.96);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -347,52 +346,6 @@
   padding: 40px 0;
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding: 20px;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .headerActions {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .search,
-  .saveBtn {
-    width: 100%;
-  }
-
-  .dateRow {
-    grid-template-columns: 1fr;
-  }
-
-  .inputs {
-    grid-template-columns: 1fr;
-  }
-
-  .modal {
-    max-width: 100%;
-    padding: 20px;
-    border-radius: 22px;
-  }
-
-  .modal h3 {
-    font-size: 22px;
-  }
-
-  .modalActions {
-    flex-direction: column;
-  }
-
-  .header h2 {
-    font-size: 30px;
-  }
-}
 .removeBtn {
   width: 100%;
   margin-top: 12px;
@@ -414,4 +367,429 @@
   margin-bottom: 14px;
   color: #1e293b;
   font-size: 17px;
+}
+@media (max-width: 1400px) {
+  .container {
+    padding: 28px;
+  }
+
+  .header h2 {
+    font-size: 34px;
+  }
+
+  .plansGrid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+}
+
+
+@media (max-width: 1199px) {
+  .container {
+    padding: 24px;
+  }
+
+  .header h2 {
+    font-size: 32px;
+  }
+
+  .modal {
+    max-width: 550px;
+    padding: 24px;
+  }
+
+  .modal h3 {
+    font-size: 26px;
+  }
+
+  .inputs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+
+@media (max-width: 991px) {
+  .container {
+    padding: 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .header h2 {
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search {
+    width: 100%;
+    height: 48px;
+  }
+
+  .saveBtn {
+    width: 100%;
+    height: 48px;
+    font-size: 18px;
+  }
+
+  .dateRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .plansGrid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .planCard h4 {
+    font-size: 18px;
+  }
+
+  .modal {
+    max-width: 500px;
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .modal h3 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .inputs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .modalActions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .confirmBtn,
+  .cancelBtn {
+    padding: 12px;
+  }
+}
+
+
+@media (max-width: 767px) {
+  .container {
+    padding: 16px;
+  }
+
+  .header h2 {
+    font-size: 24px;
+  }
+
+  .header p {
+    font-size: 14px;
+  }
+
+  .search {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .saveBtn {
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .formBox input,
+  .formBox textarea,
+  .formBox select {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .plansSection {
+    margin-top: 30px;
+  }
+
+  .plansGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .planCard {
+    padding: 16px;
+  }
+
+  .planCard h4 {
+    font-size: 17px;
+  }
+
+  .planCard p {
+    font-size: 14px;
+  }
+
+  .planActions button {
+    padding: 8px;
+    font-size: 16px;
+  }
+
+  .modal {
+    padding: 16px;
+    border-radius: 20px;
+    max-height: 85vh;
+  }
+
+  .modal h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .exerciseList {
+    max-height: 280px;
+    gap: 10px;
+  }
+
+  .exerciseItem {
+    padding: 12px;
+  }
+
+  .exerciseItem h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .inputs {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .inputs input {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .selectBtn,
+  .selectedBtn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .modalActions {
+    margin-top: 20px;
+  }
+
+  .confirmBtn,
+  .cancelBtn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .video {
+    max-height: 180px;
+  }
+
+  .empty {
+    padding: 30px 0;
+    font-size: 14px;
+  }
+
+  .removeBtn {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+
+@media (max-width: 575px) {
+  .container {
+    padding: 12px;
+  }
+
+  .header h2 {
+    font-size: 20px;
+  }
+
+  .header p {
+    font-size: 12px;
+  }
+
+  .search {
+    height: 40px;
+    font-size: 13px;
+    padding: 0 12px;
+  }
+
+  .saveBtn {
+    height: 40px;
+    font-size: 14px;
+    padding: 0 16px;
+  }
+
+  .formBox input,
+  .formBox textarea,
+  .formBox select {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 14px;
+  }
+
+  .planCard {
+    padding: 14px;
+  }
+
+  .planCard h4 {
+    font-size: 16px;
+  }
+
+  .planCard p {
+    font-size: 13px;
+  }
+
+  .planActions button {
+    padding: 6px;
+    font-size: 14px;
+  }
+
+  .modal {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .modal h3 {
+    font-size: 18px;
+  }
+
+  .exerciseItem {
+    padding: 10px;
+  }
+
+  .exerciseItem h4 {
+    font-size: 14px;
+  }
+
+  .selectBtn,
+  .selectedBtn {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .video {
+    max-height: 150px;
+  }
+
+  .empty {
+    padding: 20px 0;
+    font-size: 13px;
+  }
+}
+
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal {
+    max-height: 90vh;
+  }
+
+  .exerciseList {
+    max-height: 200px;
+  }
+
+  .video {
+    max-height: 120px;
+  }
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .search,
+  .formBox input,
+  .formBox textarea,
+  .formBox select,
+  .inputs input {
+    border-width: 0.5px;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .container {
+    background: #0f172a;
+  }
+
+  .header h2 {
+    color: #f1f5f9;
+  }
+
+  .header p {
+    color: #94a3b8;
+  }
+
+  .search {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+  }
+
+  .search:focus {
+    border-color: #5b8def;
+  }
+
+  .planCard {
+    background: #1e293b;
+  }
+
+  .planCard h4 {
+    color: #f1f5f9;
+  }
+
+  .planCard p {
+    color: #cbd5e1;
+  }
+
+  .modal {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .modal h3 {
+    color: #f1f5f9;
+  }
+
+  .exerciseItem {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .exerciseItem h4 {
+    color: #f1f5f9;
+  }
+
+  .selectBtn {
+    background: #334155;
+    color: #f1f5f9;
+  }
+
+  .selectBtn:hover {
+    background: #475569;
+  }
+
+  .formBox input,
+  .formBox textarea,
+  .formBox select,
+  .inputs input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+  }
+
+  .formBox input:focus,
+  .formBox textarea:focus,
+  .formBox select:focus,
+  .inputs input:focus {
+    background: #1e293b;
+  }
 }

@@ -52,10 +52,6 @@ function AdminUsers() {
 
   const [search, setSearch] = useState("");
 
-  const [showFilter, setShowFilter] = useState(false);
-
-  const [activeFilter, setActiveFilter] = useState("all");
-
   const [editForm, setEditForm] = useState({
     fullName: "",
     dateOfBirth: "",
@@ -68,7 +64,7 @@ function AdminUsers() {
 
   useEffect(() => {
     applyFilters();
-  }, [search, activeFilter, users]);
+  }, [search, users]);
 
   const loadUsers = async () => {
     try {
@@ -128,14 +124,6 @@ function AdminUsers() {
       data = data.filter((u) =>
         u.fullName?.toLowerCase().includes(search.toLowerCase()),
       );
-    }
-
-    if (activeFilter === "active") {
-      data = data.filter((u) => u.isActive);
-    }
-
-    if (activeFilter === "inactive") {
-      data = data.filter((u) => !u.isActive);
     }
 
     setFilteredUsers(data);
@@ -237,37 +225,6 @@ function AdminUsers() {
 
   const deleteUser = async (user) => {
     try {
-      if (user.isActive) {
-        await updateChild(user.id, {
-          fullName: user.fullName,
-
-          dateOfBirth: user.dateOfBirth,
-
-          gender: user.gender,
-
-          diagnosis: user.diagnosis,
-
-          specialistProfileId: user.specialistProfileId,
-
-          isActive: false,
-        });
-
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === user.id
-              ? {
-                  ...u,
-                  isActive: false,
-                }
-              : u,
-          ),
-        );
-
-        toast.success("تم تعطيل المستخدم ⚠️");
-
-        return;
-      }
-
       await deleteChild(user.id);
 
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
@@ -279,12 +236,6 @@ function AdminUsers() {
   };
 
   const openEdit = (user) => {
-    if (!user.isActive) {
-      toast.error("مينفعش تعدل مستخدم غير نشط ❌");
-
-      return;
-    }
-
     setSelectedUser(user);
 
     setEditForm({
@@ -335,24 +286,7 @@ function AdminUsers() {
     <div className="admin-page">
       <div className="users-header">
         <h2>ملفات المستخدمين</h2>
-
-        <button
-          className="filter-btn"
-          onClick={() => setShowFilter(!showFilter)}
-        >
-          تصفية
-        </button>
       </div>
-
-      {showFilter && (
-        <div className="filter-box">
-          <button onClick={() => setActiveFilter("all")}>الكل</button>
-
-          <button onClick={() => setActiveFilter("active")}>مفعل</button>
-
-          <button onClick={() => setActiveFilter("inactive")}>غير مفعل</button>
-        </div>
-      )}
 
       <input
         className="search"
@@ -381,14 +315,6 @@ function AdminUsers() {
                   <p>السن: {calculateAge(user.dateOfBirth)} سنة</p>
 
                   <p>ولي الأمر: {user.parentName}</p>
-
-                  <span
-                    style={{
-                      color: user.isActive ? "green" : "red",
-                    }}
-                  >
-                    {user.isActive ? "نشط" : "غير نشط"}
-                  </span>
                 </div>
               </div>
 
