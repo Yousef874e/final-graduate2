@@ -8,6 +8,28 @@ import { getTreatmentPlans } from "../../api/treatmentPlansService";
 import { getSessionsByChild } from "../../api/sessionsService";
 import { getMedicalReports } from "../../api/medicalReportsService";
 import { getChildImage } from "../../api/childrenService";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  ComposedChart,
+} from "recharts";
+
+const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 function Analytics() {
   const navigate = useNavigate();
@@ -27,6 +49,7 @@ function Analytics() {
   const [allReports, setAllReports] = useState([]);
   const [hasData, setHasData] = useState(false);
   const [selectedPlanStats, setSelectedPlanStats] = useState(null);
+  const [activeChart, setActiveChart] = useState("line");
 
   const appContext = useApp();
   const { data } = appContext;
@@ -94,6 +117,7 @@ function Analytics() {
         avgRepetitionsPerSession: 0,
         sessionsCount: 0,
         allSessionsCount: planSessions.length,
+        sessionHistory: [],
       };
 
     const avg =
@@ -112,6 +136,16 @@ function Analytics() {
     const avgMistakesPerSession = totalMistakes / validSessions.length;
     const avgRepetitionsPerSession = totalRepetitions / validSessions.length;
 
+    const sessionHistory = validSessions
+      .sort((a, b) => new Date(a.sessionDate || a.createdAtUtc) - new Date(b.sessionDate || b.createdAtUtc))
+      .map((s, idx) => ({
+        session: `جلسة ${idx + 1}`,
+        score: Number(s.result.accuracyScore),
+        mistakes: s.result?.mistakeCount || 0,
+        repetitions: s.result?.repetitionCount || 0,
+        date: new Date(s.sessionDate || s.createdAtUtc).toLocaleDateString("ar-EG"),
+      }));
+
     return {
       avgScore: Math.round(avg),
       totalMistakes,
@@ -120,6 +154,7 @@ function Analytics() {
       avgRepetitionsPerSession,
       sessionsCount: validSessions.length,
       allSessionsCount: planSessions.length,
+      sessionHistory,
     };
   };
 
@@ -158,6 +193,11 @@ function Analytics() {
       return;
     }
 
+    if (!fromDate || !toDate) {
+      toast.error("الرجاء تحديد تاريخ البداية والنهاية");
+      return;
+    }
+
     setLoading(true);
     setHasData(false);
 
@@ -172,30 +212,52 @@ function Analytics() {
       const sessionsData = sessionsRes?.items || [];
       let allReportsData = reportsRes?.items || [];
 
-      setAllPlans(allPlansData);
-      setAllReports(allReportsData);
-      setPlans(allPlansData);
-      setSessions(sessionsData);
-      setReports(allReportsData);
+      const fromDateTime = new Date(fromDate);
+      fromDateTime.setHours(0, 0, 0, 0);
+      
+      const toDateTime = new Date(toDate);
+      toDateTime.setHours(23, 59, 59, 999);
+
+      const filteredPlans = allPlansData.filter(plan => {
+        const planStartDate = new Date(plan.startDate);
+        const planEndDate = new Date(plan.endDate);
+        return planStartDate <= toDateTime && planEndDate >= fromDateTime;
+      });
+
+      const filteredSessions = sessionsData.filter(session => {
+        const sessionDate = new Date(session.sessionDate || session.createdAtUtc);
+        return sessionDate >= fromDateTime && sessionDate <= toDateTime;
+      });
+
+      const filteredReports = allReportsData.filter(report => {
+        const reportDate = new Date(report.createdAtUtc || report.createdAt);
+        return reportDate >= fromDateTime && reportDate <= toDateTime;
+      });
+
+      setAllPlans(filteredPlans);
+      setAllReports(filteredReports);
+      setPlans(filteredPlans);
+      setSessions(filteredSessions);
+      setReports(filteredReports);
 
       const hasAnyData =
-        allPlansData.length > 0 ||
-        allReportsData.length > 0 ||
-        sessionsData.length > 0;
+        filteredPlans.length > 0 ||
+        filteredReports.length > 0 ||
+        filteredSessions.length > 0;
       setHasData(hasAnyData);
 
-      if (allPlansData.length > 0) {
-        setSelectedPlan(allPlansData[0]);
-        const allScores = calculateGlobalAverageFromData(allPlansData, sessionsData);
+      if (filteredPlans.length > 0) {
+        setSelectedPlan(filteredPlans[0]);
+        const allScores = calculateGlobalAverageFromData(filteredPlans, filteredSessions);
         setGlobalAverage(allScores);
-        const stats = calculatePlanStats(allPlansData[0]);
+        const stats = calculatePlanStats(filteredPlans[0]);
         setSelectedPlanStats(stats);
       } else {
         setSelectedPlan(null);
         setGlobalAverage(null);
         setSelectedPlanStats(null);
         if (!hasAnyData) {
-          toast("لا توجد بيانات", { icon: "📭" });
+          toast("لا توجد بيانات في هذه الفترة", { icon: "📭" });
         }
       }
 
@@ -244,6 +306,33 @@ function Analytics() {
       total,
       percentage: total ? Math.round((completed / total) * 100) : 0,
     };
+  };
+
+  const getOverallStatsData = () => {
+    const planStats = plans.map(plan => {
+      const stats = calculatePlanStats(plan);
+      return {
+        name: plan.title || plan.name || "خطة",
+        score: stats.avgScore || 0,
+        sessions: stats.sessionsCount,
+        mistakes: stats.totalMistakes,
+        repetitions: stats.totalRepetitions,
+      };
+    });
+    return planStats;
+  };
+
+  const getPieData = () => {
+    const completed = plans.reduce((sum, plan) => {
+      return sum + calculateCompletedExercises(plan).completed;
+    }, 0);
+    const total = plans.reduce((sum, plan) => {
+      return sum + (plan.exercises?.length || 0);
+    }, 0);
+    return [
+      { name: "تمارين مكتملة", value: completed },
+      { name: "تمارين متبقية", value: total - completed },
+    ];
   };
 
   const formatDate = (dateString) => {
@@ -295,9 +384,28 @@ function Analytics() {
     return `⏳ متبقي ${remaining} تمرين`;
   };
 
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ background: "white", padding: "8px", borderRadius: "6px", boxShadow: "0 1px 4px rgba(0,0,0,0.1)", border: "1px solid #e2e8f0", fontSize: "10px" }}>
+          <p style={{ margin: 0, fontWeight: "bold", color: "#1e293b" }}>{label}</p>
+          {payload.map((p, idx) => (
+            <p key={idx} style={{ margin: "2px 0", color: p.color }}>
+              {p.name}: {p.value} {p.unit || "%"}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (loading) {
     return (
-      <div className={analyticsStyles.loading}>جاري تحميل البيانات...</div>
+      <div className={analyticsStyles.loading}>
+        <div className={analyticsStyles.spinner}></div>
+        <p>جاري تحميل البيانات...</p>
+      </div>
     );
   }
 
@@ -379,531 +487,219 @@ function Analytics() {
         </div>
       ) : (
         <>
-          <div className={analyticsStyles.filterBadge}>
-            📅 عرض جميع البيانات المتاحة
+          <div className={analyticsStyles.globalAverageCard}>
+            <h3>📈 متوسط الأداء العام</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <RadialBarChart 
+                cx="50%" 
+                cy="50%" 
+                innerRadius="60%" 
+                outerRadius="80%" 
+                barSize={16} 
+                data={[{ name: "المتوسط", value: globalAverage || 0, fill: getScoreColor(globalAverage) }]}
+                startAngle={180}
+                endAngle={0}
+              >
+                <RadialBar background dataKey="value" cornerRadius={30} />
+                <text x="50%" y="48%" textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={20} fontWeight="bold">
+                  {globalAverage !== null ? `${globalAverage}%` : "—"}
+                </text>
+                <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" fill="#cbd5e1" fontSize={11}>
+                  {getScoreLevel(globalAverage)}
+                </text>
+              </RadialBarChart>
+            </ResponsiveContainer>
           </div>
 
-          <div className={analyticsStyles.globalAverage}>
-            <h3>📈 متوسط الأداء العام</h3>
-            <div className={analyticsStyles.averageCircle}>
-              <svg
-                className={analyticsStyles.circularChart}
-                viewBox="0 0 180 180"
-              >
-                <circle
-                  className={analyticsStyles.circleBg}
-                  cx="90"
-                  cy="90"
-                  r="78"
-                />
-                <circle
-                  className={analyticsStyles.circleFill}
-                  cx="90"
-                  cy="90"
-                  r="78"
-                  stroke={getScoreColor(globalAverage)}
-                  strokeDasharray={`${2 * Math.PI * 78}`}
-                  strokeDashoffset={
-                    globalAverage !== null
-                      ? 2 * Math.PI * 78 * (1 - globalAverage / 100)
-                      : 2 * Math.PI * 78
-                  }
-                />
-              </svg>
-              <div
-                className={analyticsStyles.averageValue}
-                style={{ color: getScoreColor(globalAverage) }}
-              >
-                {globalAverage !== null ? `${globalAverage}%` : "—"}
+          {plans.length > 0 && (
+            <div className={analyticsStyles.chartCard}>
+              <h3>📊 مقارنة أداء الخطط العلاجية</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={getOverallStatsData()} barSize={24}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} unit="%" />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="score" name="نسبة الإنجاز" fill="#3b82f6" barSize={24} radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {selectedPlanStats && selectedPlanStats.sessionHistory && selectedPlanStats.sessionHistory.length > 1 && (
+            <div className={analyticsStyles.chartCard}>
+              <div className={analyticsStyles.chartHeader}>
+                <h3>📈 تقدم الجلسات</h3>
+                <div className={analyticsStyles.chartTabs}>
+                  <button className={`${analyticsStyles.chartTab} ${activeChart === "line" ? analyticsStyles.active : ""}`} onClick={() => setActiveChart("line")}>خطي</button>
+                  <button className={`${analyticsStyles.chartTab} ${activeChart === "area" ? analyticsStyles.active : ""}`} onClick={() => setActiveChart("area")}>مساحي</button>
+                  <button className={`${analyticsStyles.chartTab} ${activeChart === "composed" ? analyticsStyles.active : ""}`} onClick={() => setActiveChart("composed")}>مركب</button>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={280}>
+                {activeChart === "line" && (
+                  <LineChart data={selectedPlanStats.sessionHistory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="session" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line type="monotone" dataKey="score" name="درجة الدقة" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                )}
+                {activeChart === "area" && (
+                  <AreaChart data={selectedPlanStats.sessionHistory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="session" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="score" name="درجة الدقة" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={2} />
+                  </AreaChart>
+                )}
+                {activeChart === "composed" && (
+                  <ComposedChart data={selectedPlanStats.sessionHistory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="session" tick={{ fontSize: 11 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar yAxisId="right" dataKey="mistakes" name="الأخطاء" fill="#ef4444" barSize={20} radius={[4, 4, 0, 0]} />
+                    <Line yAxisId="left" type="monotone" dataKey="score" name="الدقة" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                  </ComposedChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {selectedPlanStats && (selectedPlanStats.totalMistakes > 0 || selectedPlanStats.totalRepetitions > 0) && (
+            <div className={analyticsStyles.chartCard}>
+              <h3>❌ الأخطاء والتكرارات</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={[
+                  { name: "الأخطاء", value: selectedPlanStats.totalMistakes },
+                  { name: "التكرارات", value: selectedPlanStats.totalRepetitions }
+                ]} barSize={40}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="value" name="العدد" barSize={40} radius={[6, 6, 0, 0]}>
+                    <Cell fill="#ef4444" />
+                    <Cell fill="#10b981" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <div className={analyticsStyles.ratioInfo}>
+                نسبة الأخطاء: {((selectedPlanStats.totalMistakes / Math.max(selectedPlanStats.totalRepetitions, 1)) * 100).toFixed(1)}%
               </div>
             </div>
-            <div
-              className={analyticsStyles.averageLevel}
-              style={{ color: getScoreColor(globalAverage) }}
-            >
-              {getScoreLevel(globalAverage)}
+          )}
+
+          {plans.length > 0 && (
+            <div className={analyticsStyles.chartCard}>
+              <h3>🥧 نسبة إتمام التمارين</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie data={getPieData()} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} dataKey="value">
+                    {getPieData().map((entry, index) => (<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: "11px" }} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            {globalAverage !== null && (
-              <div className={analyticsStyles.averageDetails}>
-                <span>✅ أنجزت: {globalAverage}%</span>
-                <span>⏳ باقي للهدف: {100 - globalAverage}%</span>
-              </div>
-            )}
-          </div>
+          )}
 
           {plans.length > 0 && (
             <div className={analyticsStyles.plansSection}>
               <h3>📋 الخطط العلاجية</h3>
-              <p className={analyticsStyles.plansCount}>عدد الخطط: {plans.length}</p>
-
               <div className={analyticsStyles.plansTabs}>
                 {plans.map((plan, idx) => {
                   const stats = calculatePlanStats(plan);
                   const avgScore = stats?.avgScore || null;
-                  const { completed, total, percentage } =
-                    calculateCompletedExercises(plan);
+                  const { completed, total, percentage } = calculateCompletedExercises(plan);
                   const planName = plan.title || plan.name || `خطة ${idx + 1}`;
-
                   return (
-                    <div
-                      key={plan.id || idx}
-                      className={`${analyticsStyles.planTab} ${selectedPlan?.id === plan.id ? analyticsStyles.active : ""}`}
-                      onClick={() => {
-                        setSelectedPlan(plan);
-                        setSelectedPlanStats(calculatePlanStats(plan));
-                      }}
-                    >
+                    <div key={plan.id || idx} className={`${analyticsStyles.planTab} ${selectedPlan?.id === plan.id ? analyticsStyles.active : ""}`} onClick={() => { setSelectedPlan(plan); setSelectedPlanStats(calculatePlanStats(plan)); }}>
                       <div className={analyticsStyles.planTabHeader}>
                         <h4>{planName}</h4>
-                        <span
-                          className={analyticsStyles.planScore}
-                          style={{ color: getScoreColor(avgScore) }}
-                        >
-                          {avgScore !== null ? `${avgScore}%` : "—"}
-                        </span>
+                        <span className={analyticsStyles.planScore} style={{ color: getScoreColor(avgScore) }}>{avgScore !== null ? `${avgScore}%` : "—"}</span>
                       </div>
-                      <p className={analyticsStyles.planDate}>
-                        {formatDate(plan.startDate)} → {formatDate(plan.endDate)}
-                      </p>
+                      <p className={analyticsStyles.planDate}>{formatDate(plan.startDate)} → {formatDate(plan.endDate)}</p>
                       <div className={analyticsStyles.planProgress}>
-                        <div className={analyticsStyles.progressBar}>
-                          <div
-                            className={analyticsStyles.progressFill}
-                            style={{
-                              width: `${percentage}%`,
-                              backgroundColor: getScoreColor(avgScore || 0),
-                            }}
-                          />
-                        </div>
-                        <span className={analyticsStyles.progressText}>
-                          {completed}/{total} تمرين -{" "}
-                          {getRemainingText(completed, total)}
-                        </span>
+                        <div className={analyticsStyles.progressBar}><div className={analyticsStyles.progressFill} style={{ width: `${percentage}%`, backgroundColor: getScoreColor(avgScore || 0) }} /></div>
+                        <span className={analyticsStyles.progressText}>{completed}/{total} تمرين</span>
                       </div>
-                      {stats && stats.sessionsCount > 0 && (
-                        <div className={analyticsStyles.planStats}>
-                          <span>📊 {stats.sessionsCount} جلسة</span>
-                          <span>❌ {stats.totalMistakes} خطأ</span>
-                          <span>🔄 {stats.totalRepetitions} تكرار</span>
-                        </div>
-                      )}
+                      {stats && stats.sessionsCount > 0 && (<div className={analyticsStyles.planStats}><span>📊 {stats.sessionsCount} جلسة</span><span>❌ {stats.totalMistakes} خطأ</span></div>)}
                     </div>
                   );
                 })}
               </div>
-
-              {selectedPlan && selectedPlanStats && (
-                <div className={analyticsStyles.planDetails}>
-                  <div className={analyticsStyles.planDetailsHeader}>
-                    <h3>{selectedPlan.title || selectedPlan.name || "الخطة العلاجية"}</h3>
-                    <p className={analyticsStyles.planPeriod}>
-                      📅 {formatDate(selectedPlan.startDate)} - {formatDate(selectedPlan.endDate)}
-                    </p>
-                  </div>
-
-                  <div className={analyticsStyles.statsGrid}>
-                    <div className={analyticsStyles.statCard}>
-                      <div className={analyticsStyles.statIcon}>📊</div>
-                      <div className={analyticsStyles.statLabel}>
-                        نسبة الإنجاز
-                      </div>
-                      <div
-                        className={analyticsStyles.statValue}
-                        style={{
-                          color: getScoreColor(selectedPlanStats.avgScore),
-                        }}
-                      >
-                        {selectedPlanStats.avgScore !== null
-                          ? `${selectedPlanStats.avgScore}%`
-                          : "—"}
-                      </div>
-                      <div className={analyticsStyles.statSub}>
-                        {getScoreLevel(selectedPlanStats.avgScore)}
-                      </div>
-                      {selectedPlanStats.avgScore !== null && (
-                        <div className={analyticsStyles.statExtra}>
-                          <div>✅ أنجزت: {selectedPlanStats.avgScore}%</div>
-                          <div>⏳ باقي: {100 - selectedPlanStats.avgScore}%</div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={analyticsStyles.statCard}>
-                      <div className={analyticsStyles.statIcon}>✅</div>
-                      <div className={analyticsStyles.statLabel}>
-                        التمارين المكتملة
-                      </div>
-                      <div className={analyticsStyles.statValue}>
-                        {calculateCompletedExercises(selectedPlan).completed}/
-                        {calculateCompletedExercises(selectedPlan).total}
-                      </div>
-                      <div className={analyticsStyles.statSub}>
-                        {getRemainingText(
-                          calculateCompletedExercises(selectedPlan).completed,
-                          calculateCompletedExercises(selectedPlan).total,
-                        )}
-                      </div>
-                    </div>
-
-                    <div className={analyticsStyles.statCard}>
-                      <div className={analyticsStyles.statIcon}>📋</div>
-                      <div className={analyticsStyles.statLabel}>
-                        عدد التمارين
-                      </div>
-                      <div className={analyticsStyles.statValue}>
-                        {selectedPlan.exercises?.length || 0}
-                      </div>
-                      <div className={analyticsStyles.statSub}>تمرين</div>
-                    </div>
-
-                    <div className={analyticsStyles.statCard}>
-                      <div className={analyticsStyles.statIcon}>❌</div>
-                      <div className={analyticsStyles.statLabel}>
-                        إجمالي الأخطاء
-                      </div>
-                      <div className={analyticsStyles.statValue}>
-                        {selectedPlanStats.totalMistakes || 0}
-                      </div>
-                      <div className={analyticsStyles.statSub}>
-                        بمتوسط {selectedPlanStats.avgMistakesPerSession.toFixed(1)} لكل جلسة
-                      </div>
-                    </div>
-
-                    <div className={analyticsStyles.statCard}>
-                      <div className={analyticsStyles.statIcon}>🔄</div>
-                      <div className={analyticsStyles.statLabel}>
-                        إجمالي التكرارات
-                      </div>
-                      <div className={analyticsStyles.statValue}>
-                        {selectedPlanStats.totalRepetitions || 0}
-                      </div>
-                      <div className={analyticsStyles.statSub}>
-                        بمتوسط {selectedPlanStats.avgRepetitionsPerSession.toFixed(1)} لكل جلسة
-                      </div>
-                    </div>
-
-                    <div className={analyticsStyles.statCard}>
-                      <div className={analyticsStyles.statIcon}>📅</div>
-                      <div className={analyticsStyles.statLabel}>
-                        عدد الجلسات
-                      </div>
-                      <div className={analyticsStyles.statValue}>
-                        {selectedPlanStats.sessionsCount || 0}
-                      </div>
-                      <div className={analyticsStyles.statSub}>
-                        جلسة لهذه الخطة
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedPlanStats.sessionsCount >= 2 && (
-                    <div className={analyticsStyles.improvementSection}>
-                      <div className={analyticsStyles.improvementHeader}>
-                        <span className={analyticsStyles.improvementIcon}>📈</span>
-                        <h4>نسبة التحسن في الخطة</h4>
-                      </div>
-                      {(() => {
-                        const improvement = calculateImprovementRate(selectedPlan);
-                        if (!improvement) {
-                          return (
-                            <p className={analyticsStyles.noData}>
-                              لا توجد بيانات كافية لحساب التحسن
-                            </p>
-                          );
-                        }
-                        const isPositive = improvement.percentage >= 0;
-                        const completed = improvement.lastScore;
-                        const remaining = 100 - completed;
-                        return (
-                          <div>
-                            <div
-                              className={`${analyticsStyles.improvementCard} ${isPositive ? analyticsStyles.positive : analyticsStyles.negative}`}
-                            >
-                              <div className={analyticsStyles.improvementValue}>
-                                {isPositive ? "📈" : "📉"} {Math.abs(improvement.percentage)}%
-                              </div>
-                              <div className={analyticsStyles.improvementDetails}>
-                                من {improvement.firstScore}% إلى {improvement.lastScore}%
-                              </div>
-                            </div>
-                            <div className={analyticsStyles.completionBox}>
-                              <div className={analyticsStyles.completionRow}>
-                                <span className={analyticsStyles.completionLabel}>✅ أنجزت:</span>
-                                <span className={analyticsStyles.completionValue}>{completed}%</span>
-                              </div>
-                              <div className={analyticsStyles.completionRow}>
-                                <span className={analyticsStyles.completionLabel}>⏳ باقي للهدف:</span>
-                                <span className={analyticsStyles.completionValue}>{remaining}%</span>
-                              </div>
-                              <div className={analyticsStyles.progressBar}>
-                                <div
-                                  className={analyticsStyles.progressFill}
-                                  style={{
-                                    width: `${completed}%`,
-                                    backgroundColor: "#10b981",
-                                  }}
-                                />
-                              </div>
-                              <div className={analyticsStyles.completionMessage}>
-                                {remaining <= 0 ? "🎉 تهانينا! لقد حققت الهدف بنجاح" :
-                                 remaining <= 10 ? "💪 أنت على بعد خطوات قليلة من الهدف" :
-                                 remaining <= 20 ? "👍 تقدم ممتاز، استمر" :
-                                 remaining <= 50 ? "📈 في منتصف الطريق، واصل بنفس المستوى" :
-                                 "🌟 بداية جيدة، استمر في التدريب"}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {selectedPlanStats.totalRepetitions > 0 && (
-                    <div className={analyticsStyles.errorsRepetitionsChart}>
-                      <h4>📊 تحليل الأخطاء والتكرارات</h4>
-                      <div className={analyticsStyles.chartBars}>
-                        <div className={analyticsStyles.chartBar}>
-                          <div className={analyticsStyles.barLabel}>
-                            الأخطاء
-                          </div>
-                          <div className={analyticsStyles.barWrapper}>
-                            <div
-                              className={analyticsStyles.barFill}
-                              style={{
-                                width: `${Math.min((selectedPlanStats.totalMistakes / Math.max(selectedPlanStats.totalRepetitions, 1)) * 100, 100)}%`,
-                                backgroundColor: "#ef4444",
-                              }}
-                            />
-                          </div>
-                          <span className={analyticsStyles.barValue}>
-                            {selectedPlanStats.totalMistakes}
-                          </span>
-                        </div>
-                        <div className={analyticsStyles.chartBar}>
-                          <div className={analyticsStyles.barLabel}>
-                            التكرارات
-                          </div>
-                          <div className={analyticsStyles.barWrapper}>
-                            <div
-                              className={analyticsStyles.barFillReps}
-                              style={{ width: "100%", backgroundColor: "#10b981" }}
-                            />
-                          </div>
-                          <span className={analyticsStyles.barValue}>
-                            {selectedPlanStats.totalRepetitions}
-                          </span>
-                        </div>
-                      </div>
-                      <div className={analyticsStyles.ratioInfo}>
-                        نسبة الأخطاء إلى التكرارات:{" "}
-                        {(
-                          (selectedPlanStats.totalMistakes /
-                            selectedPlanStats.totalRepetitions) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedPlan.exercises?.length > 0 && (
-                    <div className={analyticsStyles.exercisesList}>
-                      <h4>📝 تمارين الخطة</h4>
-                      <div className={analyticsStyles.exercisesGrid}>
-                        {selectedPlan.exercises.map((ex, index) => {
-                          const isCompleted = sessions
-                            .filter((s) => [2, 3, 4].includes(Number(s.status)))
-                            .some(
-                              (s) =>
-                                Number(s.treatmentPlanExerciseId) ===
-                                Number(ex.id),
-                            );
-                          return (
-                            <div
-                              key={ex.id || index}
-                              className={`${analyticsStyles.exerciseItem} ${isCompleted ? analyticsStyles.completed : ""}`}
-                            >
-                              <div className={analyticsStyles.exerciseName}>
-                                {index + 1}. {ex.exerciseName || ex.name || `تمرين ${index + 1}`}
-                                {isCompleted && (
-                                  <span
-                                    className={analyticsStyles.completedBadge}
-                                  >
-                                    ✓
-                                  </span>
-                                )}
-                              </div>
-                              <div className={analyticsStyles.exerciseDetails}>
-                                <span>🔄 {ex.sets || 0} جولات</span>
-                                <span>🔁 {ex.expectedReps || ex.reps || 0} عدات</span>
-                                <span>📅 {ex.dailyFrequency || 0} يومياً</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
           <div className={analyticsStyles.reportsSection}>
             <h3>📊 التقارير السابقة</h3>
-
-            {reports.length === 0 ? (
-              <div className={analyticsStyles.emptyReports}>
-                <p>لا توجد تقارير طبية لهذا الطفل</p>
-              </div>
-            ) : (
-              <div className={analyticsStyles.reportsGrid}>
-                {reports.map((report, idx) => {
-                  const improvement = report.improvementPercentage || 0;
-                  const isPositive = improvement >= 0;
-                  const completedExercises =
-                    report.completedExercisesCount || 0;
-                  const totalExercises = report.totalExercisesCount || 0;
-                  const remainingExercises =
-                    totalExercises - completedExercises;
-
-                  return (
-                    <div key={report.id || idx} className={analyticsStyles.reportCard}>
-                      <div className={analyticsStyles.reportPeriod}>
-                        <span>
-                          📅{" "}
-                          {formatDate(report.createdAtUtc || report.createdAt)}
-                        </span>
-                      </div>
-
-                      <div className={analyticsStyles.reportStats}>
-                        <div className={analyticsStyles.reportStat}>
-                          <span>نوع التقرير</span>
-                          <strong>{report.reportType || "طبي"}</strong>
-                        </div>
-
-                        <div className={analyticsStyles.reportStat}>
-                          <span>الحالة</span>
-                          <strong>{report.status || "مكتمل"}</strong>
-                        </div>
-
-                        {report.averageAccuracy !== undefined && (
-                          <div className={analyticsStyles.reportStat}>
-                            <span>متوسط الدقة</span>
-                            <strong
-                              style={{
-                                color: getScoreColor(report.averageAccuracy),
-                              }}
-                            >
-                              {report.averageAccuracy}%
-                            </strong>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className={analyticsStyles.improvementCard}>
-                        <div className={analyticsStyles.improvementHeader}>
-                          <span className={analyticsStyles.improvementIcon}>
-                            {isPositive ? "📈" : "📉"}
-                          </span>
-                          <span>نسبة التحسن</span>
-                        </div>
-                        <div
-                          className={analyticsStyles.improvementValue}
-                          style={{ color: isPositive ? "#10b981" : "#ef4444" }}
-                        >
-                          {Math.abs(improvement)}%
-                        </div>
-                        <div className={analyticsStyles.improvementText}>
-                          {getImprovementText(improvement)}
-                        </div>
-                      </div>
-
-                      {totalExercises > 0 && (
-                        <div className={analyticsStyles.exercisesProgress}>
-                          <div className={analyticsStyles.progressInfo}>
-                            <span>📋 التمارين المكتملة</span>
-                            <strong>
-                              {completedExercises}/{totalExercises}
-                            </strong>
-                          </div>
-                          <div className={analyticsStyles.progressBar}>
-                            <div
-                              className={analyticsStyles.progressFill}
-                              style={{
-                                width: `${(completedExercises / totalExercises) * 100}%`,
-                                backgroundColor: "#10b981",
-                              }}
-                            />
-                          </div>
-                          <div className={analyticsStyles.remainingInfo}>
-                            {remainingExercises === 0
-                              ? "🎉 جميع التمارين مكتملة"
-                              : `⏳ متبقي ${remainingExercises} تمرين`}
-                          </div>
-                        </div>
-                      )}
-
-                      {report.summary && (
-                        <div className={analyticsStyles.reportSummary}>
-                          📝 {report.summary}
-                        </div>
-                      )}
-
-                      {report.description && (
-                        <div className={analyticsStyles.reportDescription}>
-                          📄 {report.description}
-                        </div>
-                      )}
-
-                      <div className={analyticsStyles.reportDate}>
-                        🕐 آخر تحديث:{" "}
-                        {formatDate(
-                          report.updatedAtUtc ||
-                            report.updatedAt ||
-                            report.createdAtUtc ||
-                            report.createdAt,
-                        )}
-                      </div>
+            <div className={analyticsStyles.reportsGrid}>
+              {reports.map((report, idx) => {
+                const improvement = report.improvementPercentage || 0;
+                const isPositive = improvement >= 0;
+                const completedExercises = report.completedExercisesCount || 0;
+                const totalExercises = report.totalExercisesCount || 0;
+                return (
+                  <div key={report.id || idx} className={analyticsStyles.reportCard}>
+                    <div className={analyticsStyles.reportPeriod}>📅 {formatDate(report.createdAtUtc || report.createdAt)}</div>
+                    <div className={analyticsStyles.reportStats}>
+                      <div className={analyticsStyles.reportStat}><span>النوع</span><strong>{report.reportType || "طبي"}</strong></div>
+                      <div className={analyticsStyles.reportStat}><span>الحالة</span><strong>{report.status || "مكتمل"}</strong></div>
+                      {report.averageAccuracy !== undefined && (<div className={analyticsStyles.reportStat}><span>الدقة</span><strong style={{ color: getScoreColor(report.averageAccuracy) }}>{report.averageAccuracy}%</strong></div>)}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <div className={`${analyticsStyles.improvementCard} ${isPositive ? analyticsStyles.positive : analyticsStyles.negative}`}>
+                      <div className={analyticsStyles.improvementValue}>{isPositive ? "📈" : "📉"} {Math.abs(improvement)}%</div>
+                      <div className={analyticsStyles.improvementText}>{getImprovementText(improvement)}</div>
+                    </div>
+                    {totalExercises > 0 && (
+                      <div className={analyticsStyles.exercisesProgress}>
+                        <div className={analyticsStyles.progressInfo}><span>📋 التمارين</span><strong>{completedExercises}/{totalExercises}</strong></div>
+                        <div className={analyticsStyles.progressBar}><div className={analyticsStyles.progressFill} style={{ width: `${(completedExercises / totalExercises) * 100}%`, backgroundColor: "#10b981" }} /></div>
+                      </div>
+                    )}
+                    {report.summary && (<div className={analyticsStyles.reportSummary}>📝 {report.summary}</div>)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </>
       )}
 
       {showDateModal && (
-        <div
-          className={analyticsStyles.modalOverlay}
-          onClick={() => setShowDateModal(false)}
-        >
-          <div
-            className={analyticsStyles.modal}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className={analyticsStyles.modalOverlay} onClick={() => setShowDateModal(false)}>
+          <div className={analyticsStyles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={analyticsStyles.modalHeader}>
-              <h3>📅 تحديث البيانات</h3>
-              <button
-                className={analyticsStyles.closeBtn}
-                onClick={() => setShowDateModal(false)}
-              >
-                ✕
-              </button>
+              <h3>📅 تحديد الفترة الزمنية</h3>
+              <button className={analyticsStyles.closeBtn} onClick={() => setShowDateModal(false)}>✕</button>
             </div>
-
             <div className={analyticsStyles.modalBody}>
-              <p>سيتم تحديث جميع البيانات المتاحة لهذا الطفل</p>
+              <div className={analyticsStyles.inputGroup}>
+                <label>📅 من تاريخ</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+              </div>
+              <div className={analyticsStyles.inputGroup}>
+                <label>📅 إلى تاريخ</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </div>
             </div>
-
             <div className={analyticsStyles.modalFooter}>
-              <button
-                className={analyticsStyles.applyBtn}
-                onClick={fetchDataByDate}
-              >
-                تحديث البيانات
-              </button>
+              <button className={analyticsStyles.cancelBtn} onClick={() => setShowDateModal(false)}>إلغاء</button>
+              <button className={analyticsStyles.applyBtn} onClick={fetchDataByDate}>تطبيق</button>
             </div>
           </div>
         </div>

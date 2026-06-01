@@ -1352,3 +1352,530 @@
     border: 1px solid #e2e8f0;
   }
 }
+
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.container {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header h2 {
+  font-size: 32px;
+  margin: 0;
+  color: #1e293b;
+}
+
+.filterBtn {
+  padding: 14px 28px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterBtn:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.childInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  border-radius: 20px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.childAvatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  font-size: 40px;
+}
+
+.childDetails h3 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  color: #1e293b;
+}
+
+.childStats {
+  display: flex;
+  gap: 20px;
+}
+
+.childStat {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.globalAverageCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 28px;
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.globalAverageCard h3 {
+  color: white;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 24px;
+}
+
+.chartCard {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.chartCard h3 {
+  margin-bottom: 20px;
+  color: #1e293b;
+  font-size: 20px;
+  padding-right: 4px;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chartHeader h3 {
+  margin-bottom: 0;
+}
+
+.chartTabs {
+  display: flex;
+  gap: 8px;
+}
+
+.chartTab {
+  padding: 8px 18px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.chartTab.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.plansSection {
+  margin-bottom: 32px;
+}
+
+.plansSection h3 {
+  font-size: 26px;
+  margin-bottom: 24px;
+  color: #1e293b;
+}
+
+.plansTabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.planTab {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 0;
+}
+
+.planTab.active {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.15);
+}
+
+.planTabHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.planTabHeader h4 {
+  margin: 0;
+  font-size: 22px;
+  color: #1e293b;
+}
+
+.planScore {
+  font-weight: bold;
+  font-size: 26px;
+}
+
+.planDate {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+
+.planProgress {
+  margin: 14px 0;
+}
+
+.progressBar {
+  background: #e2e8f0;
+  border-radius: 10px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s;
+}
+
+.progressText {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 8px;
+  display: block;
+}
+
+.planStats {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.reportsSection {
+  margin-top: 40px;
+}
+
+.reportsSection h3 {
+  font-size: 26px;
+  margin-bottom: 24px;
+  color: #1e293b;
+}
+
+.reportsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
+}
+
+.reportCard {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.reportCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.reportPeriod {
+  font-size: 15px;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+
+.reportStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.reportStat {
+  text-align: center;
+}
+
+.reportStat span {
+  display: block;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.reportStat strong {
+  font-size: 18px;
+  color: #1e293b;
+}
+
+.improvementCard {
+  text-align: center;
+  padding: 14px;
+  border-radius: 14px;
+  margin: 16px 0;
+}
+
+.improvementCard.positive {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.improvementCard.negative {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+}
+
+.improvementValue {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.improvementText {
+  font-size: 14px;
+  color: #4b5563;
+  margin-top: 4px;
+}
+
+.exercisesProgress {
+  margin-top: 14px;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.reportSummary {
+  font-size: 15px;
+  color: #475569;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ratioInfo {
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 24px;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.primaryBtn {
+  padding: 14px 32px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 28px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalHeader h3 {
+  font-size: 22px;
+  margin: 0;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.modalBody {
+  padding: 24px;
+  font-size: 16px;
+}
+
+.modalFooter {
+  padding: 20px 24px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.applyBtn {
+  padding: 12px 28px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .plansTabs {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .reportsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .reportStats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .chartHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .childInfo {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .childStats {
+    justify-content: center;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filterBtn {
+    text-align: center;
+  }
+
+  .globalAverageCard {
+    padding: 20px;
+  }
+
+  .globalAverageCard h3 {
+    font-size: 20px;
+  }
+
+  .planTabHeader h4 {
+    font-size: 18px;
+  }
+
+  .planScore {
+    font-size: 22px;
+  }
+
+  .reportsSection h3 {
+    font-size: 22px;
+  }
+}
