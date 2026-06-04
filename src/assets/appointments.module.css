@@ -22,12 +22,29 @@
   padding: 15px;
   border-radius: 15px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .calendarTop {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.calendarTop button {
+  background: #00bfa6;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.calendarTop span {
+  font-size: 18px;
+  font-weight: bold;
 }
 
 .grid {
@@ -39,6 +56,9 @@
 .dayName {
   text-align: center;
   font-weight: bold;
+  padding: 8px;
+  color: #666;
+  font-size: 14px;
 }
 
 .day {
@@ -49,11 +69,22 @@
   background: #f5f5f5;
   border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.day:hover {
+  background: #e0e0e0;
 }
 
 .active {
   background: #00bfa6;
   color: white;
+}
+
+.hasEvent {
+  border: 2px solid #00bfa6;
+  background: #e0f7f2;
 }
 
 .overlay {
@@ -62,59 +93,83 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
-
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal {
   background: white;
-  padding: 20px;
-  border-radius: 15px;
+  padding: 25px;
+  border-radius: 20px;
   width: 400px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal h3 {
+  margin: 0 0 15px 0;
+  font-size: 22px;
 }
 
 .modal input,
 .modal select {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #ddd;
-  font-size: 25px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.modal input:focus,
+.modal select:focus {
+  outline: none;
+  border-color: #00bfa6;
 }
 
 .actions {
   display: flex;
   gap: 10px;
+  margin-top: 10px;
 }
 
 .actions button {
   flex: 1;
   padding: 10px;
-  border-radius: 15px;
+  border-radius: 10px;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.actions button:first-child {
+  background: #00bfa6;
+  color: white;
+}
+
+.actions button:first-child:hover {
+  background: #009e8f;
 }
 
 .cancel {
   background: #eee;
+  color: #333;
 }
-.cancel button {
-    flex: 1;
-  padding: 10px;
-  border-radius: 15px;
-  border: none;
-  font-size: 18px;
- 
+
+.cancel:hover {
+  background: #ddd;
 }
 
 .list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 20px;
 }
 
 .card {
@@ -123,9 +178,30 @@
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: 0.2s;
 }
-.hasEvent {
-  border: 2px solid #00bfa6;
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cardInfo h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.cardInfo p {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
 }
 
 .cardActions {
@@ -138,11 +214,80 @@
   background: #00bfa6;
   color: white;
   border: none;
-  padding: 5px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.cardActions button:hover {
+  background: #009e8f;
 }
 
 .cardActions button:last-child {
   background: #ff5252;
+}
+
+.cardActions button:last-child:hover {
+  background: #e53935;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+
+  .grid {
+    gap: 5px;
+  }
+
+  .day {
+    height: 40px;
+    font-size: 12px;
+  }
+
+  .dayName {
+    font-size: 12px;
+    padding: 5px;
+  }
+
+  .modal {
+    padding: 20px;
+    width: 95%;
+  }
+
+  .modal h3 {
+    font-size: 18px;
+  }
+
+  .card {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cardActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendarTop span {
+    font-size: 14px;
+  }
+
+  .calendarTop button {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .day {
+    height: 35px;
+    font-size: 11px;
+  }
+
+  .dayName {
+    font-size: 10px;
+  }
 }

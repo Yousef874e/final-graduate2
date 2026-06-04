@@ -27,6 +27,35 @@
   border: 1px solid #ddd;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.tools {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.filterBtn {
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  font-size: 22px;
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -34,40 +63,62 @@
 }
 
 .card {
-  background: white;
-  border-radius: 16px;
-  padding: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  background: #fff;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: 0.2s ease;
 }
 
-.info h4 {
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.right h4 {
   margin: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
 
-.info p {
-  color: #777;
-  font-size: 14px;
+.right span {
+  font-size: 13px;
+  color: #888;
 }
 
-.actions {
+.left {
   display: flex;
   gap: 10px;
 }
 
-.actions button {
-  border: none;
-  padding: 8px 12px;
+.left button {
+  padding: 8px 14px;
   border-radius: 8px;
+  border: none;
   cursor: pointer;
+  font-size: 22px;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.left button:first-child {
   background: #00bfa6;
-  color: white;
+  color: #fff;
+}
+
+.left button:first-child:hover {
+  background: #009e8f;
 }
 
 .delete {
-  background: #ff4d4f !important;
+  background: #f44336;
+  color: #fff;
+}
+
+.delete:hover {
+  background: #d32f2f;
 }
 
 .overlay {
@@ -76,8 +127,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
-
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -129,101 +179,11 @@
     flex-direction: column;
   }
 
+  .tools {
+    flex-direction: column;
+  }
+
   .modal {
     width: 90%;
   }
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.tools {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.search {
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-}
-
-.filterBtn {
-  padding: 10px 15px;
-  border-radius: 10px;
-  border: none;
-  background: #eee;
-    cursor: pointer;
-    font-size: 22px;
-}
-
-.card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  padding: 15px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  margin-bottom: 12px;
-  transition: 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-}
-
-.right h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.right span {
-  font-size: 13px;
-  color: #888;
-}
-
-.left {
-  display: flex;
-  gap: 10px;
-}
-
-.left button {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 22px;
-  font-weight: 500;
-  transition: 0.2s ease;
-}
-
-.left button:first-child {
-  background: #00bfa6;
-  color: #fff;
-}
-
-.left button:first-child:hover {
-  background: #00bfa6
-}
-
-.delete {
-  background: #f44336;
-  color: #fff;
-}
-
-.delete:hover {
-  background: #d32f2f;
-
 }

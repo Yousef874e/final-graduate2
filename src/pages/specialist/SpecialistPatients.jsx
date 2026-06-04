@@ -20,13 +20,17 @@ function SpecialistPatients() {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState("");
 
-  const getStatus = (score) => {
+  const getStatus = (score, sessions) => {
+    if (!sessions) return "قيد التقييم";
+
     if (score >= 80) return "تحسن ملحوظ";
     if (score >= 50) return "مستمر";
-    return "ضعيف";
+    return "يحتاج متابعة";
   };
 
-  const getStatusClass = (score) => {
+  const getStatusClass = (score, sessions) => {
+    if (!sessions) return styles.normal;
+
     if (score >= 80) return styles.good;
     if (score >= 50) return styles.normal;
     return styles.bad;
@@ -86,14 +90,20 @@ function SpecialistPatients() {
                 <img src={p.image || "/default-avatar.png"} alt="" />
                 <div>
                   <h4>{p.childName}</h4>
-                  <p>جلسات: {p.analyzedSessionsCount || 0}</p>
+                  <p>التقارير الطبية: {p.medicalReportsCount || 0}</p>
                 </div>
               </div>
 
               <span
-                className={`${styles.status} ${getStatusClass(p.averageAccuracyScore)}`}
+                className={`${styles.status} ${getStatusClass(
+                  p.averageAccuracyScore,
+                  p.analyzedSessionsCount
+                )}`}
               >
-                {getStatus(p.averageAccuracyScore)}
+                {getStatus(
+                  p.averageAccuracyScore,
+                  p.analyzedSessionsCount
+                )}
               </span>
             </div>
 

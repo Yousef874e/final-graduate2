@@ -37,10 +37,26 @@
 .report-card {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   background: #fff;
   padding: 15px;
   border-radius: 12px;
   border: 1px solid #eee;
+}
+
+.report-info h4 {
+  margin: 0 0 5px 0;
+}
+
+.report-info p {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+}
+
+.report-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .report-actions button {
@@ -48,6 +64,25 @@
   border: none;
   cursor: pointer;
   font-size: 18px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.report-actions button:first-child {
+  color: #2bbbad;
+}
+
+.report-actions button:first-child:hover {
+  background: #e0f7f2;
+}
+
+.delete-btn {
+  color: #dc3545;
+}
+
+.delete-btn:hover {
+  background: #ffe6e8;
 }
 
 .modal {
@@ -60,6 +95,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -69,7 +105,25 @@
   width: 350px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+}
+
+.modal-content h3 {
+  margin: 0 0 5px 0;
+}
+
+.modal-content select,
+.modal-content textarea,
+.modal-content input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-family: inherit;
+}
+
+.modal-content textarea {
+  min-height: 80px;
+  resize: vertical;
 }
 
 .upload-btn {
@@ -78,6 +132,12 @@
   padding: 10px;
   border: none;
   border-radius: 8px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.upload-btn:hover {
+  background: #249c8e;
 }
 
 .close-btn {
@@ -85,11 +145,36 @@
   padding: 10px;
   border: none;
   border-radius: 8px;
+  cursor: pointer;
 }
+
+.close-btn:hover {
+  background: #ddd;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 90%;
+    width: auto;
+  }
+}
+
 @media (max-width: 480px) {
+  .reports-page {
+    padding: 15px;
+  }
+
+  .reports-header h2 {
+    font-size: 18px;
+  }
+
+  .add-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
   .modal-content {
     padding: 18px;
-    border-radius: 15px;
   }
 
   .modal-content h3 {
@@ -101,10 +186,12 @@
     padding: 10px;
     font-size: 14px;
   }
-}
 
-@media (max-width: 768px) {
-  .modal-content {
-    max-width: 90%;
+  .report-card {
+    padding: 12px;
+  }
+
+  .report-info h4 {
+    font-size: 14px;
   }
 }

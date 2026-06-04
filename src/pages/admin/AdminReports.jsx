@@ -1,12 +1,13 @@
 import "../../assets/adminReports.css"
 import { useEffect, useState } from "react"
-import { FaDownload, FaPlus } from "react-icons/fa"
+import { FaDownload, FaPlus, FaTrash } from "react-icons/fa"
 import toast from "react-hot-toast"
 
 import { getChildren } from "../../api/childrenService"
 import {
   getMedicalReports,
   createMedicalReport,
+  deleteMedicalReport,
   downloadMedicalReport
 } from "../../api/medicalReportsService"
 import { uploadFile } from "../../api/mediaService"
@@ -56,6 +57,19 @@ function AdminReports() {
       window.open(url, "_blank")
     } catch {
       toast.error("فشل تحميل التقرير ❌")
+    }
+  }
+
+  const handleDelete = async (id) => {
+    const confirm = window.confirm("هل أنت متأكد من حذف هذا التقرير؟")
+    if (!confirm) return
+
+    try {
+      await deleteMedicalReport(id)
+      toast.success("تم حذف التقرير ✅")
+      await loadReports(form.childId)
+    } catch {
+      toast.error("فشل حذف التقرير ❌")
     }
   }
 
@@ -133,6 +147,9 @@ function AdminReports() {
               <div className="report-actions">
                 <button onClick={() => handleDownload(r.id)}>
                   <FaDownload />
+                </button>
+                <button onClick={() => handleDelete(r.id)} className="delete-btn">
+                  <FaTrash />
                 </button>
               </div>
             </div>
