@@ -320,11 +320,17 @@ function AdminLibrary() {
               }
             />
 
-            <button onClick={isEdit ? handleUpdate : handleCreate}>
-              {isEdit ? "حفظ" : "إضافة"}
-            </button>
-
-            <button onClick={closeModal}>إغلاق</button>
+            <div class="modal-buttons">
+              <button
+                class="action-btn"
+                onClick={isEdit ? handleUpdate : handleCreate}
+              >
+                {isEdit ? "حفظ" : "إضافة"}
+              </button>
+              <button class="close-btn" onClick={closeModal}>
+                إغلاق
+              </button>
+            </div>
           </div>
         </div>
       )}

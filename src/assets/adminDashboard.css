@@ -689,3 +689,11 @@ filter-box button {
     align-items: flex-start;
   }
 }
+
+.react-select-container {
+  width: 100%;
+}
+
+.modal-content {
+  overflow: visible;
+}

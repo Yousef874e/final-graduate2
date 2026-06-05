@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FaCalendarAlt, FaFileAlt, FaLink, FaEllipsisV } from "react-icons/fa";
 
 import toast from "react-hot-toast";
+import Select from "react-select";
 
 import {
   getChildren,
@@ -135,14 +136,20 @@ function AdminUsers() {
     return new Date().getFullYear() - new Date(date).getFullYear();
   };
 
-  const getStatus = (status) => {
-    if (status === 0) return "قيد الانتظار";
-
-    if (status === 1) return "مكتمل";
-
-    if (status === 2) return "ملغي";
-
-    return "-";
+  const formatDate = (dateString) => {
+    if (!dateString) return "التاريخ غير متوفر";
+    
+    try {
+      const date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        return "تاريخ غير صالح";
+      }
+      
+      return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    } catch (error) {
+      return "خطأ في التاريخ";
+    }
   };
 
   const openReports = async (user) => {
@@ -199,9 +206,14 @@ function AdminUsers() {
   };
 
   const handleLink = async () => {
+    if (selectedUser?.specialistProfileId) {
+      toast.error("هذا الطفل مربوط بالفعل بأخصائي، لا يمكن ربطه بأخصائي آخر ❌");
+      setShowLink(false);
+      return;
+    }
+
     if (!selectedSpecialist) {
       toast.error("اختار أخصائي ❌");
-
       return;
     }
 
@@ -220,6 +232,26 @@ function AdminUsers() {
       loadUsers();
     } catch {
       toast.error("فشل الربط ❌");
+    }
+  };
+
+  const handleUnlink = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await updateChild(selectedUser.id, {
+        fullName: selectedUser.fullName,
+        dateOfBirth: selectedUser.dateOfBirth,
+        gender: selectedUser.gender,
+        diagnosis: selectedUser.diagnosis,
+        specialistProfileId: null,
+      });
+
+      toast.success("تم فك الربط ✅");
+      setShowMenu(null);
+      loadUsers();
+    } catch {
+      toast.error("فشل فك الربط ❌");
     }
   };
 
@@ -328,7 +360,12 @@ function AdminUsers() {
               {showMenu === user.id && (
                 <div className="dropdown">
                   <div onClick={() => openEdit(user)}>تعديل</div>
-
+                  {user.specialistProfileId && (
+                    <div onClick={() => {
+                      setSelectedUser(user);
+                      handleUnlink();
+                    }}>فك الربط</div>
+                  )}
                   <div onClick={() => deleteUser(user)}>حذف</div>
                 </div>
               )}
@@ -338,13 +375,19 @@ function AdminUsers() {
 
             <div className="user-actions">
               <div
+                className={user.specialistProfileId ? "linked-btn" : ""}
                 onClick={() => {
+                  if (user.specialistProfileId) {
+                    toast("هذا الطفل مربوط بالفعل بأخصائي", { icon: "🔗" });
+                    return;
+                  }
                   setSelectedUser(user);
                   setShowLink(true);
                 }}
+                style={user.specialistProfileId ? { opacity: 0.6, cursor: "pointer" } : {}}
               >
                 <FaLink />
-                <span>ربط</span>
+                <span>{user.specialistProfileId ? "مرتبط" : "ربط"}</span>
               </div>
 
               <div onClick={() => openSessions(user)}>
@@ -366,21 +409,36 @@ function AdminUsers() {
           <div className="modal-content">
             <h3>ربط أخصائي</h3>
 
-            <select
-              value={selectedSpecialist}
-              onChange={(e) => setSelectedSpecialist(e.target.value)}
-            >
-              <option value="">اختر أخصائي</option>
-
-              {specialists.map((s) => (
-                <option
-                  key={s.specialistProfileId || s.id}
-                  value={s.specialistProfileId || s.id}
-                >
-                  {s.fullName}
-                </option>
-              ))}
-            </select>
+            <Select
+              placeholder="اختر أخصائي"
+              menuPlacement="bottom"
+              menuPortalTarget={document.body}
+              value={
+                specialists
+                  .map((s) => ({
+                    value: s.specialistProfileId || s.id,
+                    label: s.fullName,
+                  }))
+                  .find(
+                    (option) => option.value === Number(selectedSpecialist),
+                  ) || null
+              }
+              onChange={(option) => setSelectedSpecialist(option?.value || "")}
+              options={specialists.map((s) => ({
+                value: s.specialistProfileId || s.id,
+                label: s.fullName,
+              }))}
+              styles={{
+                menuPortal: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+              }}
+            />
 
             <div className="modal-actions">
               <button onClick={handleLink}>ربط</button>
@@ -399,12 +457,7 @@ function AdminUsers() {
             {sessions.length > 0 ? (
               sessions.map((s) => (
                 <div key={s.id} className="session-card">
-                  <p>
-                    التاريخ:
-                    {s.appointmentDate?.split("T")[0]}
-                  </p>
-
-                  <p>الحالة: {getStatus(s.status)}</p>
+                  <p>التاريخ: {formatDate(s.scheduledAtUtc)}</p>
                 </div>
               ))
             ) : (

@@ -134,7 +134,9 @@
   border-radius: 8px;
   cursor: pointer;
   margin-top: 5px;
+  font-size: 25px;
 }
+
 
 .upload-btn:hover {
   background: #249c8e;
@@ -146,6 +148,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
+font-size: 25px;
 }
 
 .close-btn:hover {

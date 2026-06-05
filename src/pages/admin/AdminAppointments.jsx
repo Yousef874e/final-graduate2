@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 
 import {
   getAppointmentsByChildId,
-  createAppointment,
   cancelAppointment,
   completeAppointment,
 } from "../../api/appointmentsService";
@@ -14,34 +13,22 @@ import toast from "react-hot-toast";
 
 export default function AdminAppointments() {
   const [appointments, setAppointments] = useState([]);
-
   const [children, setChildren] = useState([]);
-
   const [selectedDate, setSelectedDate] = useState(new Date());
-
   const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  const [showModal, setShowModal] = useState(false);
-
   const [loading, setLoading] = useState(false);
-
-  const [form, setForm] = useState({
-    childId: "",
-    scheduledAtUtc: "",
-    durationMinutes: "",
-    notes: "",
-  });
+  const [selectedChildId, setSelectedChildId] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const c = await getChildren();
-
       const kids = c.items || [];
-
       setChildren(kids);
 
       const requests = kids.map((child) =>
@@ -52,7 +39,6 @@ export default function AdminAppointments() {
       );
 
       const results = await Promise.all(requests);
-
       const allAppointments = results.flatMap((r) => r.items || []);
 
       allAppointments.sort(
@@ -62,18 +48,16 @@ export default function AdminAppointments() {
       setAppointments(allAppointments);
     } catch {
       toast.error("فشل تحميل البيانات ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
   const getDays = () => {
     const year = currentMonth.getFullYear();
-
     const month = currentMonth.getMonth();
-
     const firstDay = new Date(year, month, 1).getDay();
-
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-
     const days = [];
 
     for (let i = 0; i < firstDay; i++) {
@@ -87,76 +71,26 @@ export default function AdminAppointments() {
     return days;
   };
 
+  const getChildName = (childId) => {
+    const child = children.find(c => c.id === childId);
+    return child ? child.fullName : "طفل غير معروف";
+  };
+
   const filtered = appointments.filter((a) => {
-    const d = new Date(a.scheduledAtUtc);
-
-    return (
-      d.getFullYear() === selectedDate.getFullYear() &&
-      d.getMonth() === selectedDate.getMonth() &&
-      d.getDate() === selectedDate.getDate()
-    );
+    const childMatch = selectedChildId ? a.childId === Number(selectedChildId) : true;
+    const statusMatch = statusFilter === "all" ? true : a.status === Number(statusFilter);
+    return childMatch && statusMatch;
   });
-
-  const isValid = () => {
-    return (
-      form.childId &&
-      form.scheduledAtUtc &&
-      Number(form.durationMinutes) >= 15 &&
-      Number(form.durationMinutes) <= 240
-    );
-  };
-
-  const submit = async () => {
-    if (!isValid()) {
-      toast.error("اكمل البيانات صح ❌");
-
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await createAppointment({
-        childId: Number(form.childId),
-
-        scheduledAtUtc: new Date(form.scheduledAtUtc).toISOString(),
-
-        durationMinutes: Number(form.durationMinutes),
-
-        notes: form.notes,
-      });
-
-      toast.success("تم إضافة الجلسة ✅");
-
-      setShowModal(false);
-
-      setForm({
-        childId: "",
-        scheduledAtUtc: "",
-        durationMinutes: "",
-        notes: "",
-      });
-
-      loadData();
-    } catch {
-      toast.error("فشل إضافة الجلسة ❌");
-    }
-
-    setLoading(false);
-  };
 
   const handleCancel = async (appointment) => {
     if (appointment.status !== 0) {
       toast.error("لا يمكن إلغاء هذا الموعد ❌");
-
       return;
     }
 
     try {
       await cancelAppointment(appointment.id);
-
       toast.success("تم الإلغاء ✅");
-
       loadData();
     } catch {
       toast.error("فشل الإلغاء ❌");
@@ -166,15 +100,12 @@ export default function AdminAppointments() {
   const handleComplete = async (appointment) => {
     if (appointment.status !== 0) {
       toast.error("لا يمكن إنهاء هذا الموعد ❌");
-
       return;
     }
 
     try {
       await completeAppointment(appointment.id);
-
       toast.success("تم إنهاء الجلسة ✅");
-
       loadData();
     } catch {
       toast.error("فشل إنهاء الجلسة ❌");
@@ -195,52 +126,43 @@ export default function AdminAppointments() {
 
   const getStatusText = (status) => {
     if (status === 0) return "قيد الانتظار";
-
     if (status === 1) return "مكتمل";
-
     if (status === 2) return "ملغي";
-
     return "غير معروف";
+  };
+
+  const handleChildChange = (e) => {
+    setSelectedChildId(e.target.value);
   };
 
   return (
     <div className="appointments">
       <div className="header">
-        <h2>الجدول الزمني</h2>
-
-        <button className="add-btn" onClick={() => setShowModal(true)}>
-          + إضافة موعد
-        </button>
+        <h2>الجدول الزمني - لوحة المشرف</h2>
+       
       </div>
 
-      <div className="month">
-        <button onClick={prevMonth}>‹</button>
+      <div className="filters">
+        <select value={selectedChildId} onChange={handleChildChange}>
+          <option value="">كل الأطفال</option>
+          {children.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.fullName}
+            </option>
+          ))}
+        </select>
 
-        <span>
-          {currentMonth.toLocaleString("ar-EG", {
-            month: "long",
-            year: "numeric",
-          })}
-        </span>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="all">كل الحالات</option>
+          <option value="0">قيد الانتظار</option>
+          <option value="1">مكتمل</option>
+          <option value="2">ملغي</option>
+        </select>
 
-        <button onClick={nextMonth}>›</button>
+        <button className="refresh-btn" onClick={loadData}>تحديث</button>
       </div>
 
-      <div className="days">
-        {getDays().map((d, i) => (
-          <div
-            key={i}
-            className={`day ${
-              d && selectedDate.toDateString() === d.toDateString()
-                ? "active"
-                : ""
-            }`}
-            onClick={() => d && setSelectedDate(d)}
-          >
-            {d ? d.getDate() : ""}
-          </div>
-        ))}
-      </div>
+      {loading && <div className="loading">جاري التحميل...</div>}
 
       <div className="cards">
         {filtered.length === 0 ? (
@@ -248,49 +170,33 @@ export default function AdminAppointments() {
         ) : (
           filtered.map((a) => {
             const time = new Date(a.scheduledAtUtc);
-
             return (
               <div className="card" key={a.id}>
                 <h3>{a.notes || "جلسة"}</h3>
-
+                <p>👶 {getChildName(a.childId)}</p>
                 <p>
-                  {time.toLocaleTimeString("ar-EG", {
+                  ⏰ {time.toLocaleTimeString("ar-EG", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
                 </p>
-
-                <p>الحالة: {getStatusText(a.status)}</p>
+                <p>⏱️ {a.durationMinutes} دقيقة</p>
+                <p>📌 الحالة: {getStatusText(a.status)}</p>
 
                 <div className="actions">
                   {a.status === 0 && (
                     <>
                       <button onClick={() => handleCancel(a)}>إلغاء</button>
-
                       <button onClick={() => handleComplete(a)}>إنهاء</button>
                     </>
                   )}
 
                   {a.status === 1 && (
-                    <span
-                      style={{
-                        color: "green",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      مكتمل ✅
-                    </span>
+                    <span className="completed">مكتمل ✅</span>
                   )}
 
                   {a.status === 2 && (
-                    <span
-                      style={{
-                        color: "red",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      ملغي ❌
-                    </span>
+                    <span className="cancelled">ملغي ❌</span>
                   )}
                 </div>
               </div>
@@ -298,78 +204,6 @@ export default function AdminAppointments() {
           })
         )}
       </div>
-
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>إضافة جلسة</h3>
-
-            <select
-              value={form.childId}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  childId: e.target.value,
-                })
-              }
-            >
-              <option value="">اختر الطفل</option>
-
-              {children.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.fullName}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="datetime-local"
-              value={form.scheduledAtUtc}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  scheduledAtUtc: e.target.value,
-                })
-              }
-            />
-
-            <input
-              type="number"
-              placeholder="مدة الجلسة (15-240 دقيقة)"
-              value={form.durationMinutes}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  durationMinutes: e.target.value,
-                })
-              }
-            />
-
-            <input
-              placeholder="ملاحظات"
-              value={form.notes}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  notes: e.target.value,
-                })
-              }
-            />
-
-            <button
-              disabled={!isValid() || loading}
-              className="submit"
-              onClick={submit}
-            >
-              {loading ? "جاري الإضافة..." : "إضافة"}
-            </button>
-
-            <button className="close" onClick={() => setShowModal(false)}>
-              إغلاق
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

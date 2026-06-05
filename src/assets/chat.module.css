@@ -22,7 +22,7 @@
 .sidebarTitle {
   padding: 0 12px 18px 12px;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 800;
   background: linear-gradient(135deg, #1a472a, #00bfa6);
   background-clip: text;
   -webkit-background-clip: text;
@@ -84,6 +84,8 @@
 
 .avatar span {
   font-size: 24px;
+  font-weight: 600;
+  color: white;
 }
 
 .chatInfo {
@@ -93,9 +95,9 @@
 
 .chatInfo h4 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0a2f2a;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -104,34 +106,37 @@
 
 .active .chatInfo h4 {
   color: #ffffff;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.25);
 }
 
 .chatInfo small {
   font-size: 10px;
-  color: #00bfa6;
+  color: #006b5e;
   background: #e0f7f4;
   padding: 2px 8px;
   border-radius: 20px;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .active .chatInfo small {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.3);
   color: #ffffff;
+  font-weight: 700;
 }
 
 .chatInfo p {
   margin: 6px 0 0;
   font-size: 12px;
-  color: #334155;
+  color: #1e3a3a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 450;
+  font-weight: 600;
 }
 
 .active .chatInfo p {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
 }
 
 .chatArea {
@@ -170,6 +175,8 @@
 
 .headerAvatar span {
   font-size: 22px;
+  font-weight: 600;
+  color: white;
 }
 
 .headerInfo {
@@ -179,14 +186,15 @@
 .headerInfo h3 {
   margin: 0;
   font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 800;
+  color: #0a2f2a;
 }
 
 .headerInfo p {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #64748b;
+  color: #2d5a5a;
+  font-weight: 600;
 }
 
 .headerActions {
@@ -227,39 +235,40 @@
 }
 
 .myMsg {
-  background: linear-gradient(125deg, #00bfa6, #008f7a);
-  color: #ffffff;
+  background: linear-gradient(125deg, #e2e8f0, #cbd5e1);
+  color: #000000;
   padding: 10px 16px;
   border-radius: 20px 20px 4px 20px;
   align-self: flex-end;
   max-width: 68%;
   font-size: 14px;
-  font-weight: 550;
+  font-weight: 700;
   word-wrap: break-word;
   cursor: pointer;
   position: relative;
   line-height: 1.5;
-  text-shadow: 0 0.5px 0.5px rgba(0, 0, 0, 0.1);
 }
 
 .otherMsg {
-  background: #f8fafc;
+  background: #ffffff;
   color: #000000;
   padding: 10px 16px;
   border-radius: 20px 20px 20px 4px;
   align-self: flex-start;
   max-width: 68%;
   font-size: 14px;
-  font-weight: 550;
+  font-weight: 700;
   word-wrap: break-word;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1;
   line-height: 1.5;
 }
 
 .readMark {
   font-size: 11px;
   margin-right: 6px;
-  opacity: 0.8;
+  opacity: 0.7;
+  font-weight: 600;
+  color: #555555;
 }
 
 .inputBox {
@@ -280,13 +289,13 @@
   font-size: 14px;
   transition: 0.2s;
   background: #fafcff;
-  color: #0f172a;
-  font-weight: 500;
+  color: #0a2f2a;
+  font-weight: 600;
 }
 
 .inputBox input:focus {
   border-color: #00bfa6;
-  box-shadow: 0 0 0 3px rgba(0, 191, 166, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 191, 166, 0.15);
 }
 
 .inputBox button {
@@ -297,7 +306,7 @@
   border-radius: 30px;
   cursor: pointer;
   transition: 0.2s;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
 }
 
@@ -336,7 +345,7 @@
   padding: 10px 20px;
   border-radius: 12px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .cancelBtn {
@@ -345,19 +354,8 @@
   padding: 10px 20px;
   border-radius: 12px;
   cursor: pointer;
-  font-weight: 600;
-  color: #334155;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  font-weight: 700;
+  color: #1e3a3a;
 }
 
 @media (max-width: 992px) {
@@ -412,7 +410,7 @@
   }
 
   .chatInfo h4 {
-    font-size: 12px;
+    font-size: 13px;
   }
   
   .chatInfo small {
@@ -500,7 +498,7 @@
   }
   
   .chatInfo h4 {
-    font-size: 11px;
+    font-size: 12px;
   }
   
   .chatInfo small {

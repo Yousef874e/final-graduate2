@@ -10,6 +10,7 @@ import {
 } from "../../api/messagesService";
 import { getChildProfile } from "../../api/childrenService";
 import { getParentProfileById, getParentProfileImage } from "../../api/parentProfileService";
+import { getSpecialistProfileImage } from "../../api/specialistProfileService";
 import { startConnection } from "../../api/chatHub.js";
 import toast from "react-hot-toast";
 
@@ -31,13 +32,26 @@ function Chat() {
   useEffect(() => {
     loadConversations();
     initSignalR();
+    if (role === "Specialist" && !specialistImageFromContext) {
+      loadSpecialistImage();
+    }
     return () => {
       connectionRef.current?.off("ReceiveMessage");
     };
   }, []);
 
+  const loadSpecialistImage = async () => {
+    try {
+      const res = await getSpecialistProfileImage();
+      if (res && res.imageUrl) {
+        setSpecialistImage(res.imageUrl);
+      }
+    } catch (error) {
+      console.error("Error loading specialist image:", error);
+    }
+  };
+
   const loadParentImage = async (parentId) => {
-    if (parentImages[parentId]) return parentImages[parentId];
     try {
       const res = await getParentProfileImage(parentId);
       if (res && res.imageUrl) {
@@ -45,7 +59,7 @@ function Chat() {
         return res.imageUrl;
       }
     } catch (error) {
-      console.error("Error loading parent image:", error);
+      console.error(error);
     }
     return null;
   };
@@ -90,7 +104,7 @@ function Chat() {
               const parent = await getParentProfileById(child.parentProfileId);
               if (parent) {
                 parentName = parent.fullName || "ولي الأمر";
-                const image = await loadParentImage(parent.id);
+                const image = await loadParentImage(parent.parentProfileId);
                 parentImage = image;
               }
             }
