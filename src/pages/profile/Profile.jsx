@@ -28,24 +28,17 @@ import { clearAuth } from "../../utils/auth";
 function Profile() {
   const navigate = useNavigate();
 
-  const { data } = useApp();
+  const { data, setParentImage: setParentImageInContext } = useApp();
 
   const childId = data?.children?.[0]?.childId;
 
   const [child, setChild] = useState({});
-
   const [parent, setParent] = useState({});
-
   const [childImage, setChildImageUrl] = useState(null);
-
   const [parentImage, setParentImage] = useState(null);
-
   const [childPreview, setChildPreview] = useState(null);
-
   const [parentPreview, setParentPreview] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -57,33 +50,31 @@ function Profile() {
       setLoading(true);
 
       const parentRes = await getParentProfile();
-
       setParent(parentRes || {});
 
       try {
         const parentImg = await getParentProfileImage();
-
-        setParentImage(parentImg?.url || null);
+        const imageUrl = parentImg?.url || null;
+        setParentImage(imageUrl);
+        setParentImageInContext(imageUrl);
       } catch {
         setParentImage(null);
+        setParentImageInContext(null);
       }
 
       if (childId) {
         const childRes = await getChildProfile(childId);
-
         setChild(childRes || {});
 
         try {
           const childImg = await getChildImage(childId);
-
-          setChildImageUrl(childImg?.url || null);
+          const imageUrl = childImg?.url || null;
+          setChildImageUrl(imageUrl);
         } catch {
           setChildImageUrl(null);
         }
       }
     } catch (err) {
-      console.log(err);
-
       toast.error("فشل تحميل البيانات");
     } finally {
       setLoading(false);
@@ -93,7 +84,6 @@ function Profile() {
   const handleParentChange = (e) => {
     setParent((prev) => ({
       ...prev,
-
       [e.target.name]: e.target.value,
     }));
   };
@@ -101,21 +91,14 @@ function Profile() {
   const handleSave = async () => {
     try {
       setSaving(true);
-
       await updateParentProfile({
         fullName: parent.fullName,
-
         phoneNumber: parent.phoneNumber,
-
         address: parent.address,
       });
-
       localStorage.setItem("userName", parent.fullName);
-
       toast.success("تم حفظ البيانات");
-    } catch (err) {
-      console.log(err);
-
+    } catch {
       toast.error("فشل الحفظ");
     } finally {
       setSaving(false);
@@ -124,7 +107,6 @@ function Profile() {
 
   const handleChildImage = async (e) => {
     const file = e.target.files[0];
-
     if (!file) return;
 
     setChildPreview(URL.createObjectURL(file));
@@ -133,11 +115,8 @@ function Profile() {
       const res = await uploadImage(file, {
         category: 2,
       });
-
       await setChildImage(childId, res.id);
-
       setChildImageUrl(res.url);
-
       toast.success("تم تغيير صورة الطفل");
     } catch {
       toast.error("فشل رفع الصورة");
@@ -146,7 +125,6 @@ function Profile() {
 
   const handleParentImage = async (e) => {
     const file = e.target.files[0];
-
     if (!file) return;
 
     setParentPreview(URL.createObjectURL(file));
@@ -155,13 +133,9 @@ function Profile() {
       const res = await uploadImage(file, {
         category: 2,
       });
-
-      await setParentProfileImage({
-        mediaId: res.id,
-      });
-
+      await setParentProfileImage(res.id);
       setParentImage(res.url);
-
+      setParentImageInContext(res.url);
       toast.success("تم تغيير الصورة");
     } catch {
       toast.error("فشل رفع الصورة");
@@ -192,6 +166,7 @@ function Profile() {
             <img
               src={parentPreview || parentImage || "/avatar.png"}
               className={styles.avatar}
+              alt="profile"
             />
 
             <h3>
@@ -203,7 +178,6 @@ function Profile() {
             <div className={styles.parentInfo}>
               <div className={styles.parentField}>
                 <label>اسم ولي الأمر</label>
-
                 <input
                   name="fullName"
                   value={parent.fullName || ""}
@@ -214,7 +188,6 @@ function Profile() {
 
               <div className={styles.parentField}>
                 <label>رقم الهاتف</label>
-
                 <input
                   name="phoneNumber"
                   value={parent.phoneNumber || ""}
@@ -225,7 +198,6 @@ function Profile() {
 
               <div className={styles.parentField}>
                 <label>العنوان</label>
-
                 <input
                   name="address"
                   value={parent.address || ""}
@@ -244,7 +216,6 @@ function Profile() {
               className={styles.logout}
               onClick={() => {
                 clearAuth();
-
                 navigate("/login");
               }}
             >
@@ -261,6 +232,7 @@ function Profile() {
               <img
                 src={childPreview || childImage || "/avatar.png"}
                 className={styles.avatar}
+                alt="child"
               />
 
               <span>{child.fullName || "لا يوجد طفل"}</span>

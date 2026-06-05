@@ -10,13 +10,16 @@ import {
 import { uploadImage } from "../../api/mediaService";
 
 import toast from "react-hot-toast";
+import { useApp } from "../../Context/AppContext";
 
 function SpecialistProfile() {
+  const { setSpecialistImage } = useApp();
   const [profile, setProfile] = useState(null);
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [mediaId, setMediaId] = useState(null);
 
   useEffect(() => {
     loadProfile();
@@ -37,13 +40,21 @@ function SpecialistProfile() {
   const loadImage = async () => {
     try {
       const res = await getSpecialistProfileImage();
-      setImage(res?.url || null);
+      const imageUrl = res?.url || null;
+      const id = res?.id || null;
+      setImage(imageUrl);
+      setMediaId(id);
+      if (imageUrl) {
+        setSpecialistImage(imageUrl);
+      }
     } catch (err) {
       if (err?.response?.status === 404) {
         setImage(null);
+        setMediaId(null);
         return;
       }
       setImage(null);
+      setMediaId(null);
     }
   };
 
@@ -56,7 +67,8 @@ function SpecialistProfile() {
       return;
     }
 
-    setPreview(URL.createObjectURL(file));
+    const localPreview = URL.createObjectURL(file);
+    setPreview(localPreview);
 
     try {
       setUploading(true);
@@ -67,9 +79,12 @@ function SpecialistProfile() {
         mediaId: media.id,
       });
       setImage(media.url);
+      setMediaId(media.id);
+      setSpecialistImage(media.url);
       toast.success("تم تحديث الصورة");
     } catch {
       toast.error("فشل رفع الصورة");
+      setPreview(null);
     } finally {
       setUploading(false);
     }

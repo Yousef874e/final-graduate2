@@ -15,6 +15,9 @@ export const getChildProfile = async (childId) => {
     const res = await axiosClient.get(`/Children/${childId}`);
     return res.data;
   } catch (err) {
+    if (err.response?.status === 404) {
+      return null;
+    }
     console.error("Error getting child profile:", err);
     throw err;
   }
@@ -89,18 +92,16 @@ export const setChildImage = async (childId, mediaId) => {
 export const getChildImage = async (childId) => {
   try {
     const res = await axiosClient.get(`/Children/${childId}/profile-image`);
-
     return res.data;
   } catch (err) {
     if (err.response?.status === 404) {
       return null;
     }
-
     console.error("Error getting child image:", err);
-
     throw err;
   }
 };
+
 export const deleteChildImage = async (childId) => {
   try {
     const res = await axiosClient.delete(`/Children/${childId}/profile-image`);
