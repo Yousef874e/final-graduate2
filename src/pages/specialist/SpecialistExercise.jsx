@@ -37,7 +37,13 @@ function SpecialistExercise() {
 
   const toEgyptTime = (dateString) => {
     if (!dateString) return "";
-    return dateString.split("T")[0];
+    if (dateString.includes(" ")) {
+      return dateString.split(" ")[0];
+    }
+    if (dateString.includes("T")) {
+      return dateString.split("T")[0];
+    }
+    return dateString;
   };
 
   const toUTCForAPI = (dateString) => {
@@ -81,8 +87,6 @@ function SpecialistExercise() {
         setPlans(plansWithEgyptTime);
       }
     } catch (err) {
-      console.log(err);
-
       toast.error("فشل تحميل البيانات");
     }
   };
@@ -203,7 +207,6 @@ function SpecialistExercise() {
       resetForm();
       setShowModal(false);
     } catch (err) {
-      console.log(err);
       toast.error("فشل حفظ الخطة");
     } finally {
       setLoading(false);
@@ -232,27 +235,26 @@ function SpecialistExercise() {
 
       setShowModal(true);
     } catch (err) {
-      console.log(err);
       toast.error("فشل تحميل الخطة");
     }
   };
-const handleStop = async (plan) => {
-  const ok = window.confirm("هل تريد إيقاف الخطة ؟");
 
-  if (!ok) return;
+  const handleStop = async (plan) => {
+    const ok = window.confirm("هل تريد إيقاف الخطة ؟");
 
-  try {
-    const fullPlan = await getTreatmentPlanById(plan.id);
+    if (!ok) return;
 
-    await stopTreatmentPlan(plan.id, fullPlan);
+    try {
+      const fullPlan = await getTreatmentPlanById(plan.id);
 
-    toast.success("تم إيقاف الخطة");
-    loadPlans(childId);
-  } catch (err) {
-  
-    toast.error("فشل إيقاف الخطة");
-  }
-};
+      await stopTreatmentPlan(plan.id, fullPlan);
+
+      toast.success("تم إيقاف الخطة");
+      loadPlans(childId);
+    } catch (err) {
+      toast.error("فشل إيقاف الخطة");
+    }
+  };
 
   const filtered = exercises.filter((ex) =>
     ex.name?.toLowerCase().includes(search.toLowerCase()),
@@ -293,8 +295,8 @@ const handleStop = async (plan) => {
               <h4>{plan.title}</h4>
               <p>{plan.notes}</p>
               <p>
-                من {plan.startDate?.split("T")[0] || plan.startDate} إلى{" "}
-                {plan.endDate?.split("T")[0] || plan.endDate}
+                من {plan.startDate?.split(" ")[0] || plan.startDate?.split("T")[0] || plan.startDate} إلى{" "}
+                {plan.endDate?.split(" ")[0] || plan.endDate?.split("T")[0] || plan.endDate}
               </p>
               <div className={styles.planActions}>
                 <button onClick={() => handleEdit(plan)}>تعديل</button>
@@ -352,7 +354,6 @@ const handleStop = async (plan) => {
                     }));
                     setPlans(plansWithEgyptTime);
                   } catch (err) {
-                    console.log(err);
                     setPlans([]);
                     toast.error("فشل تحميل الخطط");
                   }

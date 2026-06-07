@@ -5,7 +5,6 @@ export const getParentProfile = async () => {
     const res = await axiosClient.get("/Parent/profile");
     return res.data;
   } catch (err) {
-    console.error("Error getting parent profile:", err);
     throw err;
   }
 };
@@ -16,7 +15,7 @@ export const getParentProfileById = async (id) => {
     return res.data;
   } catch (err) {
     if (err?.response?.status !== 403) {
-      console.error("Error getting parent profile by id:", err);
+      throw err;
     }
     return null;
   }
@@ -27,7 +26,6 @@ export const updateParentProfile = async (data) => {
     const res = await axiosClient.put("/Parent/profile", data);
     return res.data;
   } catch (err) {
-    console.error("Error updating parent profile:", err);
     throw err;
   }
 };
@@ -37,7 +35,6 @@ export const getParentProfileImage = async () => {
     const res = await axiosClient.get("/Parent/profile-image");
     return res.data;
   } catch (err) {
-    console.error("Error getting parent image:", err);
     throw err;
   }
 };
@@ -45,9 +42,8 @@ export const getParentProfileImage = async () => {
 export const setParentProfileImage = async (mediaId) => {
   try {
     const res = await axiosClient.put("/Parent/profile-image", { mediaId });
-    return res.data || true;
+    return res.data !== undefined ? res.data : true;
   } catch (err) {
-    console.error("Error setting parent image:", err);
     throw err;
   }
 };
@@ -57,7 +53,6 @@ export const deleteParentProfileImage = async () => {
     const res = await axiosClient.delete("/Parent/profile-image");
     return res.data || true;
   } catch (err) {
-    console.error("Error deleting parent image:", err);
     throw err;
   }
 };
@@ -68,7 +63,7 @@ export const getParentProfileWithChildren = async (id) => {
     return res.data;
   } catch (err) {
     if (err?.response?.status !== 403) {
-      console.error("Error getting parent profile with children:", err);
+      throw err;
     }
     return null;
   }
@@ -82,7 +77,6 @@ export const addChild = async (parentProfileId, childData) => {
     );
     return res.data;
   } catch (err) {
-    console.error("Error adding child:", err);
     throw err;
   }
 };
@@ -95,7 +89,6 @@ export const updateChild = async (childId, childData) => {
     );
     return res.data;
   } catch (err) {
-    console.error("Error updating child:", err);
     throw err;
   }
 };
@@ -105,7 +98,6 @@ export const deleteChild = async (childId) => {
     const res = await axiosClient.delete(`/Parent/child/${childId}`);
     return res.data || true;
   } catch (err) {
-    console.error("Error deleting child:", err);
     throw err;
   }
 };
@@ -115,7 +107,6 @@ export const getChildById = async (childId) => {
     const res = await axiosClient.get(`/Parent/child/${childId}`);
     return res.data;
   } catch (err) {
-    console.error("Error getting child by id:", err);
     throw err;
   }
 };
@@ -127,7 +118,6 @@ export const getChildrenByParentId = async (parentProfileId) => {
     );
     return res.data;
   } catch (err) {
-    console.error("Error getting children by parent id:", err);
     throw err;
   }
 };

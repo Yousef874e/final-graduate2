@@ -81,3 +81,8 @@ export const deleteMedia = async (id) => {
 
   return res.data || true;
 };
+
+export const getImageById = async (id) => {
+  const res = await axiosClient.get(`/Media/${id}`);
+  return res.data;
+};

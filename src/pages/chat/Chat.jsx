@@ -46,14 +46,14 @@ function Chat() {
         for (let i = 0; i < list.length; i++) {
           const chat = list[i];
           let parentName = "ولي الأمر";
-          let parentImageUrl = parentImage;
+          let parentImageUrl = null;
 
           try {
             const child = await getChildProfile(chat.childId);
             if (child?.parentProfileId) {
               const parent = await getParentProfileById(child.parentProfileId);
               parentName = parent?.fullName || "ولي الأمر";
-              parentImageUrl = parent?.profilePictureUrl || parentImage;
+              parentImageUrl = parent?.profilePictureUrl || null;
             }
           } catch (error) {
             console.error("Error fetching parent:", error);
@@ -118,7 +118,7 @@ function Chat() {
       console.error("Error loading conversations:", error);
       toast.error("فشل تحميل المحادثات");
     }
-  }, [role, parentImage, specialistImage, specialistName, childrenWithDetails]);
+  }, [role, specialistImage, specialistName, childrenWithDetails]);
 
   const loadMessages = useCallback(
     async (childId) => {
@@ -247,7 +247,7 @@ function Chat() {
     if (role === "Parent") {
       return activeChat?.specialistImage || specialistImage || null;
     } else {
-      return activeChat?.parentImage || parentImage || null;
+      return activeChat?.parentImage || null;
     }
   };
 
@@ -288,8 +288,8 @@ function Chat() {
                 ) : (
                   <span>👤</span>
                 )
-              ) : (c.parentImage || parentImage) ? (
-                <img src={c.parentImage || parentImage} alt="ولي الأمر" />
+              ) : c.parentImage ? (
+                <img src={c.parentImage} alt="ولي الأمر" />
               ) : (
                 <span>👤</span>
               )}

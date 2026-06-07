@@ -133,23 +133,39 @@ export const AppProvider = ({ children }) => {
         if (children.length > 0) {
           const enrichedChildren = await Promise.all(
             children.map(async (child) => {
+              let parentImageUrl = null;
+              let parentFullName = "ولي الأمر";
+
               try {
-                const parentProfile = await getParentProfileById(child.parentProfileId);
-                return {
-                  ...child,
-                  parentImageUrl: parentProfile?.profilePictureUrl || null,
-                  parentFullName: parentProfile?.fullName || "ولي الأمر"
-                };
-              } catch {
-                return {
-                  ...child,
-                  parentImageUrl: null,
-                  parentFullName: "ولي الأمر"
-                };
+                const parentProfile = await getParentProfileById(
+                  child.parentProfileId
+                );
+
+                console.log(
+                  "Parent From Context:",
+                  child.parentProfileId,
+                  parentProfile
+                );
+
+                parentImageUrl = parentProfile?.profilePictureUrl || null;
+                parentFullName = parentProfile?.fullName || "ولي الأمر";
+              } catch (error) {
+                console.error("Error fetching parent:", error);
               }
+
+              return {
+                ...child,
+                parentImageUrl,
+                parentFullName,
+              };
             })
           );
           setChildrenWithDetails(enrichedChildren);
+          
+          if (enrichedChildren.length > 0) {
+            setParentImage(enrichedChildren[0].parentImageUrl);
+            setParentName(enrichedChildren[0].parentFullName);
+          }
         }
       }
 
@@ -183,48 +199,40 @@ export const AppProvider = ({ children }) => {
         const children = dashboardData?.children || [];
 
         if (children.length > 0) {
-          const firstChild = children[0];
-          setSpecialistName(firstChild?.specialistName || "");
-
-          const childDetails = childrenRes?.items?.find(
-            (c) => c.id === firstChild.childId
+          const enrichedChildren = await Promise.all(
+            children.map(async (child) => {
+              const childDetails = childrenRes?.items?.find((c) => c.id === child.childId);
+              const specialistId = childDetails?.specialistProfileId;
+              
+              let specialistImageUrl = null;
+              let specialistFullName = child.specialistName || "الأخصائي";
+              
+              if (specialistId) {
+                try {
+                  const specialistProfile = await getSpecialistProfileById(specialistId);
+                  if (specialistProfile) {
+                    specialistImageUrl = specialistProfile?.profilePictureUrl || null;
+                    specialistFullName = specialistProfile?.fullName || child.specialistName || "الأخصائي";
+                  }
+                } catch {
+                  specialistImageUrl = null;
+                }
+              }
+              
+              return {
+                ...child,
+                specialistImageUrl: specialistImageUrl,
+                specialistFullName: specialistFullName
+              };
+            })
           );
           
-          const specialistId = childDetails?.specialistProfileId;
-          
-          let imageUrl = null;
-          
-          if (specialistId) {
-            try {
-              const specialistProfile = await getSpecialistProfileById(specialistId);
-              if (specialistProfile) {
-                imageUrl = specialistProfile?.profilePictureUrl || null;
-                setSpecialistImage(imageUrl);
-                localStorage.setItem("specialistProfileId", specialistId);
-              }
-            } catch {
-              imageUrl = null;
-            }
-          } else {
-            const storedMediaId = localStorage.getItem("specialistMediaId");
-            if (storedMediaId) {
-              try {
-                const specialistImg = await getSpecialistProfileImageById(storedMediaId);
-                imageUrl = specialistImg?.url || null;
-              } catch {
-                imageUrl = null;
-              }
-            }
-          }
-          
-          setSpecialistImage(imageUrl);
-
-          const enrichedChildren = children.map((child) => ({
-            ...child,
-            specialistImageUrl: imageUrl,
-            specialistFullName: child.specialistName || "الأخصائي"
-          }));
           setChildrenWithDetails(enrichedChildren);
+          
+          if (enrichedChildren.length > 0) {
+            setSpecialistImage(enrichedChildren[0].specialistImageUrl);
+            setSpecialistName(enrichedChildren[0].specialistFullName);
+          }
         }
 
         if (children.length === 0) {

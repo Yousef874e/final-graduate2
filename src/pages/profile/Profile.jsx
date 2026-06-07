@@ -115,11 +115,16 @@ function Profile() {
       const res = await uploadImage(file, {
         category: 2,
       });
+      
       await setChildImage(childId, res.id);
+      
       setChildImageUrl(res.url);
+      setChildPreview(null);
       toast.success("تم تغيير صورة الطفل");
-    } catch {
+      
+    } catch (error) {
       toast.error("فشل رفع الصورة");
+      setChildPreview(null);
     }
   };
 
@@ -133,12 +138,16 @@ function Profile() {
       const res = await uploadImage(file, {
         category: 2,
       });
+      
       await setParentProfileImage(res.id);
+      
       setParentImage(res.url);
       setParentImageInContext(res.url);
+      setParentPreview(null);
       toast.success("تم تغيير الصورة");
-    } catch {
+    } catch (error) {
       toast.error("فشل رفع الصورة");
+      setParentPreview(null);
     }
   };
 
