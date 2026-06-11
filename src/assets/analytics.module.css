@@ -1879,3 +1879,144 @@
     font-size: 22px;
   }
 }
+.chartCard {
+  background: white;
+  border-radius: 28px;
+  padding: 32px;
+  margin-bottom: 40px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.chartHeader h3 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.chartTabs {
+  display: flex;
+  gap: 12px;
+  background: #f1f5f9;
+  padding: 6px;
+  border-radius: 48px;
+}
+
+.chartTab {
+  padding: 10px 24px;
+  border: none;
+  background: transparent;
+  border-radius: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.2s ease;
+}
+
+.chartTab.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+@media (max-width: 768px) {
+  .chartCard {
+    padding: 24px;
+  }
+
+  .chartHeader h3 {
+    font-size: 22px;
+  }
+
+  .chartTabs {
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .chartTab {
+    padding: 8px 20px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chartCard {
+    padding: 18px;
+  }
+
+  .chartHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .chartHeader h3 {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .chartTab {
+    padding: 6px 16px;
+    font-size: 14px;
+  }
+}
+.planSelector {
+  background: #f8fafc;
+  padding: 16px 20px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border: 1px solid #e2e8f0;
+}
+
+.planSelector label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.planSelect {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+  cursor: pointer;
+  min-width: 200px;
+}
+
+.planSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+@media (max-width: 640px) {
+  .planSelector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .planSelect {
+    width: 100%;
+  }
+}

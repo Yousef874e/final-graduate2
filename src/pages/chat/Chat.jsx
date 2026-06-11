@@ -37,6 +37,65 @@ function Chat() {
   const connectionRef = useRef(null);
   const activeChatRef = useRef(null);
 
+  const defaultAvatars = [
+    "https://randomuser.me/api/portraits/men/1.jpg",
+    "https://randomuser.me/api/portraits/men/2.jpg",
+    "https://randomuser.me/api/portraits/men/3.jpg",
+    "https://randomuser.me/api/portraits/men/4.jpg",
+    "https://randomuser.me/api/portraits/men/5.jpg",
+    "https://randomuser.me/api/portraits/men/6.jpg",
+    "https://randomuser.me/api/portraits/men/7.jpg",
+    "https://randomuser.me/api/portraits/men/8.jpg",
+    "https://randomuser.me/api/portraits/men/9.jpg",
+    "https://randomuser.me/api/portraits/men/10.jpg",
+    "https://randomuser.me/api/portraits/men/11.jpg",
+    "https://randomuser.me/api/portraits/men/12.jpg",
+    "https://randomuser.me/api/portraits/men/13.jpg",
+    "https://randomuser.me/api/portraits/men/14.jpg",
+    "https://randomuser.me/api/portraits/men/15.jpg",
+    "https://randomuser.me/api/portraits/men/16.jpg",
+    "https://randomuser.me/api/portraits/men/17.jpg",
+    "https://randomuser.me/api/portraits/men/18.jpg",
+    "https://randomuser.me/api/portraits/men/19.jpg",
+    "https://randomuser.me/api/portraits/men/20.jpg",
+  ];
+
+  const getRandomDefaultAvatar = (id) => {
+    const index = (id || Math.random()) % defaultAvatars.length;
+    return defaultAvatars[index];
+  };
+
+  const loadMessages = useCallback(
+    async (childId) => {
+      if (!childId) {
+        toast.error("معرف الطفل غير موجود");
+        return;
+      }
+      setLoading(true);
+      try {
+        const res = await getChildMessages(childId);
+        const msgs = (res.items || []).sort(
+          (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc),
+        );
+        setMessages(msgs);
+        await Promise.all(
+          msgs
+            .filter((m) => !m.isRead && Number(m.receiverUserId) === myId)
+            .map((m) => markMessageRead(m.id)),
+        );
+        setTimeout(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      } catch (error) {
+        console.error("Error loading messages:", error);
+        toast.error("فشل تحميل الرسائل");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [myId],
+  );
+
   const loadConversations = useCallback(async () => {
     try {
       const res = await getConversations();
@@ -63,6 +122,7 @@ function Chat() {
             ...chat,
             parentName: parentName,
             parentImage: parentImageUrl,
+            parentId: chat.parentId || chat.otherUserId,
           };
         }
       } else if (role === "Parent") {
@@ -118,38 +178,7 @@ function Chat() {
       console.error("Error loading conversations:", error);
       toast.error("فشل تحميل المحادثات");
     }
-  }, [role, specialistImage, specialistName, childrenWithDetails]);
-
-  const loadMessages = useCallback(
-    async (childId) => {
-      if (!childId) {
-        toast.error("معرف الطفل غير موجود");
-        return;
-      }
-      setLoading(true);
-      try {
-        const res = await getChildMessages(childId);
-        const msgs = (res.items || []).sort(
-          (a, b) => new Date(a.sentAtUtc) - new Date(b.sentAtUtc),
-        );
-        setMessages(msgs);
-        await Promise.all(
-          msgs
-            .filter((m) => !m.isRead && Number(m.receiverUserId) === myId)
-            .map((m) => markMessageRead(m.id)),
-        );
-        setTimeout(() => {
-          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      } catch (error) {
-        console.error("Error loading messages:", error);
-        toast.error("فشل تحميل الرسائل");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [myId],
-  );
+  }, [role, specialistImage, specialistName, childrenWithDetails, loadMessages]);
 
   const initSignalR = useCallback(async () => {
     const conn = await startConnection();
@@ -247,7 +276,23 @@ function Chat() {
     if (role === "Parent") {
       return activeChat?.specialistImage || specialistImage || null;
     } else {
-      return activeChat?.parentImage || null;
+      const img = activeChat?.parentImage;
+      if (img && img.trim() !== "") {
+        return img;
+      }
+      return getRandomDefaultAvatar(activeChat?.parentId || activeChat?.conversationId);
+    }
+  };
+
+  const getAvatarImage = (chat) => {
+    if (role === "Parent") {
+      return chat.specialistImage || specialistImage || null;
+    } else {
+      const img = chat.parentImage;
+      if (img && img.trim() !== "") {
+        return img;
+      }
+      return getRandomDefaultAvatar(chat.parentId || chat.conversationId);
     }
   };
 
@@ -279,20 +324,7 @@ function Chat() {
             }}
           >
             <div className={styles.avatar}>
-              {role === "Parent" ? (
-                (c.specialistImage || specialistImage) ? (
-                  <img
-                    src={c.specialistImage || specialistImage}
-                    alt="الأخصائي"
-                  />
-                ) : (
-                  <span>👤</span>
-                )
-              ) : c.parentImage ? (
-                <img src={c.parentImage} alt="ولي الأمر" />
-              ) : (
-                <span>👤</span>
-              )}
+              <img src={getAvatarImage(c)} alt="avatar" />
             </div>
             <div className={styles.chatInfo}>
               <h4>
@@ -310,11 +342,7 @@ function Chat() {
       <div className={styles.chatArea}>
         <div className={styles.header}>
           <div className={styles.headerAvatar}>
-            {getOtherUserImage() ? (
-              <img src={getOtherUserImage()} alt={getOtherUserName()} />
-            ) : (
-              <span>👤</span>
-            )}
+            <img src={getOtherUserImage()} alt={getOtherUserName()} />
           </div>
           <div className={styles.headerInfo}>
             <h3>{getOtherUserName()}</h3>

@@ -526,10 +526,10 @@ function Analytics() {
             </div>
           )}
 
-          {selectedPlanStats && selectedPlanStats.sessionHistory && selectedPlanStats.sessionHistory.length > 1 && (
+          {selectedPlanStats?.sessionHistory?.length > 0 && (
             <div className={analyticsStyles.chartCard}>
               <div className={analyticsStyles.chartHeader}>
-                <h3>📈 تقدم الجلسات</h3>
+                <h3>📈 تقدم الجلسات - {selectedPlan?.title || selectedPlan?.name || "الخطة الحالية"}</h3>
                 <div className={analyticsStyles.chartTabs}>
                   <button className={`${analyticsStyles.chartTab} ${activeChart === "line" ? analyticsStyles.active : ""}`} onClick={() => setActiveChart("line")}>خطي</button>
                   <button className={`${analyticsStyles.chartTab} ${activeChart === "area" ? analyticsStyles.active : ""}`} onClick={() => setActiveChart("area")}>مساحي</button>
