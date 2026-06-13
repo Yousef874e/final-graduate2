@@ -3,7 +3,7 @@ import { clearAuth } from "../utils/auth";
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL + "/api/v1",
-  timeout: 12000,
+  timeout: 20000,
   headers: {
     Accept: "application/json",
   },
