@@ -10,6 +10,9 @@ function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  console.log("URL =", window.location.href);
+  console.log("TOKEN =", searchParams.get("token"));
+
   const urlEmail = searchParams.get("email");
   const rawToken = searchParams.get("token") || "";
   const token = decodeURIComponent(rawToken);
@@ -131,6 +134,12 @@ function ResetPassword() {
     try {
       setLoading(true);
 
+      console.log({
+        email,
+        token,
+        newPassword: password,
+      });
+
       await resetPassword({
         email,
         token,
@@ -144,6 +153,8 @@ function ResetPassword() {
         navigate("/login");
       }, 1500);
     } catch (err) {
+      console.log("ERROR:", err.response?.data);
+
       const errorMsg =
         err?.response?.data?.errors?.[0] ||
         err?.response?.data?.title ||
